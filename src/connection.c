@@ -35,9 +35,10 @@ connection_close(struct connection *connection)
  */
 static bool
 connection_send_to_socket(struct connection *connection,
-                          struct socket *s, struct fifo_buffer *buffer)
+                          struct socket *s, struct fifo_buffer *buffer,
+                          size_t max)
 {
-    ssize_t remaining = socket_send_from_buffer(s, buffer);
+    ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);
     assert(remaining != -2);
 
     if (remaining < 0) {
@@ -54,17 +55,51 @@ connection_send_to_socket(struct connection *connection,
 }
 
 static bool
+connection_forward(struct connection *connection,
+                   struct peer *src, struct peer *dest, size_t length)
+{
+    size_t before = fifo_buffer_available(src->socket.input);
+
+    if (!connection_send_to_socket(connection, &dest->socket,
+                                   src->socket.input, length))
+        return false;
+
+    size_t after = fifo_buffer_available(src->socket.input);
+    assert(after <= before);
+    size_t nbytes = before - after;
+
+    if (nbytes > 0)
+        mysql_reader_forwarded(&src->reader, nbytes);
+
+    return true;
+}
+
+static bool
 connection_handle_client_input(struct connection *connection)
 {
-    return connection_send_to_socket(connection, &connection->server.socket,
-                                     connection->client.socket.input);
+    while (true) {
+        size_t nbytes = peer_feed(&connection->client);
+        if (nbytes == 0)
+            return true;
+
+        if (!connection_forward(connection, &connection->client,
+                                &connection->server, nbytes))
+            return false;
+    }
 }
 
 static bool
 connection_handle_server_input(struct connection *connection)
 {
-    return connection_send_to_socket(connection, &connection->client.socket,
-                                     connection->server.socket.input);
+    while (true) {
+        size_t nbytes = peer_feed(&connection->server);
+        if (nbytes == 0)
+            return true;
+
+        if (!connection_forward(connection, &connection->server,
+                                &connection->client, nbytes))
+            return false;
+    }
 }
 
 static void
@@ -167,6 +202,42 @@ connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
         socket_schedule_read(&connection->client.socket, false);
 }
 
+static void
+connection_mysql_client_packet(unsigned number, size_t length,
+                               const void *data, size_t available,
+                               void *ctx)
+{
+    struct connection *connection = ctx;
+
+    (void)connection;
+    (void)number;
+    (void)length;
+    (void)data;
+    (void)available;
+}
+
+static const struct mysql_handler connection_mysql_client_handler = {
+    .packet = connection_mysql_client_packet,
+};
+
+static void
+connection_mysql_server_packet(unsigned number, size_t length,
+                               const void *data, size_t available,
+                               void *ctx)
+{
+    struct connection *connection = ctx;
+
+    (void)connection;
+    (void)number;
+    (void)length;
+    (void)data;
+    (void)available;
+}
+
+static const struct mysql_handler connection_mysql_server_handler = {
+    .packet = connection_mysql_server_packet,
+};
+
 struct connection *
 connection_new(struct instance *instance, int fd)
 {
@@ -177,6 +248,8 @@ connection_new(struct instance *instance, int fd)
     socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
                 connection_client_read_callback,
                 connection_client_write_callback, connection);
+    mysql_reader_init(&connection->client.reader,
+                      &connection_mysql_client_handler, connection);
 
     const struct addrinfo *address = connection->instance->server_address;
     assert(address != NULL);
@@ -196,6 +269,8 @@ connection_new(struct instance *instance, int fd)
     socket_init(&connection->server.socket, SOCKET_CONNECTING, fd, 4096,
                 connection_server_read_callback,
                 connection_server_write_callback, connection);
+    mysql_reader_init(&connection->server.reader,
+                      &connection_mysql_server_handler, connection);
 
     socket_schedule_read(&connection->client.socket, false);
     socket_schedule_read(&connection->server.socket, true);

@@ -23,6 +23,7 @@ src_cm4all_myproxy_SOURCES = \
 	src/buffered_io.c \
 	src/listener.c \
 	src/socket.c \
+	src/peer.h \
 	src/connection.c \
 	src/instance.c \
 	src/cmdline.c \

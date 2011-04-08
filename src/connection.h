@@ -7,7 +7,7 @@
 #ifndef MYPROXY_CONNECTION_H
 #define MYPROXY_CONNECTION_H
 
-#include "socket.h"
+#include "peer.h"
 
 #include <inline/list.h>
 
@@ -22,12 +22,12 @@ struct connection {
     /**
      * The connection to the client.
      */
-    struct socket client;
+    struct peer client;
 
     /**
      * The connection to the server.
      */
-    struct socket server;
+    struct peer server;
 };
 
 struct connection *

@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <netdb.h>
+#include <string.h>
 
 void
 connection_close(struct connection *connection)
@@ -203,17 +204,38 @@ connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
 }
 
 static void
+connection_login_packet(struct connection *connection,
+                        const char *data, size_t length)
+{
+    if (length < 33)
+        return;
+
+    const char *user = data + 32;
+    const char *user_end = memchr(user, 0, data + length - user);
+    if (user_end == NULL)
+        return;
+
+    size_t user_length = user_end - user;
+    if (user_length >= sizeof(connection->user))
+        user_length = sizeof(connection->user) - 1;
+
+    memcpy(connection->user, user, user_length);
+    connection->user[user_length] = 0;
+}
+
+static void
 connection_mysql_client_packet(unsigned number, size_t length,
                                const void *data, size_t available,
                                void *ctx)
 {
     struct connection *connection = ctx;
 
-    (void)connection;
-    (void)number;
     (void)length;
-    (void)data;
-    (void)available;
+
+    if (number == 1 && !connection->login_received) {
+        connection->login_received = true;
+        connection_login_packet(connection, data, available);
+    }
 }
 
 static const struct mysql_handler connection_mysql_client_handler = {
@@ -227,11 +249,13 @@ connection_mysql_server_packet(unsigned number, size_t length,
 {
     struct connection *connection = ctx;
 
-    (void)connection;
-    (void)number;
     (void)length;
     (void)data;
     (void)available;
+
+    if (!connection->greeting_received && number == 0) {
+        connection->greeting_received = true;
+    }
 }
 
 static const struct mysql_handler connection_mysql_server_handler = {
@@ -243,6 +267,8 @@ connection_new(struct instance *instance, int fd)
 {
     struct connection *connection = malloc(sizeof(*connection));
     connection->instance = instance;
+    connection->greeting_received = false;
+    connection->login_received = false;
 
     socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
                 connection_client_read_callback,

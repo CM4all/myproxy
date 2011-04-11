@@ -19,6 +19,10 @@ struct connection {
     struct list_head siblings;
     struct instance *instance;
 
+    bool greeting_received, login_received;
+
+    char user[64];
+
     /**
      * The connection to the client.
      */

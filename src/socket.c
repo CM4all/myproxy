@@ -113,3 +113,14 @@ socket_send_from_buffer(struct socket *s, struct fifo_buffer *buffer)
 
     return send_from_buffer(s->fd, buffer);
 }
+
+ssize_t
+socket_send_from_buffer_n(struct socket *s, struct fifo_buffer *buffer,
+                          size_t max)
+{
+    assert(s != NULL);
+    assert(s->state == SOCKET_ALIVE);
+    assert(s->fd >= 0);
+
+    return send_from_buffer_n(s->fd, buffer, max);
+}

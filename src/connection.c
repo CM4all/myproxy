@@ -243,7 +243,6 @@ connection_new(struct instance *instance, int fd)
 {
     struct connection *connection = malloc(sizeof(*connection));
     connection->instance = instance;
-    connection->client.socket.fd = fd;
 
     socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
                 connection_client_read_callback,

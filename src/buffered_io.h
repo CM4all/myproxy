@@ -51,4 +51,15 @@ recv_to_buffer(int fd, struct fifo_buffer *buffer, size_t length);
 ssize_t
 send_from_buffer(int fd, struct fifo_buffer *buffer);
 
+/**
+ * Sends data from the buffer to the socket.
+ *
+ * @param fd the destination socket
+ * @param buffer the source buffer
+ * @param max the maximum number of bytes to transmit
+ * @return -1 on error, -2 if the buffer is empty, or the rest left in the buffer
+ */
+ssize_t
+send_from_buffer_n(int fd, struct fifo_buffer *buffer, size_t max);
+
 #endif

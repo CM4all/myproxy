@@ -103,3 +103,27 @@ send_from_buffer(int fd, struct fifo_buffer *buffer)
     fifo_buffer_consume(buffer, (size_t)nbytes);
     return (ssize_t)length - nbytes;
 }
+
+ssize_t
+send_from_buffer_n(int fd, struct fifo_buffer *buffer, size_t max)
+{
+    assert(max > 0);
+
+    size_t length;
+    const void *data = fifo_buffer_read(buffer, &length);
+    if (data == NULL)
+        return -2;
+
+    if (length > max)
+        length = max;
+
+    ssize_t nbytes = send(fd, data, length, MSG_DONTWAIT|MSG_NOSIGNAL);
+    if (nbytes < 0 && errno != EAGAIN)
+        return -1;
+
+    if (nbytes <= 0)
+        return length;
+
+    fifo_buffer_consume(buffer, (size_t)nbytes);
+    return (ssize_t)length - nbytes;
+}

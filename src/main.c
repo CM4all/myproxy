@@ -1,5 +1,6 @@
 #include "instance.h"
 #include "cmdline.h"
+#include "policy.h"
 #include "listener.h"
 #include "connection.h"
 
@@ -63,9 +64,13 @@ int main(int argc, char **argv)
 
     init_signals(&instance);
 
+    policy_init();
+
     listener_init(&instance, 3306);
 
     event_dispatch();
+
+    policy_deinit();
 
     instance_deinit(&instance);
 

@@ -21,6 +21,8 @@ src_cm4all_myproxy_SOURCES = \
 	src/fd_util.c \
 	src/fifo_buffer.c \
 	src/buffered_io.c \
+	src/policy.h \
+	src/policy.c \
 	src/listener.c \
 	src/socket.c \
 	src/mysql_protocol.h \

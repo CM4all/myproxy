@@ -19,6 +19,15 @@ struct connection {
     struct list_head siblings;
     struct instance *instance;
 
+    /**
+     * Used to insert delay in the connection: it gets fired after the
+     * delay is over.  It re-enables parsing and forwarding client
+     * input.
+     */
+    struct event delay_timer;
+
+    bool delayed;
+
     bool greeting_received, login_received;
 
     char user[64];
@@ -39,5 +48,12 @@ connection_new(struct instance *instance, int fd);
 
 void
 connection_close(struct connection *connection);
+
+/**
+ * Delay forwarding client input for the specified duration.  Can be
+ * used to throttle the connection.
+ */
+void
+connection_delay(struct connection *c, unsigned delay_ms);
 
 #endif

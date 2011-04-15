@@ -83,6 +83,10 @@ connection_handle_client_input(struct connection *connection)
         if (nbytes == 0)
             return true;
 
+        if (connection->delayed)
+            /* don't continue reading now */
+            return false;
+
         if (!connection_forward(connection, &connection->client,
                                 &connection->server, nbytes))
             return false;
@@ -108,6 +112,8 @@ connection_client_read_callback(__attr_unused int fd,
                                 short event, void *ctx)
 {
     struct connection *connection = ctx;
+
+    assert(!connection->delayed);
 
     if (event & EV_TIMEOUT) {
         connection_close(connection);
@@ -193,6 +199,8 @@ connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
 {
     struct connection *connection = ctx;
 
+    assert(!connection->delayed);
+
     if (event & EV_TIMEOUT) {
         connection_close(connection);
         return;
@@ -262,11 +270,35 @@ static const struct mysql_handler connection_mysql_server_handler = {
     .packet = connection_mysql_server_packet,
 };
 
+/**
+ * Called when the artificial delay is over, and restarts the transfer
+ * from the client to the server.
+ */
+static void
+connection_delay_timer_callback(__attr_unused int fd,
+                                __attr_unused short event, void *ctx)
+{
+    struct connection *connection = ctx;
+
+    assert(connection->delayed);
+
+    connection->delayed = false;
+
+    if (connection_handle_client_input(connection) &&
+        !fifo_buffer_full(connection->client.socket.input))
+        socket_schedule_read(&connection->client.socket, false);
+}
+
 struct connection *
 connection_new(struct instance *instance, int fd)
 {
     struct connection *connection = malloc(sizeof(*connection));
     connection->instance = instance;
+
+    event_set(&connection->delay_timer, -1, EV_TIMEOUT,
+              connection_delay_timer_callback, connection);
+    connection->delayed = false;
+
     connection->greeting_received = false;
     connection->login_received = false;
 
@@ -303,4 +335,20 @@ connection_new(struct instance *instance, int fd)
     event_add(&connection->client.socket.read_event, NULL);
 
     return connection;
+}
+
+void
+connection_delay(struct connection *c, unsigned delay_ms)
+{
+    c->delayed = true;
+
+    socket_unschedule_read(&c->client.socket);
+    socket_unschedule_write(&c->server.socket);
+
+    const struct timeval timeout = {
+        .tv_sec = delay_ms / 1000,
+        .tv_usec = (delay_ms % 1000) * 1000,
+    };
+
+    event_add(&c->delay_timer, &timeout);
 }

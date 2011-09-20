@@ -18,6 +18,7 @@ INCLUDES = -I$(srcdir)/src -I$(srcdir)/include
 
 bin_PROGRAMS = src/cm4all-myproxy
 src_cm4all_myproxy_SOURCES = \
+	src/clock.h \
 	src/fd_util.c \
 	src/fifo_buffer.c \
 	src/buffered_io.c \
@@ -35,6 +36,7 @@ src_cm4all_myproxy_SOURCES = \
 	src/cmdline.c \
 	src/main.c
 src_cm4all_myproxy_LDADD = $(AM_LDADD) \
+	-lrt \
 	$(LIBCM4ALL_DAEMON_LIBS) \
 	$(LIBCM4ALL_INLINE_LIBS) \
 	$(LIBCM4ALL_SOCKET_LIBS) \

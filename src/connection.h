@@ -33,6 +33,11 @@ struct connection {
     char user[64];
 
     /**
+     * The time stamp of the last request packet [us].
+     */
+    uint64_t request_time;
+
+    /**
      * The connection to the client.
      */
     struct peer client;

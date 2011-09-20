@@ -9,6 +9,9 @@
 #include "buffered_io.h"
 #include "fd_util.h"
 #include "fifo_buffer.h"
+#include "mysql_protocol.h"
+#include "clock.h"
+#include "policy.h"
 
 #include <inline/compiler.h>
 
@@ -239,7 +242,9 @@ connection_mysql_client_packet(unsigned number, size_t length,
 {
     struct connection *connection = ctx;
 
-    (void)length;
+    if (mysql_is_query_packet(number, data, length) &&
+        connection->request_time == 0)
+        connection->request_time = now_us();
 
     if (number == 1 && !connection->login_received) {
         connection->login_received =
@@ -264,6 +269,14 @@ connection_mysql_server_packet(unsigned number, size_t length,
 
     if (!connection->greeting_received && number == 0) {
         connection->greeting_received = true;
+    }
+
+    if (mysql_is_eof_packet(number, data, length) &&
+        connection->login_received &&
+        connection->request_time != 0) {
+        uint64_t duration_us = now_us() - connection->request_time;
+        policy_duration(connection->user, (unsigned)(duration_us / 1000));
+        connection->request_time = 0;
     }
 }
 
@@ -302,6 +315,7 @@ connection_new(struct instance *instance, int fd)
 
     connection->greeting_received = false;
     connection->login_received = false;
+    connection->request_time = 0;
 
     socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
                 connection_client_read_callback,

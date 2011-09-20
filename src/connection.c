@@ -211,17 +211,17 @@ connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
         socket_schedule_read(&connection->client.socket, false);
 }
 
-static void
+static bool
 connection_login_packet(struct connection *connection,
                         const char *data, size_t length)
 {
     if (length < 33)
-        return;
+        return false;
 
     const char *user = data + 32;
     const char *user_end = memchr(user, 0, data + length - user);
-    if (user_end == NULL)
-        return;
+    if (user_end == NULL || user_end == user)
+        return false;
 
     size_t user_length = user_end - user;
     if (user_length >= sizeof(connection->user))
@@ -229,6 +229,7 @@ connection_login_packet(struct connection *connection,
 
     memcpy(connection->user, user, user_length);
     connection->user[user_length] = 0;
+    return true;
 }
 
 static void
@@ -241,8 +242,8 @@ connection_mysql_client_packet(unsigned number, size_t length,
     (void)length;
 
     if (number == 1 && !connection->login_received) {
-        connection->login_received = true;
-        connection_login_packet(connection, data, available);
+        connection->login_received =
+            connection_login_packet(connection, data, available);
     }
 }
 

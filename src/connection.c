@@ -87,12 +87,12 @@ connection_handle_client_input(struct connection *connection)
         if (nbytes == 0)
             return true;
 
-        if (connection->delayed)
-            /* don't continue reading now */
-            return false;
-
         if (!connection_forward(connection, &connection->client,
                                 &connection->server, nbytes))
+            return false;
+
+        if (connection->delayed)
+            /* don't continue reading now */
             return false;
     }
 }

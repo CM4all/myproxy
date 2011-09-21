@@ -233,6 +233,11 @@ connection_login_packet(struct connection *connection,
 
     memcpy(connection->user, user, user_length);
     connection->user[user_length] = 0;
+
+    unsigned delay_ms = policy_login(connection->user);
+    if (delay_ms > 0)
+        connection_delay(connection, delay_ms);
+
     return true;
 }
 
@@ -356,6 +361,8 @@ connection_new(struct instance *instance, int fd)
 void
 connection_delay(struct connection *c, unsigned delay_ms)
 {
+    assert(delay_ms > 0);
+
     c->delayed = true;
 
     socket_unschedule_read(&c->client.socket);

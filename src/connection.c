@@ -85,7 +85,7 @@ connection_handle_client_input(struct connection *connection)
     while (true) {
         size_t nbytes = peer_feed(&connection->client);
         if (nbytes == 0)
-            return true;
+            return !connection->delayed;
 
         if (!connection_forward(connection, &connection->client,
                                 &connection->server, nbytes))

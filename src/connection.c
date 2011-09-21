@@ -366,7 +366,6 @@ connection_delay(struct connection *c, unsigned delay_ms)
     c->delayed = true;
 
     socket_unschedule_read(&c->client.socket);
-    socket_unschedule_write(&c->server.socket);
 
     const struct timeval timeout = {
         .tv_sec = delay_ms / 1000,

@@ -28,6 +28,7 @@ connection_close(struct connection *connection)
 {
     socket_close(&connection->client.socket);
     socket_close(&connection->server.socket);
+    event_del(&connection->delay_timer);
 
     list_remove(&connection->siblings);
 

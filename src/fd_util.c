@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2010 The Music Player Daemon Project
+ * Copyright (C) 2003-2011 The Music Player Daemon Project
  * http://www.musicpd.org
  *
  * Redistribution and use in source and binary forms, with or without
@@ -205,6 +205,29 @@ socketpair_cloexec(int domain, int type, int protocol, int sv[2])
 	return ret;
 }
 
+int
+socketpair_cloexec_nonblock(int domain, int type, int protocol, int sv[2])
+{
+	int ret;
+
+#if defined(SOCK_CLOEXEC) && defined(SOCK_NONBLOCK)
+	ret = socketpair(domain, type | SOCK_CLOEXEC | SOCK_NONBLOCK, protocol,
+			 sv);
+	if (ret >= 0 || errno != EINVAL)
+		return ret;
+#endif
+
+	ret = socketpair(domain, type, protocol, sv);
+	if (ret >= 0) {
+		fd_set_cloexec(sv[0], true);
+		fd_set_nonblock(sv[0]);
+		fd_set_cloexec(sv[1], true);
+		fd_set_nonblock(sv[1]);
+	}
+
+	return ret;
+}
+
 #endif
 
 int
@@ -269,8 +292,8 @@ recvmsg_cloexec(int sockfd, struct msghdr *msg, int flags)
 		struct cmsghdr *cmsg = CMSG_FIRSTHDR(msg);
 		while (cmsg != NULL) {
 			if (cmsg->cmsg_type == SCM_RIGHTS) {
-				int fd = *(const int *)CMSG_DATA(cmsg);
-				fd_set_cloexec(fd, true);
+				const int *fd_p = (const int *)CMSG_DATA(cmsg);
+				fd_set_cloexec(*fd_p, true);
 			}
 
 			cmsg = CMSG_NXTHDR(msg, cmsg);
@@ -303,3 +326,13 @@ inotify_init_cloexec(void)
 }
 
 #endif
+
+int
+close_socket(int fd)
+{
+#ifdef WIN32
+	return closesocket(fd);
+#else
+	return close(fd);
+#endif
+}

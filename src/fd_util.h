@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2010 The Music Player Daemon Project
+ * Copyright (C) 2003-2011 The Music Player Daemon Project
  * http://www.musicpd.org
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,10 @@
 
 struct sockaddr;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Wrapper for dup(), which sets the CLOEXEC flag on the new
  * descriptor.
@@ -89,6 +93,13 @@ pipe_cloexec_nonblock(int fd[2]);
 int
 socketpair_cloexec(int domain, int type, int protocol, int sv[2]);
 
+/**
+ * Wrapper for socketpair(), which sets the flags CLOEXEC and NONBLOCK
+ * (atomically if supported by the OS).
+ */
+int
+socketpair_cloexec_nonblock(int domain, int type, int protocol, int sv[2]);
+
 #endif
 
 /**
@@ -120,11 +131,25 @@ recvmsg_cloexec(int sockfd, struct msghdr *msg, int flags);
 
 #endif
 
+#ifdef HAVE_INOTIFY_INIT
+
 /**
  * Wrapper for inotify_init(), which sets the CLOEXEC flag (atomically
  * if supported by the OS).
  */
 int
 inotify_init_cloexec(void);
+
+#endif
+
+/**
+ * Portable wrapper for close(); use closesocket() on WIN32/WinSock.
+ */
+int
+close_socket(int fd);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -4,7 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "instance.h"
+#include "Instance.hxx"
 
 #include <stddef.h>
 #include <netdb.h>

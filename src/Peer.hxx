@@ -4,11 +4,11 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_PEER_H
-#define MYPROXY_PEER_H
+#ifndef MYPROXY_PEER_HXX
+#define MYPROXY_PEER_HXX
 
-#include "socket.h"
-#include "mysql_reader.h"
+#include "Socket.hxx"
+#include "MySQLReader.hxx"
 
 struct peer {
     struct socket socket;

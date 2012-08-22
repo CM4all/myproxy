@@ -4,17 +4,17 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_POLICY_H
-#define MYPROXY_POLICY_H
+#ifndef MYPROXY_POLICY_HXX
+#define MYPROXY_POLICY_HXX
 
 /**
  * Global initialization.
  */
 void
-policy_init(void);
+policy_init();
 
 void
-policy_deinit(void);
+policy_deinit();
 
 /**
  * A user attempts to log in.

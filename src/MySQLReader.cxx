@@ -6,7 +6,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "mysql_reader.h"
+#include "MySQLReader.hxx"
 #include "mysql_protocol.h"
 
 #include <string.h>
@@ -62,7 +62,8 @@ mysql_reader_feed(struct mysql_reader *reader,
 
     if (!reader->have_packet) {
         /* start of a new packet */
-        const struct mysql_packet_header *header = data;
+        const struct mysql_packet_header *header =
+            (const struct mysql_packet_header *)data;
 
         if (length < sizeof(*header)) {
             /* need more data to complete the header */

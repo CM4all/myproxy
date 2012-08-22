@@ -4,9 +4,12 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "socket.h"
+#include "Socket.hxx"
 #include "fifo_buffer.h"
+
+extern "C" {
 #include "buffered_io.h"
+}
 
 #include <assert.h>
 #include <unistd.h>

@@ -4,8 +4,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_CMDLINE_H
-#define MYPROXY_CMDLINE_H
+#ifndef MYPROXY_CMDLINE_HXX
+#define MYPROXY_CMDLINE_HXX
 
 struct instance;
 

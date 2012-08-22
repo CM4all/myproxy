@@ -4,8 +4,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_LISTENER_H
-#define MYPROXY_LISTENER_H
+#ifndef MYPROXY_LISTENER_HXX
+#define MYPROXY_LISTENER_HXX
 
 struct instance;
 

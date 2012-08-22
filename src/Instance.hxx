@@ -4,8 +4,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_INSTANCE_H
-#define MYPROXY_INSTANCE_H
+#ifndef MYPROXY_INSTANCE_HXX
+#define MYPROXY_INSTANCE_HXX
 
 #include <inline/list.h>
 

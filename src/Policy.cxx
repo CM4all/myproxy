@@ -4,15 +4,15 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "policy.h"
+#include "Policy.hxx"
 
 void
-policy_init(void)
+policy_init()
 {
 }
 
 void
-policy_deinit(void)
+policy_deinit()
 {
 }
 

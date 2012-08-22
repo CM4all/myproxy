@@ -4,10 +4,13 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "listener.h"
-#include "instance.h"
+#include "Listener.hxx"
+#include "Instance.hxx"
+#include "Connection.hxx"
+
+extern "C" {
 #include "fd_util.h"
-#include "connection.h"
+}
 
 #include <daemon/log.h>
 #include <socket/util.h>
@@ -39,7 +42,7 @@ my_htons(uint16_t x)
 static void
 listener_event_callback(int fd, short event __attr_unused, void *ctx)
 {
-    struct instance *instance = ctx;
+    struct instance *instance = (struct instance *)ctx;
 
     struct sockaddr_storage sa;
     size_t sa_len = sizeof(sa);

@@ -1,8 +1,8 @@
-#include "instance.h"
-#include "cmdline.h"
-#include "policy.h"
-#include "listener.h"
-#include "connection.h"
+#include "Instance.hxx"
+#include "CommandLine.hxx"
+#include "Policy.hxx"
+#include "Listener.hxx"
+#include "Connection.hxx"
 
 #include <inline/compiler.h>
 

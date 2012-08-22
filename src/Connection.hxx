@@ -4,10 +4,10 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_CONNECTION_H
-#define MYPROXY_CONNECTION_H
+#ifndef MYPROXY_CONNECTION_HXX
+#define MYPROXY_CONNECTION_HXX
 
-#include "peer.h"
+#include "Peer.hxx"
 
 #include <inline/list.h>
 

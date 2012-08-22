@@ -4,14 +4,14 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "connection.h"
-#include "instance.h"
+#include "Connection.hxx"
+#include "Instance.hxx"
 #include "buffered_io.h"
 #include "fd_util.h"
 #include "fifo_buffer.h"
 #include "mysql_protocol.h"
 #include "clock.h"
-#include "policy.h"
+#include "Policy.hxx"
 
 #include <inline/compiler.h>
 
@@ -115,7 +115,7 @@ static void
 connection_client_read_callback(__attr_unused int fd,
                                 short event, void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     assert(!connection->delayed);
 
@@ -143,7 +143,7 @@ connection_client_read_callback(__attr_unused int fd,
 static void
 connection_client_write_callback(__attr_unused int fd, short event, void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     if (event & EV_TIMEOUT) {
         connection_close(connection);
@@ -159,7 +159,7 @@ static void
 connection_server_read_callback(__attr_unused int fd,
                                 short event, void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     if (event & EV_TIMEOUT) {
         connection_close(connection);
@@ -201,7 +201,7 @@ connection_server_read_callback(__attr_unused int fd,
 static void
 connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     assert(!connection->delayed);
 
@@ -223,7 +223,8 @@ connection_login_packet(struct connection *connection,
         return false;
 
     const char *user = data + 32;
-    const char *user_end = memchr(user, 0, data + length - user);
+    const char *user_end = (const char *)
+        memchr((const void *)user, 0, data + length - user);
     if (user_end == NULL || user_end == user)
         return false;
 
@@ -246,7 +247,7 @@ connection_mysql_client_packet(unsigned number, size_t length,
                                const void *data, size_t available,
                                void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     if (mysql_is_query_packet(number, data, length) &&
         connection->request_time == 0)
@@ -254,7 +255,7 @@ connection_mysql_client_packet(unsigned number, size_t length,
 
     if (number == 1 && !connection->login_received) {
         connection->login_received =
-            connection_login_packet(connection, data, available);
+            connection_login_packet(connection, (const char *)data, available);
     }
 }
 
@@ -267,7 +268,7 @@ connection_mysql_server_packet(unsigned number, size_t length,
                                const void *data, size_t available,
                                void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     (void)length;
     (void)data;
@@ -298,7 +299,7 @@ static void
 connection_delay_timer_callback(__attr_unused int fd,
                                 __attr_unused short event, void *ctx)
 {
-    struct connection *connection = ctx;
+    struct connection *connection = (struct connection *)ctx;
 
     assert(connection->delayed);
 
@@ -312,7 +313,8 @@ connection_delay_timer_callback(__attr_unused int fd,
 struct connection *
 connection_new(struct instance *instance, int fd)
 {
-    struct connection *connection = malloc(sizeof(*connection));
+    struct connection *connection = (struct connection *)
+        malloc(sizeof(*connection));
     connection->instance = instance;
 
     event_set(&connection->delay_timer, -1, EV_TIMEOUT,

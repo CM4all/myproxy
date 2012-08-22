@@ -22,19 +22,16 @@ src_cm4all_myproxy_SOURCES = \
 	src/fd_util.c \
 	src/fifo_buffer.c \
 	src/buffered_io.c \
-	src/policy.h \
-	src/policy.c \
-	src/listener.c \
-	src/socket.c \
+	src/Policy.cxx src/Policy.hxx \
+	src/Listener.cxx src/Listener.hxx \
+	src/Socket.cxx src/Socket.hxx \
 	src/mysql_protocol.h \
-	src/mysql_reader.h \
-	src/mysql_reader.c \
-	src/peer.h \
-	src/peer.c \
-	src/connection.c \
-	src/instance.c \
-	src/cmdline.c \
-	src/main.c
+	src/MySQLReader.cxx src/MySQLReader.hxx \
+	src/Peer.cxx src/Peer.hxx \
+	src/Connection.cxx src/Connection.hxx \
+	src/Instance.cxx src/Instance.hxx \
+	src/CommandLine.cxx src/CommandLine.hxx \
+	src/Main.cxx
 src_cm4all_myproxy_LDADD = $(AM_LDADD) \
 	-lrt \
 	$(LIBCM4ALL_DAEMON_LIBS) \

@@ -4,8 +4,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "cmdline.h"
-#include "instance.h"
+#include "CommandLine.hxx"
+#include "Instance.hxx"
 
 #include <socket/resolver.h>
 

@@ -6,8 +6,8 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_MYSQL_READER_H
-#define MYPROXY_MYSQL_READER_H
+#ifndef MYPROXY_MYSQL_READER_HXX
+#define MYPROXY_MYSQL_READER_HXX
 
 #include <assert.h>
 #include <stddef.h>

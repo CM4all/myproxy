@@ -35,9 +35,11 @@ dnl
 
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CPPFLAGS)
+AC_SUBST(AM_LDFLAGS)
 
 AM_CFLAGS="-W -Wall"
 AM_CPPFLAGS="-D_REENTRANT"
+AM_LDFLAGS=""
 
 if test "$am_cv_CC_dependencies_compiler_type" = "gcc3"; then
 	AM_CFLAGS="$AM_CFLAGS -Wall -Wextra -Wmissing-prototypes -Wwrite-strings -Wcast-qual -Wfloat-equal -Wshadow -Wpointer-arith -Wbad-function-cast -Wsign-compare -Waggregate-return -Wmissing-declarations -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -Wnested-externs -Wno-long-long -Wstrict-prototypes -Wundef -pedantic"
@@ -57,7 +59,9 @@ if test x$enable_debug = xyes; then
 	AM_CFLAGS="$AM_CFLAGS -Werror -pedantic-errors"
 	AM_CPPFLAGS="$AM_CPPFLAGS -DPOISON -DVALGRIND"
 else
+	AM_CFLAGS="$AM_CFLAGS -ffunction-sections -fdata-sections"
 	AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+	AM_LDFLAGS="$AM_LDFLAGS -Wl,-gc-sections"
 fi
 
 dnl

@@ -7,10 +7,10 @@
 #ifndef MYPROXY_INSTANCE_HXX
 #define MYPROXY_INSTANCE_HXX
 
-#include <inline/list.h>
-
 #include <event.h>
 #include <stdbool.h>
+
+#include <inline/list.h>
 
 struct addrinfo;
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "net/UniqueSocketDescriptor.hxx"
 #include "util/IntrusiveList.hxx"
 
 #include <event.h>
@@ -21,7 +22,7 @@ struct Instance {
 	bool should_exit;
 	struct event sigterm_event, sigint_event, sigquit_event;
 
-	int listener_socket;
+	UniqueSocketDescriptor listener_socket;
 	struct event listener_event;
 
 	IntrusiveList<Connection> connections;

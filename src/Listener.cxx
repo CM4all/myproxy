@@ -7,13 +7,10 @@
 #include "Listener.hxx"
 #include "Instance.hxx"
 #include "Connection.hxx"
-
-extern "C" {
-#include "fd_util.h"
-}
+#include "net/IPv4Address.hxx"
+#include "net/SocketError.hxx"
 
 #include <daemon/log.h>
-#include <socket/util.h>
 
 #include <assert.h>
 #include <sys/socket.h>
@@ -24,112 +21,71 @@ extern "C" {
 #include <stdlib.h>
 
 static void
-listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
+listener_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void *ctx)
 {
 	Instance *instance = (Instance *)ctx;
 
-	struct sockaddr_storage sa;
-	size_t sa_len = sizeof(sa);
-	int remote_fd = accept_cloexec_nonblock(fd, (struct sockaddr*)&sa,
-						&sa_len);
-	if (remote_fd < 0) {
+	auto remote_fd = instance->listener_socket.AcceptNonBlock();
+	if (!remote_fd.IsDefined()) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
 			daemon_log(1, "accept() failed: %s\n", strerror(errno));
 		return;
 	}
 
-	if (!socket_set_nodelay(remote_fd, true)) {
+	if (!remote_fd.SetNoDelay()) {
 		daemon_log(1, "setsockopt(TCP_NODELAY) failed: %s\n", strerror(errno));
-		close(remote_fd);
 		return;
 	}
 
-	Connection *connection = new Connection(*instance, UniqueSocketDescriptor{remote_fd});
+	Connection *connection = new Connection(*instance, std::move(remote_fd));
 	instance->connections.push_back(*connection);
 }
 
-static int
+static UniqueSocketDescriptor
 listener_create_socket(int family, int socktype, int protocol,
-		       const struct sockaddr *address, size_t address_length)
+		       SocketAddress address)
 {
-	assert(address != NULL);
-	assert(address_length > 0);
+	UniqueSocketDescriptor fd;
+	if (!fd.CreateNonBlock(family, socktype, protocol))
+		throw MakeSocketError("Failed to create socket");
 
-	int fd = socket_cloexec_nonblock(family, socktype, protocol);
-	if (fd < 0)
-		return -1;
+	if (!fd.SetReuseAddress())
+		throw MakeSocketError("Failed to set SO_REUSEADDR");
 
-	int param = 1;
-	int ret = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &param, sizeof(param));
-	if (ret < 0) {
-		int save_errno = errno;
-		close(fd);
-		errno = save_errno;
-		return -1;
-	}
+	if (!fd.Bind(address))
+		throw MakeSocketError("Failed to bind socket");
 
-	ret = bind(fd, address, address_length);
-	if (ret < 0) {
-		int save_errno = errno;
-		close(fd);
-		errno = save_errno;
-		return -1;
-	}
-
-	ret = listen(fd, 16);
-	if (ret < 0) {
-		int save_errno = errno;
-		close(fd);
-		errno = save_errno;
-		return -1;
-	}
+	if (!fd.Listen(16))
+		throw MakeSocketError("Failed to listen");
 
 	return fd;
 }
 
-static bool
+static void
 listener_init_address(Instance *instance,
 		      int family, int socktype, int protocol,
-		      const struct sockaddr *address, size_t address_length)
+		      SocketAddress address)
 {
 	instance->listener_socket =
-		listener_create_socket(family, socktype, protocol,
-				       address, address_length);
-	if (instance->listener_socket < 0)
-		return false;
+		listener_create_socket(family, socktype, protocol, address);
 
-	event_set(&instance->listener_event, instance->listener_socket,
+	event_set(&instance->listener_event, instance->listener_socket.Get(),
 		  EV_READ|EV_PERSIST, listener_event_callback, instance);
 	event_add(&instance->listener_event, NULL);
-
-	return true;
 }
 
 
 void
-listener_init(Instance *instance, unsigned port)
+listener_init(Instance *instance, uint16_t port)
 {
 	assert(port > 0);
 
-	struct sockaddr_in sa4;
-	memset(&sa4, 0, sizeof(sa4));
-	sa4.sin_family = AF_INET;
-	sa4.sin_addr.s_addr = INADDR_ANY;
-	sa4.sin_port = htons((uint16_t)port);
-
-	if (listener_init_address(instance, PF_INET, SOCK_STREAM, 0,
-				  (const struct sockaddr *)&sa4, sizeof(sa4)))
-		return;
-
-	/* error */
-
-	fprintf(stderr, "Failed to listen: %s\n", strerror(errno));
-	exit(EXIT_FAILURE);
+	listener_init_address(instance, PF_INET, SOCK_STREAM, 0, IPv4Address{port});
 }
 
 void
 listener_deinit(Instance *instance)
 {
 	event_del(&instance->listener_event);
-	close(instance->listener_socket);
+	instance->listener_socket.Close();
 }

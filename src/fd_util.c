@@ -134,21 +134,7 @@ pipe_cloexec(int fd[2])
 #ifdef WIN32
 	return _pipe(fd, 512, _O_BINARY);
 #else
-	int ret;
-
-#ifdef HAVE_PIPE2
-	ret = pipe2(fd, O_CLOEXEC);
-	if (ret >= 0 || errno != ENOSYS)
-		return ret;
-#endif
-
-	ret = pipe(fd);
-	if (ret >= 0) {
-		fd_set_cloexec(fd[0], true);
-		fd_set_cloexec(fd[1], true);
-	}
-
-	return ret;
+	return pipe2(fd, O_CLOEXEC);
 #endif
 }
 
@@ -158,24 +144,7 @@ pipe_cloexec_nonblock(int fd[2])
 #ifdef WIN32
 	return _pipe(fd, 512, _O_BINARY);
 #else
-	int ret;
-
-#ifdef HAVE_PIPE2
-	ret = pipe2(fd, O_CLOEXEC|O_NONBLOCK);
-	if (ret >= 0 || errno != ENOSYS)
-		return ret;
-#endif
-
-	ret = pipe(fd);
-	if (ret >= 0) {
-		fd_set_cloexec(fd[0], true);
-		fd_set_cloexec(fd[1], true);
-
-		fd_set_nonblock(fd[0]);
-		fd_set_nonblock(fd[1]);
-	}
-
-	return ret;
+	return pipe2(fd, O_CLOEXEC|O_NONBLOCK);
 #endif
 }
 
@@ -250,26 +219,11 @@ int
 accept_cloexec_nonblock(int fd, struct sockaddr *address,
 			size_t *address_length_r)
 {
-	int ret;
 	socklen_t address_length = *address_length_r;
-
-#ifdef HAVE_ACCEPT4
-	ret = accept4(fd, address, &address_length,
-		      SOCK_CLOEXEC|SOCK_NONBLOCK);
-	if (ret >= 0 || errno != ENOSYS) {
-		if (ret >= 0)
-			*address_length_r = address_length;
-
-		return ret;
-	}
-#endif
-
-	ret = accept(fd, address, &address_length);
-	if (ret >= 0) {
-		fd_set_cloexec(ret, true);
-		fd_set_nonblock(ret);
+	int ret = accept4(fd, address, &address_length,
+			  SOCK_CLOEXEC|SOCK_NONBLOCK);
+	if (ret >= 0)
 		*address_length_r = address_length;
-	}
 
 	return ret;
 }

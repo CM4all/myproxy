@@ -17,8 +17,6 @@ dnl Checks for OS features
 
 AC_SYS_LARGEFILE
 
-AC_CHECK_FUNCS(pipe2 accept4)
-
 dnl Checks for libraries.
 
 PKG_CHECK_MODULES([LIBCM4ALL_DAEMON], [libcm4all-daemon >= 0.3.1],,

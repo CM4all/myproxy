@@ -5,6 +5,7 @@
 #include "Listener.hxx"
 #include "Connection.hxx"
 #include "util/DeleteDisposer.hxx"
+#include "util/PrintException.hxx"
 
 #include <event.h>
 #include <signal.h>
@@ -52,8 +53,9 @@ init_signals(Instance *instance)
 	event_add(&instance->sigquit_event, NULL);
 }
 
-int main(int argc, char **argv)
-{
+int
+main(int argc, char **argv) noexcept
+try {
 	Config config;
 	parse_cmdline(config, argc, argv);
 
@@ -70,4 +72,7 @@ int main(int argc, char **argv)
 	policy_deinit();
 
 	return EXIT_SUCCESS;
+} catch (...) {
+	PrintException(std::current_exception());
+	return EXIT_FAILURE;
 }

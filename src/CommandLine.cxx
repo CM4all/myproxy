@@ -20,6 +20,6 @@ parse_cmdline(Config &config, int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	static constexpr auto active_hints = MakeAddrInfo(0, AF_UNSPEC, SOCK_STREAM);
+	static constexpr auto active_hints = MakeAddrInfo(AI_ADDRCONFIG, AF_UNSPEC, SOCK_STREAM);
 	config.server_address = Resolve(argv[1], 3306, &active_hints).GetBest();
 }

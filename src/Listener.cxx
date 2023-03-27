@@ -10,7 +10,7 @@
 #include "net/IPv4Address.hxx"
 #include "net/SocketError.hxx"
 
-#include <daemon/log.h>
+#include <fmt/core.h>
 
 #include <assert.h>
 #include <sys/socket.h>
@@ -28,12 +28,12 @@ listener_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, v
 	auto remote_fd = instance->listener_socket.AcceptNonBlock();
 	if (!remote_fd.IsDefined()) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
-			daemon_log(1, "accept() failed: %s\n", strerror(errno));
+			fmt::print(stderr, "accept() failed: %s\n", strerror(errno));
 		return;
 	}
 
 	if (!remote_fd.SetNoDelay()) {
-		daemon_log(1, "setsockopt(TCP_NODELAY) failed: %s\n", strerror(errno));
+		fmt::print(stderr, "setsockopt(TCP_NODELAY) failed: %s\n", strerror(errno));
 		return;
 	}
 

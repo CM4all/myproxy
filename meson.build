@@ -105,7 +105,6 @@ add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language:
 add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
 libevent = dependency('libevent_core')
-libdaemon = dependency('libcm4all-daemon', version: '>= 0.1.2')
 
 inc = include_directories(
   'src',
@@ -139,7 +138,6 @@ executable(
     util_dep,
     net_dep,
     libevent,
-    libdaemon,
   ],
   install: true,
   install_dir: 'sbin',

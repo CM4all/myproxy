@@ -109,7 +109,14 @@ libdaemon = dependency('libcm4all-daemon', version: '>= 0.1.2')
 libinline = dependency('libcm4all-inline', version: '>= 0.1.1')
 libsocket = dependency('libcm4all-socket')
 
-inc = include_directories('src')
+inc = include_directories(
+  'src',
+  'libcommon/src',
+)
+
+libcommon_enable_c = false
+libcommon_enable_DefaultFifoBuffer = false
+libcommon_enable_boost = false
 
 executable(
   'cm4all-myproxy',

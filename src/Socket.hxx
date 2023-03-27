@@ -34,9 +34,3 @@ socket_schedule_read(Socket *s, bool timeout);
 
 void
 socket_unschedule_read(Socket *s);
-
-void
-socket_schedule_write(Socket *s, bool timeout);
-
-void
-socket_unschedule_write(Socket *s);

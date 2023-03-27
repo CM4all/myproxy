@@ -49,23 +49,6 @@ socket_unschedule_read(Socket *s)
 }
 
 void
-socket_schedule_write(Socket *s, bool timeout)
-{
-	assert(s != NULL);
-
-	s->socket.SetWriteTimeout(timeout ? socket_timeout : Event::Duration{1});
-	s->socket.ScheduleWrite();
-}
-
-void
-socket_unschedule_write(Socket *s)
-{
-	assert(s != NULL);
-
-	s->socket.UnscheduleWrite();
-}
-
-void
 Socket::OnReadTimeout() noexcept
 {
 	handler.OnBufferedTimeout();

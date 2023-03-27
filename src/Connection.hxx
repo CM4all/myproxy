@@ -39,7 +39,7 @@ struct Connection final
 	/**
 	 * The time stamp of the last request packet [us].
 	 */
-	uint64_t request_time;
+	Event::TimePoint request_time;
 
 	/**
 	 * The connection to the client.

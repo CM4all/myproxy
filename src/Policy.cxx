@@ -29,8 +29,8 @@ policy_execute(const char *user)
 }
 
 void
-policy_duration(const char *user, unsigned duration_ms)
+policy_duration(const char *user, Event::Duration duration)
 {
 	(void)user;
-	(void)duration_ms;
+	(void)duration;
 }

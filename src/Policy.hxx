@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "event/Chrono.hxx"
+
 /**
  * Global initialization.
  */
@@ -41,4 +43,4 @@ policy_execute(const char *user);
  * statement to the server's response
  */
 void
-policy_duration(const char *user, unsigned duration_ms);
+policy_duration(const char *user, Event::Duration duration);

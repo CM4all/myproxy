@@ -7,7 +7,6 @@
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "MysqlProtocol.hxx"
-#include "clock.h"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
@@ -136,8 +135,8 @@ Connection::OnMysqlPacket(unsigned number, size_t length,
 			  const void *data, size_t available)
 {
 	if (Mysql::IsQueryPacket(number, data, length) &&
-	    request_time == 0)
-		request_time = now_us();
+	    request_time == Event::TimePoint{})
+		request_time = GetEventLoop().SteadyNow();
 
 	if (number == 1 && !login_received) {
 		login_received =
@@ -156,10 +155,10 @@ Connection::Outgoing::OnMysqlPacket(unsigned number, size_t length,
 
 	if (Mysql::IsEofPacket(number, data, length) &&
 	    connection.login_received &&
-	    connection.request_time != 0) {
-		uint64_t duration_us = now_us() - connection.request_time;
-		policy_duration(connection.user, (unsigned)(duration_us / 1000));
-		connection.request_time = 0;
+	    connection.request_time != Event::TimePoint{}) {
+		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
+		policy_duration(connection.user, duration);
+		connection.request_time = Event::TimePoint{};
 	}
 }
 
@@ -191,7 +190,6 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 
 	greeting_received = false;
 	login_received = false;
-	request_time = 0;
 
 	// TODO move this call out of the ctor
 	connect.Connect(instance->config.server_address, std::chrono::seconds{30});

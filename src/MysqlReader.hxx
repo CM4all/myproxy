@@ -54,28 +54,24 @@ struct MysqlReader {
 
 	constexpr MysqlReader(const MysqlHandler &_handler, void *_ctx) noexcept
 		:handler(&_handler), handler_ctx(_ctx) {}
+
+	/**
+	 * Feed data into the reader.  It stops at the boundary of a packet,
+	 * to allow the caller to inspect each packet.
+	 *
+	 * @return the number of bytes that should be forwarded in this step
+	 */
+	size_t Feed(const void *data, size_t length) noexcept;
+
+	/**
+	 * Indicates that the caller has forwarded the specified number of
+	 * bytes.
+	 */
+	void Forwarded(size_t nbytes) noexcept {
+		assert(nbytes > 0);
+		assert(forward > 0);
+		assert(nbytes <= forward);
+
+		forward -= nbytes;
+	}
 };
-
-/**
- * Feed data into the reader.  It stops at the boundary of a packet,
- * to allow the caller to inspect each packet.
- *
- * @return the number of bytes that should be forwarded in this step
- */
-size_t
-mysql_reader_feed(MysqlReader *reader,
-		  const void *data, size_t length);
-
-/**
- * Indicates that the caller has forwarded the specified number of
- * bytes.
- */
-static inline void
-mysql_reader_forwarded(MysqlReader *reader, size_t nbytes)
-{
-	assert(nbytes > 0);
-	assert(reader->forward > 0);
-	assert(nbytes <= reader->forward);
-
-	reader->forward -= nbytes;
-}

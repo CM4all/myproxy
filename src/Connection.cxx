@@ -64,7 +64,7 @@ connection_forward(Connection *connection,
 	size_t nbytes = before - after;
 
 	if (nbytes > 0)
-		mysql_reader_forwarded(&src->reader, nbytes);
+		src->reader.Forwarded(nbytes);
 
 	return true;
 }

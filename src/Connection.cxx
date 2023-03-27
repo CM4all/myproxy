@@ -12,13 +12,8 @@
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/PrintException.hxx"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <netdb.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
 
 Connection::~Connection() noexcept = default;
 

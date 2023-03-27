@@ -8,10 +8,11 @@
 #include "Config.hxx"
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
-#include "fd_util.h"
 #include "mysql_protocol.h"
 #include "clock.h"
 #include "Policy.hxx"
+#include "net/ConnectSocket.hxx"
+#include "net/UniqueSocketDescriptor.hxx"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -318,18 +319,8 @@ Connection::Connection(Instance &_instance, int fd)
 	mysql_reader_init(&client.reader,
 			  &connection_mysql_client_handler, this);
 
-	const SocketAddress address = instance->config.server_address;
-	assert(!address.IsNull());
-
-	fd = socket_cloexec_nonblock(address.GetFamily(), SOCK_STREAM, 0);
-	if (fd < 0)
-		throw "Failed to create socket";
-
-	int ret = connect(fd, address.GetAddress(), address.GetSize());
-	if (ret < 0 && errno != EINPROGRESS)
-		throw "Failed to create socket";
-
-	server.emplace(SOCKET_CONNECTING, fd,
+	server.emplace(SOCKET_CONNECTING,
+		       CreateConnectSocket(instance->config.server_address, SOCK_STREAM).Steal(),
 		       connection_server_read_callback,
 		       connection_server_write_callback, this);
 	mysql_reader_init(&server->reader,

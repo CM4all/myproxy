@@ -10,6 +10,3 @@ struct Instance;
 
 void
 listener_init(Instance *instance, uint16_t port);
-
-void
-listener_deinit(Instance *instance);

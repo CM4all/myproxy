@@ -4,15 +4,20 @@
 
 #include "Instance.hxx"
 #include "Connection.hxx"
+#include "util/DeleteDisposer.hxx"
 
 #include <cstddef>
 
 Instance::Instance(const Config &_config)
 	:config(_config)
 {
+	shutdown_listener.Enable();
 }
 
-Instance::~Instance() noexcept
+void
+Instance::OnShutdown() noexcept
 {
-	event_base_free(event_base);
+	shutdown_listener.Disable();
+	listener.Close();
+	connections.clear_and_dispose(DeleteDisposer{});
 }

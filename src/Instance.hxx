@@ -4,10 +4,11 @@
 
 #pragma once
 
+#include "event/Loop.hxx"
+#include "event/ShutdownListener.hxx"
+#include "event/SocketEvent.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/IntrusiveList.hxx"
-
-#include <event.h>
 
 struct Config;
 struct Connection;
@@ -15,16 +16,17 @@ struct Connection;
 struct Instance {
 	const Config &config;
 
-	struct event_base *const event_base = event_init();
+	EventLoop event_loop;
 
-	bool should_exit;
-	struct event sigterm_event, sigint_event, sigquit_event;
+	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
 
-	UniqueSocketDescriptor listener_socket;
-	struct event listener_event;
+	SocketEvent listener{event_loop, BIND_THIS_METHOD(OnListenerReady)};
 
 	IntrusiveList<Connection> connections;
 
 	explicit Instance(const Config &config);
-	~Instance() noexcept;
+
+private:
+	void OnShutdown() noexcept;
+	void OnListenerReady(unsigned events) noexcept;
 };

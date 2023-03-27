@@ -18,12 +18,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void
-listener_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void *ctx)
+void
+Instance::OnListenerReady(unsigned) noexcept
 {
-	Instance *instance = (Instance *)ctx;
-
-	auto remote_fd = instance->listener_socket.AcceptNonBlock();
+	UniqueSocketDescriptor remote_fd{listener.GetSocket().AcceptNonBlock()};
 	if (!remote_fd.IsDefined()) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
 			fmt::print(stderr, "accept() failed: %s\n", strerror(errno));
@@ -35,8 +33,8 @@ listener_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, v
 		return;
 	}
 
-	Connection *connection = new Connection(*instance, std::move(remote_fd));
-	instance->connections.push_back(*connection);
+	Connection *connection = new Connection(*this, std::move(remote_fd));
+	connections.push_back(*connection);
 }
 
 static UniqueSocketDescriptor
@@ -64,12 +62,8 @@ listener_init_address(Instance *instance,
 		      int family, int socktype, int protocol,
 		      SocketAddress address)
 {
-	instance->listener_socket =
-		listener_create_socket(family, socktype, protocol, address);
-
-	event_set(&instance->listener_event, instance->listener_socket.Get(),
-		  EV_READ|EV_PERSIST, listener_event_callback, instance);
-	event_add(&instance->listener_event, NULL);
+	instance->listener.Open(listener_create_socket(family, socktype, protocol, address).Release());
+	instance->listener.ScheduleRead();
 }
 
 
@@ -79,11 +73,4 @@ listener_init(Instance *instance, uint16_t port)
 	assert(port > 0);
 
 	listener_init_address(instance, PF_INET, SOCK_STREAM, 0, IPv4Address{port});
-}
-
-void
-listener_deinit(Instance *instance)
-{
-	event_del(&instance->listener_event);
-	instance->listener_socket.Close();
 }

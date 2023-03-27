@@ -104,15 +104,12 @@ add_global_arguments(c_compiler.get_supported_arguments(test_global_cflags), lan
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language: 'c')
 
-libevent = dependency('libevent_core')
-
 inc = include_directories(
   'src',
   'libcommon/src',
 )
 
 libcommon_enable_c = false
-libcommon_enable_DefaultFifoBuffer = false
 libcommon_enable_boost = false
 
 subdir('libcommon/src/util')
@@ -120,9 +117,12 @@ subdir('libcommon/src/lib/fmt')
 subdir('libcommon/src/io')
 subdir('libcommon/src/system')
 subdir('libcommon/src/net')
+subdir('libcommon/src/event')
+subdir('libcommon/src/event/net')
 
 executable(
   'cm4all-myproxy',
+  'src/system/SetupProcess.cxx',
   'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/Listener.cxx',
@@ -137,7 +137,8 @@ executable(
   dependencies: [
     util_dep,
     net_dep,
-    libevent,
+    event_dep,
+    event_net_dep,
   ],
   install: true,
   install_dir: 'sbin',

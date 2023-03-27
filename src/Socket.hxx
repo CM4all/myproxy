@@ -4,12 +4,13 @@
 
 #pragma once
 
+#include "event/net/BufferedSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
+#include "event/SocketEvent.hxx"
+#include "event/CoarseTimerEvent.hxx"
 #include "util/StaticFifoBuffer.hxx"
 
 #include <cstddef> // for std::byte
-
-#include <event.h>
 
 enum socket_state {
 	SOCKET_CLOSED,
@@ -22,19 +23,20 @@ enum socket_state {
 struct Socket {
 	enum socket_state state;
 
-	const UniqueSocketDescriptor fd;
+	BufferedSocket socket;
 
-	StaticFifoBuffer<std::byte, 4096> input;
+	CoarseTimerEvent read_timeout;
 
-	struct event read_event, write_event;
+	BufferedSocketHandler &handler;
 
-	Socket(enum socket_state _state,
-	       UniqueSocketDescriptor _fd,
-	       void (*read_callback)(int, short, void *),
-	       void (*write_callback)(int, short, void *),
-	       void *arg) noexcept;
+	Socket(EventLoop &event_loop, enum socket_state _state,
+	       UniqueSocketDescriptor fd,
+	       BufferedSocketHandler &_handler) noexcept;
 
 	~Socket() noexcept;
+
+private:
+	void OnReadTimeout() noexcept;
 };
 
 void
@@ -48,13 +50,3 @@ socket_schedule_write(Socket *s, bool timeout);
 
 void
 socket_unschedule_write(Socket *s);
-
-ssize_t
-socket_recv_to_buffer(Socket *s);
-
-ssize_t
-socket_send_from_buffer(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer);
-
-ssize_t
-socket_send_from_buffer_n(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer,
-			  size_t max);

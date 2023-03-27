@@ -7,30 +7,45 @@
 #include "Socket.hxx"
 #include "MysqlReader.hxx"
 
+class PeerHandler {
+public:
+	enum ForwardResult {
+		OK,
+		ERROR,
+		CLOSED,
+	};
+
+	virtual std::pair<ForwardResult, std::size_t> OnPeerForward(std::span<std::byte> src) = 0;
+	virtual void OnPeerClosed() noexcept = 0;
+	virtual bool OnPeerWrite() = 0;
+	virtual void OnPeerError(std::exception_ptr e) noexcept = 0;
+};
+
 /*
  * A connection to one peer.
  */
-struct Peer {
+struct Peer final : BufferedSocketHandler {
 	Socket socket;
 
 	MysqlReader reader;
 
-	Peer(enum socket_state _state,
-	     UniqueSocketDescriptor _fd,
-	     void (*read_callback)(int, short, void *),
-	     void (*write_callback)(int, short, void *),
-	     void *arg,
-	     const MysqlHandler &_handler, void *_ctx) noexcept
-		:socket(_state, std::move(_fd),
-			read_callback, write_callback, arg),
-		 reader(_handler, _ctx) {}
-};
+	PeerHandler &handler;
 
-/**
- * Feed data from the input buffer into the MySQL reader.
- *
- * @return the number of bytes that should be forwarded from the
- * buffer
- */
-size_t
-peer_feed(Peer *peer);
+	Peer(EventLoop &event_loop,
+	     enum socket_state state,
+	     UniqueSocketDescriptor fd,
+	     PeerHandler &_handler,
+	     const MysqlHandler &_mysql_handler, void *_ctx) noexcept
+		:socket(event_loop, state, std::move(fd), *this),
+		 reader(_mysql_handler, _ctx),
+		 handler(_handler) {}
+
+	std::pair<PeerHandler::ForwardResult, std::size_t> Forward(std::span<std::byte> src) noexcept;
+
+private:
+	/* virtual methods from BufferedSocketHandler */
+	BufferedResult OnBufferedData() override;
+	bool OnBufferedClosed() noexcept override;
+	bool OnBufferedWrite() override;
+	void OnBufferedError(std::exception_ptr e) noexcept override;
+};

@@ -11,6 +11,7 @@
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
+#include "util/PrintException.hxx"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -20,184 +21,88 @@
 #include <netdb.h>
 #include <string.h>
 
-Connection::~Connection() noexcept
+Connection::~Connection() noexcept = default;
+
+std::pair<PeerHandler::ForwardResult, std::size_t>
+Connection::Outgoing::OnPeerForward(std::span<std::byte> src)
 {
-	event_del(&delay_timer);
+	return connection.incoming.Forward(src);
 }
 
-/**
- * @return true if the connection is still valid
- */
-static bool
-connection_send_to_socket(Connection *connection,
-			  Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer,
-			  size_t max)
+bool
+Connection::Outgoing::OnPeerWrite()
 {
-	ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);
-	assert(remaining != -2);
+	if (connection.delayed)
+		/* don't continue reading now */
+		return true;
 
-	if (remaining < 0) {
-		delete connection;
-		return false;
-	}
-
-	if (remaining > 0)
-		socket_schedule_write(s, buffer.IsFull());
-	else
-		socket_unschedule_write(s);
-
-	return true;
+	return connection.incoming.socket.socket.Read(); // TODO return value?
 }
 
-static bool
-connection_forward(Connection *connection,
-		   Peer *src, Peer *dest, size_t length)
+void
+Connection::Outgoing::OnPeerClosed() noexcept
 {
-	size_t before = src->socket.input.GetAvailable();
-
-	if (!connection_send_to_socket(connection, &dest->socket,
-				       src->socket.input, length))
-		return false;
-
-	size_t after = src->socket.input.GetAvailable();
-	assert(after <= before);
-	size_t nbytes = before - after;
-
-	if (nbytes > 0)
-		src->reader.Forwarded(nbytes);
-
-	return true;
+	delete &connection;
 }
 
-static bool
-connection_handle_client_input(Connection *connection)
+void
+Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 {
-	while (true) {
-		size_t nbytes = peer_feed(&connection->client);
-		if (nbytes == 0)
-			return !connection->delayed;
-
-		if (!connection_forward(connection, &connection->client,
-					&*connection->server, nbytes))
-			return false;
-
-		if (connection->delayed)
-			/* don't continue reading now */
-			return false;
-	}
+	PrintException(e);
+	delete &connection;
 }
 
-static bool
-connection_handle_server_input(Connection *connection)
+std::pair<PeerHandler::ForwardResult, std::size_t>
+Connection::OnPeerForward(std::span<std::byte> src)
 {
-	while (true) {
-		size_t nbytes = peer_feed(&*connection->server);
-		if (nbytes == 0)
-			return true;
+	if (delayed)
+		/* don't continue reading now */
+		return {PeerHandler::ForwardResult::OK, 0};
 
-		if (!connection_forward(connection, &*connection->server,
-					&connection->client, nbytes))
-			return false;
-	}
+	if (!outgoing)
+		return {PeerHandler::ForwardResult::OK, 0};
+
+	return outgoing->peer.Forward(src);
 }
 
-static void
-connection_client_read_callback([[maybe_unused]] int fd,
-				short event, void *ctx)
+void
+Connection::OnPeerClosed() noexcept
 {
-	Connection *connection = (Connection *)ctx;
-
-	assert(!connection->delayed);
-
-	if (event & EV_TIMEOUT) {
-		delete connection;
-		return;
-	}
-
-	ssize_t nbytes = socket_recv_to_buffer(&connection->client.socket);
-	if (nbytes < 0 && errno == EAGAIN) {
-		socket_schedule_read(&connection->client.socket, false);
-		return;
-	}
-
-	if (nbytes <= 0) {
-		delete connection;
-		return;
-	}
-
-	if (connection_handle_client_input(connection) &&
-	    !connection->client.socket.input.IsFull())
-		socket_schedule_read(&connection->client.socket, false);
+	delete this;
 }
 
-static void
-connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx)
+bool
+Connection::OnPeerWrite()
 {
-	Connection *connection = (Connection *)ctx;
+	if (!outgoing)
+		return true;
 
-	if (event & EV_TIMEOUT) {
-		delete connection;
-		return;
-	}
-
-	if (connection_handle_server_input(connection) &&
-	    !connection->server->socket.input.IsFull())
-		socket_schedule_read(&connection->server->socket, false);
+	return outgoing->peer.socket.socket.Read(); // TODO return value?
 }
 
-static void
-connection_server_read_callback([[maybe_unused]] int fd,
-				short event, void *ctx)
+void
+Connection::OnPeerError(std::exception_ptr e) noexcept
 {
-	Connection *connection = (Connection *)ctx;
-
-	if (event & EV_TIMEOUT) {
-		delete connection;
-		return;
-	}
-
-	if (connection->server->socket.state == SOCKET_CONNECTING) {
-		if (connection->server->socket.fd.GetError() != 0) {
-			delete connection;
-			return;
-		}
-
-		connection->server->socket.state = SOCKET_ALIVE;
-		socket_schedule_read(&connection->server->socket, false);
-		return;
-	}
-
-	ssize_t nbytes = socket_recv_to_buffer(&connection->server->socket);
-	if (nbytes < 0 && errno == EAGAIN) {
-		socket_schedule_read(&connection->server->socket, false);
-		return;
-	}
-
-	if (nbytes <= 0) {
-		delete connection;
-		return;
-	}
-
-	if (connection_handle_server_input(connection) &&
-	    !connection->server->socket.input.IsFull())
-		socket_schedule_read(&connection->server->socket, false);
+	PrintException(e);
+	delete this;
 }
 
-static void
-connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx)
+void
+Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 {
-	Connection *connection = (Connection *)ctx;
+	assert(!outgoing);
 
-	assert(!connection->delayed);
+	outgoing.emplace(*this, SOCKET_ALIVE, std::move(fd));
+	socket_schedule_read(&outgoing->peer.socket, true);
+}
 
-	if (event & EV_TIMEOUT) {
-		delete connection;
-		return;
-	}
+void
+Connection::OnSocketConnectError(std::exception_ptr e) noexcept
+{
+	assert(!outgoing);
 
-	if (connection_handle_client_input(connection) &&
-	    !connection->client.socket.input.IsFull())
-		socket_schedule_read(&connection->client.socket, false);
+	PrintException(e);
+	delete this;
 }
 
 static bool
@@ -276,50 +181,44 @@ static constexpr MysqlHandler connection_mysql_server_handler = {
 	.packet = connection_mysql_server_packet,
 };
 
-/**
- * Called when the artificial delay is over, and restarts the transfer
- * from the client to the server->
- */
-static void
-connection_delay_timer_callback([[maybe_unused]] int fd,
-				[[maybe_unused]] short event, void *ctx)
+Connection::Outgoing::Outgoing(Connection &_connection,
+			       enum socket_state state,
+			       UniqueSocketDescriptor fd) noexcept
+	:connection(_connection),
+	 peer(connection.GetEventLoop(), state, std::move(fd), *this,
+	      connection_mysql_server_handler, &connection)
 {
-	Connection *connection = (Connection *)ctx;
+}
 
-	assert(connection->delayed);
+void
+Connection::OnDelayTimer() noexcept
+{
+	assert(delayed);
 
-	connection->delayed = false;
+	delayed = false;
 
-	if (connection_handle_client_input(connection) &&
-	    !connection->client.socket.input.IsFull())
-		socket_schedule_read(&connection->client.socket, false);
+	incoming.socket.socket.Read();
 }
 
 Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd)
 	:instance(&_instance),
-	 client(SOCKET_ALIVE, std::move(fd),
-		connection_client_read_callback,
-		connection_client_write_callback, this,
-		connection_mysql_client_handler, this)
+	 delay_timer(instance->event_loop, BIND_THIS_METHOD(OnDelayTimer)),
+	 incoming(instance->event_loop, SOCKET_ALIVE, std::move(fd), *this,
+		  connection_mysql_client_handler, this),
+	 connect(instance->event_loop, *this)
 {
-	event_set(&delay_timer, -1, EV_TIMEOUT,
-		  connection_delay_timer_callback, this);
+	socket_schedule_read(&incoming.socket, false);
+
 	delayed = false;
 
 	greeting_received = false;
 	login_received = false;
 	request_time = 0;
 
-	server.emplace(SOCKET_CONNECTING,
-		       CreateConnectSocket(instance->config.server_address, SOCK_STREAM),
-		       connection_server_read_callback,
-		       connection_server_write_callback, this,
-		       connection_mysql_server_handler, this);
+	// TODO move this call out of the ctor
+	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 
-	socket_schedule_read(&client.socket, false);
-	socket_schedule_read(&server->socket, true);
-
-	event_add(&client.socket.read_event, NULL);
+	socket_schedule_read(&incoming.socket, false);
 }
 
 void
@@ -329,12 +228,7 @@ connection_delay(Connection *c, unsigned delay_ms)
 
 	c->delayed = true;
 
-	socket_unschedule_read(&c->client.socket);
+	socket_unschedule_read(&c->incoming.socket);
 
-	const struct timeval timeout = {
-		.tv_sec = delay_ms / 1000,
-		.tv_usec = (delay_ms % 1000) * 1000,
-	};
-
-	event_add(&c->delay_timer, &timeout);
+	c->delay_timer.Schedule(std::chrono::milliseconds{delay_ms});
 }

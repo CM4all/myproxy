@@ -44,7 +44,7 @@ struct Connection : IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
 	 */
 	std::optional<Peer> server;
 
-	Connection(Instance &_instance, int fd);
+	Connection(Instance &_instance, UniqueSocketDescriptor fd);
 	~Connection() noexcept;
 };
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "net/UniqueSocketDescriptor.hxx"
 #include "util/StaticFifoBuffer.hxx"
 
 #include <cstddef> // for std::byte
@@ -23,14 +24,14 @@ enum socket_state {
 struct Socket {
 	enum socket_state state;
 
-	const int fd;
+	const UniqueSocketDescriptor fd;
 
 	StaticFifoBuffer<std::byte, 4096> input;
 
 	struct event read_event, write_event;
 
 	Socket(enum socket_state _state,
-	       int _fd,
+	       UniqueSocketDescriptor _fd,
 	       void (*read_callback)(int, short, void *),
 	       void (*write_callback)(int, short, void *),
 	       void *arg) noexcept;

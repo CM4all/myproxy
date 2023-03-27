@@ -15,11 +15,11 @@ struct Peer {
 	struct mysql_reader reader;
 
 	Peer(enum socket_state _state,
-	     int _fd,
+	     UniqueSocketDescriptor _fd,
 	     void (*read_callback)(int, short, void *),
 	     void (*write_callback)(int, short, void *),
 	     void *arg) noexcept
-		:socket(_state, _fd,
+		:socket(_state, std::move(_fd),
 			read_callback, write_callback, arg) {}
 };
 

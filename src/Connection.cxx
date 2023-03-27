@@ -159,12 +159,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (connection->server->socket.state == SOCKET_CONNECTING) {
-		int s_err = 0;
-		socklen_t s_err_size = sizeof(s_err);
-
-		if (getsockopt(connection->server->socket.fd, SOL_SOCKET, SO_ERROR,
-			       (char*)&s_err, &s_err_size) < 0 ||
-		    s_err != 0) {
+		if (connection->server->socket.fd.GetError() != 0) {
 			delete connection;
 			return;
 		}
@@ -302,9 +297,9 @@ connection_delay_timer_callback([[maybe_unused]] int fd,
 		socket_schedule_read(&connection->client.socket, false);
 }
 
-Connection::Connection(Instance &_instance, int fd)
+Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd)
 	:instance(&_instance),
-	 client(SOCKET_ALIVE, fd,
+	 client(SOCKET_ALIVE, std::move(fd),
 		connection_client_read_callback,
 		connection_client_write_callback, this)
 {
@@ -320,7 +315,7 @@ Connection::Connection(Instance &_instance, int fd)
 			  &connection_mysql_client_handler, this);
 
 	server.emplace(SOCKET_CONNECTING,
-		       CreateConnectSocket(instance->config.server_address, SOCK_STREAM).Steal(),
+		       CreateConnectSocket(instance->config.server_address, SOCK_STREAM),
 		       connection_server_read_callback,
 		       connection_server_write_callback, this);
 	mysql_reader_init(&server->reader,

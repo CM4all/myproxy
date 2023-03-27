@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 static void
-deinit_signals(struct instance *instance)
+deinit_signals(Instance *instance)
 {
     event_del(&instance->sigterm_event);
     event_del(&instance->sigint_event);
@@ -20,7 +20,7 @@ deinit_signals(struct instance *instance)
 static void
 exit_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void *ctx)
 {
-    struct instance *instance = (struct instance*)ctx;
+    Instance *instance = (Instance*)ctx;
 
     if (instance->should_exit)
         return;
@@ -30,14 +30,14 @@ exit_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void 
     listener_deinit(instance);
 
     while (!list_empty(&instance->connections)) {
-        struct connection *connection =
-            (struct connection *)instance->connections.next;
+        Connection *connection =
+            (Connection *)instance->connections.next;
         connection_close(connection);
     }
 }
 
 static void
-init_signals(struct instance *instance)
+init_signals(Instance *instance)
 {
     signal(SIGPIPE, SIG_IGN);
 
@@ -56,7 +56,7 @@ init_signals(struct instance *instance)
 
 int main(int argc, char **argv)
 {
-    static struct instance instance;
+    static Instance instance;
     instance_init(&instance);
     parse_cmdline(&instance, argc, argv);
 

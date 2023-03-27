@@ -15,7 +15,7 @@
 #include <netdb.h>
 
 void
-parse_cmdline(struct instance *instance, int argc, char **argv)
+parse_cmdline(Instance *instance, int argc, char **argv)
 {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s HOST[:PORT]\n", argv[0]);

@@ -10,7 +10,7 @@
 #include "Socket.hxx"
 #include "MySQLReader.hxx"
 
-struct peer {
+struct Peer {
     struct socket socket;
 
     struct mysql_reader reader;
@@ -23,6 +23,6 @@ struct peer {
  * buffer
  */
 size_t
-peer_feed(struct peer *peer);
+peer_feed(Peer *peer);
 
 #endif

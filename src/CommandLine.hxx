@@ -7,9 +7,9 @@
 #ifndef MYPROXY_CMDLINE_HXX
 #define MYPROXY_CMDLINE_HXX
 
-struct instance;
+struct Instance;
 
 void
-parse_cmdline(struct instance *instance, int argc, char **argv);
+parse_cmdline(Instance *instance, int argc, char **argv);
 
 #endif

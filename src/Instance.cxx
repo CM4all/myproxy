@@ -10,7 +10,7 @@
 #include <netdb.h>
 
 void
-instance_init(struct instance *instance)
+instance_init(Instance *instance)
 {
     instance->event_base = event_init();
     instance->server_address = NULL;
@@ -19,7 +19,7 @@ instance_init(struct instance *instance)
 }
 
 void
-instance_deinit(struct instance *instance)
+instance_deinit(Instance *instance)
 {
     event_base_free(instance->event_base);
 

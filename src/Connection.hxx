@@ -13,11 +13,11 @@
 
 #include <stdbool.h>
 
-struct config;
+struct Instance;
 
-struct connection {
+struct Connection {
     struct list_head siblings;
-    struct instance *instance;
+    Instance *instance;
 
     /**
      * Used to insert delay in the connection: it gets fired after the
@@ -40,25 +40,25 @@ struct connection {
     /**
      * The connection to the client.
      */
-    struct peer client;
+    Peer client;
 
     /**
      * The connection to the server.
      */
-    struct peer server;
+    Peer server;
 };
 
-struct connection *
-connection_new(struct instance *instance, int fd);
+Connection *
+connection_new(Instance *instance, int fd);
 
 void
-connection_close(struct connection *connection);
+connection_close(Connection *connection);
 
 /**
  * Delay forwarding client input for the specified duration.  Can be
  * used to throttle the connection.
  */
 void
-connection_delay(struct connection *c, unsigned delay_ms);
+connection_delay(Connection *c, unsigned delay_ms);
 
 #endif

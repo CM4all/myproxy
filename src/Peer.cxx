@@ -8,7 +8,7 @@
 #include "fifo_buffer.h"
 
 size_t
-peer_feed(struct peer *peer)
+peer_feed(Peer *peer)
 {
     size_t length;
     const void *data = fifo_buffer_read(peer->socket.input, &length);

@@ -14,7 +14,7 @@
 
 struct addrinfo;
 
-struct instance {
+struct Instance {
     struct event_base *event_base;
 
     struct addrinfo *server_address;
@@ -29,9 +29,9 @@ struct instance {
 };
 
 void
-instance_init(struct instance *instance);
+instance_init(Instance *instance);
 
 void
-instance_deinit(struct instance *instance);
+instance_deinit(Instance *instance);
 
 #endif

@@ -7,12 +7,12 @@
 #ifndef MYPROXY_LISTENER_HXX
 #define MYPROXY_LISTENER_HXX
 
-struct instance;
+struct Instance;
 
 void
-listener_init(struct instance *instance, unsigned port);
+listener_init(Instance *instance, unsigned port);
 
 void
-listener_deinit(struct instance *instance);
+listener_deinit(Instance *instance);
 
 #endif

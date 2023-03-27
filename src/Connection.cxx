@@ -22,7 +22,7 @@
 #include <string.h>
 
 void
-connection_close(struct connection *connection)
+connection_close(Connection *connection)
 {
     socket_close(&connection->client.socket);
     socket_close(&connection->server.socket);
@@ -37,7 +37,7 @@ connection_close(struct connection *connection)
  * @return true if the connection is still valid
  */
 static bool
-connection_send_to_socket(struct connection *connection,
+connection_send_to_socket(Connection *connection,
                           struct socket *s, struct fifo_buffer *buffer,
                           size_t max)
 {
@@ -58,8 +58,8 @@ connection_send_to_socket(struct connection *connection,
 }
 
 static bool
-connection_forward(struct connection *connection,
-                   struct peer *src, struct peer *dest, size_t length)
+connection_forward(Connection *connection,
+                   Peer *src, Peer *dest, size_t length)
 {
     size_t before = fifo_buffer_available(src->socket.input);
 
@@ -78,7 +78,7 @@ connection_forward(struct connection *connection,
 }
 
 static bool
-connection_handle_client_input(struct connection *connection)
+connection_handle_client_input(Connection *connection)
 {
     while (true) {
         size_t nbytes = peer_feed(&connection->client);
@@ -96,7 +96,7 @@ connection_handle_client_input(struct connection *connection)
 }
 
 static bool
-connection_handle_server_input(struct connection *connection)
+connection_handle_server_input(Connection *connection)
 {
     while (true) {
         size_t nbytes = peer_feed(&connection->server);
@@ -113,7 +113,7 @@ static void
 connection_client_read_callback([[maybe_unused]] int fd,
                                 short event, void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     assert(!connection->delayed);
 
@@ -141,7 +141,7 @@ connection_client_read_callback([[maybe_unused]] int fd,
 static void
 connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     if (event & EV_TIMEOUT) {
         connection_close(connection);
@@ -157,7 +157,7 @@ static void
 connection_server_read_callback([[maybe_unused]] int fd,
                                 short event, void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     if (event & EV_TIMEOUT) {
         connection_close(connection);
@@ -199,7 +199,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 static void
 connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     assert(!connection->delayed);
 
@@ -214,7 +214,7 @@ connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx
 }
 
 static bool
-connection_login_packet(struct connection *connection,
+connection_login_packet(Connection *connection,
                         const char *data, size_t length)
 {
     if (length < 33)
@@ -245,7 +245,7 @@ connection_mysql_client_packet(unsigned number, size_t length,
                                const void *data, size_t available,
                                void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     if (mysql_is_query_packet(number, data, length) &&
         connection->request_time == 0)
@@ -266,7 +266,7 @@ connection_mysql_server_packet(unsigned number, size_t length,
                                const void *data, size_t available,
                                void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     (void)length;
     (void)data;
@@ -297,7 +297,7 @@ static void
 connection_delay_timer_callback([[maybe_unused]] int fd,
                                 [[maybe_unused]] short event, void *ctx)
 {
-    struct connection *connection = (struct connection *)ctx;
+    Connection *connection = (Connection *)ctx;
 
     assert(connection->delayed);
 
@@ -308,10 +308,10 @@ connection_delay_timer_callback([[maybe_unused]] int fd,
         socket_schedule_read(&connection->client.socket, false);
 }
 
-struct connection *
-connection_new(struct instance *instance, int fd)
+Connection *
+connection_new(Instance *instance, int fd)
 {
-    struct connection *connection = (struct connection *)
+    Connection *connection = (Connection *)
         malloc(sizeof(*connection));
     connection->instance = instance;
 
@@ -359,7 +359,7 @@ connection_new(struct instance *instance, int fd)
 }
 
 void
-connection_delay(struct connection *c, unsigned delay_ms)
+connection_delay(Connection *c, unsigned delay_ms)
 {
     assert(delay_ms > 0);
 

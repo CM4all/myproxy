@@ -26,7 +26,7 @@ extern "C" {
 static void
 listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
 {
-    struct instance *instance = (struct instance *)ctx;
+    Instance *instance = (Instance *)ctx;
 
     struct sockaddr_storage sa;
     size_t sa_len = sizeof(sa);
@@ -44,7 +44,7 @@ listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
         return;
     }
 
-    struct connection *connection = connection_new(instance, remote_fd);
+    Connection *connection = connection_new(instance, remote_fd);
     list_add(&connection->siblings, &instance->connections);
 }
 
@@ -88,7 +88,7 @@ listener_create_socket(int family, int socktype, int protocol,
 }
 
 static bool
-listener_init_address(struct instance *instance,
+listener_init_address(Instance *instance,
                       int family, int socktype, int protocol,
                       const struct sockaddr *address, size_t address_length)
 {
@@ -107,7 +107,7 @@ listener_init_address(struct instance *instance,
 
 
 void
-listener_init(struct instance *instance, unsigned port)
+listener_init(Instance *instance, unsigned port)
 {
     assert(port > 0);
 
@@ -144,7 +144,7 @@ listener_init(struct instance *instance, unsigned port)
 }
 
 void
-listener_deinit(struct instance *instance)
+listener_deinit(Instance *instance)
 {
     event_del(&instance->listener_event);
     close(instance->listener_socket);

@@ -83,6 +83,8 @@ struct Connection final
 	void Delay(Event::Duration duration) noexcept;
 
 private:
+	bool OnLoginPacket(const char *data, size_t length);
+
 	/**
 	 * Called when the artificial delay is over, and restarts the
 	 * transfer from the client to the server->

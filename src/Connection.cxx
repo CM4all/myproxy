@@ -98,29 +98,28 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	delete this;
 }
 
-static bool
-connection_login_packet(Connection *connection,
-			const char *data, size_t length)
+bool
+Connection::OnLoginPacket(const char *data, size_t length)
 {
 	if (length < 33)
 		return false;
 
-	const char *user = data + 32;
+	const char *user_ = data + 32;
 	const char *user_end = (const char *)
-		memchr((const void *)user, 0, data + length - user);
-	if (user_end == NULL || user_end == user)
+		memchr((const void *)user_, 0, data + length - user_);
+	if (user_end == NULL || user_end == user_)
 		return false;
 
-	size_t user_length = user_end - user;
-	if (user_length >= sizeof(connection->user))
-		user_length = sizeof(connection->user) - 1;
+	size_t user_length = user_end - user_;
+	if (user_length >= sizeof(user))
+		user_length = sizeof(user) - 1;
 
-	memcpy(connection->user, user, user_length);
-	connection->user[user_length] = 0;
+	memcpy(user, user_, user_length);
+	user[user_length] = 0;
 
-	const auto delay = policy_login(connection->user);
+	const auto delay = policy_login(user);
 	if (delay.count() > 0)
-		connection->Delay(delay);
+		Delay(delay);
 
 	return true;
 }
@@ -134,8 +133,7 @@ Connection::OnMysqlPacket(unsigned number, size_t length,
 		request_time = GetEventLoop().SteadyNow();
 
 	if (number == 1 && !login_received) {
-		login_received =
-			connection_login_packet(this, (const char *)data, available);
+		login_received = OnLoginPacket((const char *)data, available);
 	}
 }
 

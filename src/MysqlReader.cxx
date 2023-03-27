@@ -3,7 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "MysqlReader.hxx"
-#include "mysql_protocol.h"
+#include "MysqlProtocol.hxx"
 
 #include <cstring>
 
@@ -42,23 +42,22 @@ MysqlReader::Feed(const void *data, size_t length) noexcept
 
 	if (!have_packet) {
 		/* start of a new packet */
-		const struct mysql_packet_header *header =
-			(const struct mysql_packet_header *)data;
+		const auto &header = *(const Mysql::PacketHeader *)data;
 
-		if (length < sizeof(*header)) {
+		if (length < sizeof(header)) {
 			/* need more data to complete the header */
 			forward = nbytes;
 			return nbytes;
 		}
 
 		have_packet = true;
-		number = header->number;
-		payload_length = mysql_packet_length(header);
+		number = header.number;
+		payload_length = header.GetLength();
 		payload_available = 0;
 
-		data = header + 1;
-		length -= sizeof(*header);
-		nbytes += sizeof(*header);
+		data = &header + 1;
+		length -= sizeof(header);
+		nbytes += sizeof(header);
 	}
 
 	if (length > payload_length - payload_available)

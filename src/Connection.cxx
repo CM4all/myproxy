@@ -6,7 +6,7 @@
 #include "Config.hxx"
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
-#include "mysql_protocol.h"
+#include "MysqlProtocol.hxx"
 #include "clock.h"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
@@ -139,7 +139,7 @@ connection_mysql_client_packet(unsigned number, size_t length,
 {
 	Connection *connection = (Connection *)ctx;
 
-	if (mysql_is_query_packet(number, data, length) &&
+	if (Mysql::IsQueryPacket(number, data, length) &&
 	    connection->request_time == 0)
 		connection->request_time = now_us();
 
@@ -168,7 +168,7 @@ connection_mysql_server_packet(unsigned number, size_t length,
 		connection->greeting_received = true;
 	}
 
-	if (mysql_is_eof_packet(number, data, length) &&
+	if (Mysql::IsEofPacket(number, data, length) &&
 	    connection->login_received &&
 	    connection->request_time != 0) {
 		uint64_t duration_us = now_us() - connection->request_time;

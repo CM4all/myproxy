@@ -123,7 +123,7 @@ executable(
   'cm4all-myproxy',
   'src/fd_util.c',
   'src/fifo_buffer.c',
-  'src/buffered_io.c',
+  'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/Listener.cxx',
   'src/Socket.cxx',

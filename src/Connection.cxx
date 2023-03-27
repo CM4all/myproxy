@@ -6,7 +6,7 @@
 
 #include "Connection.hxx"
 #include "Instance.hxx"
-#include "buffered_io.h"
+#include "BufferedIO.hxx"
 #include "fd_util.h"
 #include "fifo_buffer.h"
 #include "mysql_protocol.h"

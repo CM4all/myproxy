@@ -4,12 +4,13 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#include "buffered_io.h"
+#include "BufferedIO.hxx"
 #include "fifo_buffer.h"
 
-#include <assert.h>
+#include <cassert>
+#include <cerrno>
+
 #include <unistd.h>
-#include <errno.h>
 #include <sys/socket.h>
 
 ssize_t

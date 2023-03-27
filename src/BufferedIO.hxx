@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef __BENG_BUFFERED_IO_H
-#define __BENG_BUFFERED_IO_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -61,5 +60,3 @@ send_from_buffer(int fd, struct fifo_buffer *buffer);
  */
 ssize_t
 send_from_buffer_n(int fd, struct fifo_buffer *buffer, size_t max);
-
-#endif

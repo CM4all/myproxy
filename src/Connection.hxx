@@ -10,6 +10,7 @@
 #include "util/IntrusiveList.hxx"
 
 #include <optional>
+#include <string>
 
 struct Instance;
 
@@ -34,7 +35,7 @@ struct Connection final
 
 	bool greeting_received = false, login_received = false;
 
-	char user[64];
+	std::string user;
 
 	/**
 	 * The time stamp of the last request packet [us].

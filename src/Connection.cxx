@@ -111,13 +111,9 @@ Connection::OnLoginPacket(const char *data, size_t length)
 		return false;
 
 	size_t user_length = user_end - user_;
-	if (user_length >= sizeof(user))
-		user_length = sizeof(user) - 1;
+	user = std::string_view{user_, user_length};
 
-	memcpy(user, user_, user_length);
-	user[user_length] = 0;
-
-	const auto delay = policy_login(user);
+	const auto delay = policy_login(user.c_str());
 	if (delay.count() > 0)
 		Delay(delay);
 
@@ -150,7 +146,7 @@ Connection::Outgoing::OnMysqlPacket(unsigned number, size_t length,
 	    connection.login_received &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
-		policy_duration(connection.user, duration);
+		policy_duration(connection.user.c_str(), duration);
 		connection.request_time = Event::TimePoint{};
 	}
 }

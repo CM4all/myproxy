@@ -80,6 +80,8 @@ struct Connection final
 		return delay_timer.GetEventLoop();
 	}
 
+	void Delay(Event::Duration duration) noexcept;
+
 private:
 	/**
 	 * Called when the artificial delay is over, and restarts the

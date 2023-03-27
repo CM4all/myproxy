@@ -14,18 +14,18 @@ policy_deinit()
 {
 }
 
-unsigned
+Event::Duration
 policy_login(const char *user)
 {
 	(void)user;
-	return 0;
+	return {};
 }
 
-unsigned
+Event::Duration
 policy_execute(const char *user)
 {
 	(void)user;
-	return 0;
+	return {};
 }
 
 void

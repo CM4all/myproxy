@@ -118,9 +118,9 @@ connection_login_packet(Connection *connection,
 	memcpy(connection->user, user, user_length);
 	connection->user[user_length] = 0;
 
-	unsigned delay_ms = policy_login(connection->user);
-	if (delay_ms > 0)
-		connection_delay(connection, delay_ms);
+	const auto delay = policy_login(connection->user);
+	if (delay.count() > 0)
+		connection->Delay(delay);
 
 	return true;
 }
@@ -186,13 +186,11 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 }
 
 void
-connection_delay(Connection *c, unsigned delay_ms)
+Connection::Delay(Event::Duration duration) noexcept
 {
-	assert(delay_ms > 0);
+	delayed = true;
 
-	c->delayed = true;
+	incoming.socket.UnscheduleRead();
 
-	c->incoming.socket.UnscheduleRead();
-
-	c->delay_timer.Schedule(std::chrono::milliseconds{delay_ms});
+	delay_timer.Schedule(duration);
 }

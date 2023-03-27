@@ -24,7 +24,7 @@ policy_deinit();
  *
  * @return the number of milliseconds this operation should be delayed
  */
-unsigned
+Event::Duration
 policy_login(const char *user);
 
 /**
@@ -32,7 +32,7 @@ policy_login(const char *user);
  *
  * @return the number of milliseconds this operation should be delayed
  */
-unsigned
+Event::Duration
 policy_execute(const char *user);
 
 /**

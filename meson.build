@@ -125,7 +125,6 @@ executable(
   'src/system/SetupProcess.cxx',
   'src/BufferedIO.cxx',
   'src/Policy.cxx',
-  'src/Listener.cxx',
   'src/Socket.cxx',
   'src/MysqlReader.cxx',
   'src/Peer.cxx',

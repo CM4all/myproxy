@@ -5,25 +5,24 @@
 #include "Instance.hxx"
 #include "Config.hxx"
 #include "Connection.hxx"
-#include "util/DeleteDisposer.hxx"
 
 #include <cstddef>
 
 #include <sys/socket.h>
 
 Instance::Instance(const Config &_config)
-	:config(_config)
+	:config(_config),
+	 listener(event_loop, *this)
 {
 	shutdown_listener.Enable();
 
-	listener.Open(config.listener.Create(SOCK_STREAM).Release());
-	listener.ScheduleRead();
+	listener.Listen(config.listener.Create(SOCK_STREAM));
 }
 
 void
 Instance::OnShutdown() noexcept
 {
 	shutdown_listener.Disable();
-	listener.Close();
-	connections.clear_and_dispose(DeleteDisposer{});
+	listener.CloseAllConnections();
+	listener.RemoveEvent();
 }

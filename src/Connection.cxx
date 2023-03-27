@@ -200,7 +200,8 @@ Connection::OnDelayTimer() noexcept
 	incoming.socket.socket.Read();
 }
 
-Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd)
+Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
+		       SocketAddress)
 	:instance(&_instance),
 	 delay_timer(instance->event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(instance->event_loop, SOCKET_ALIVE, std::move(fd), *this,

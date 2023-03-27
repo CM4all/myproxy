@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include "Listener.hxx"
 #include "event/Loop.hxx"
 #include "event/ShutdownListener.hxx"
-#include "event/SocketEvent.hxx"
+#include "event/net/ServerSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
-#include "util/IntrusiveList.hxx"
 
 struct Config;
 struct Connection;
@@ -20,13 +20,10 @@ struct Instance {
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
 
-	SocketEvent listener{event_loop, BIND_THIS_METHOD(OnListenerReady)};
-
-	IntrusiveList<Connection> connections;
+	MyProxyListener listener;
 
 	explicit Instance(const Config &config);
 
 private:
 	void OnShutdown() noexcept;
-	void OnListenerReady(unsigned events) noexcept;
 };

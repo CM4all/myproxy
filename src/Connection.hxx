@@ -67,7 +67,8 @@ struct Connection final
 
 	std::optional<Outgoing> outgoing;
 
-	Connection(Instance &_instance, UniqueSocketDescriptor fd);
+	Connection(Instance &_instance, UniqueSocketDescriptor fd,
+		   SocketAddress address);
 	~Connection() noexcept;
 
 	auto &GetEventLoop() const noexcept {

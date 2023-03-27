@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
+
 /*
  * Definitions for the MySQL protocol.
  *
  * http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol
- *
- * author: Max Kellermann <mk@cm4all.com>
  */
 
 #pragma once

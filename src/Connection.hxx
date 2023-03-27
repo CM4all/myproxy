@@ -1,8 +1,6 @@
-/*
- * Manage connections from MySQL clients.
- *
- * author: Max Kellermann <mk@cm4all.com>
- */
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
 
 #pragma once
 
@@ -13,6 +11,9 @@
 
 struct Instance;
 
+/**
+ * Manage connections from MySQL clients.
+ */
 struct Connection : IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
 	Instance *const instance;
 

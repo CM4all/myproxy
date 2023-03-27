@@ -1,8 +1,6 @@
-/*
- * A stream socket.
- *
- * author: Max Kellermann <mk@cm4all.com>
- */
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
 
 #include "Socket.hxx"
 #include "BufferedIO.hxx"

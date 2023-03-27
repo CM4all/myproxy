@@ -1,8 +1,6 @@
-/*
- * Manage connections from MySQL clients.
- *
- * author: Max Kellermann <mk@cm4all.com>
- */
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
 
 #include "Connection.hxx"
 #include "Config.hxx"

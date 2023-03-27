@@ -1,8 +1,6 @@
-/*
- * Command-line parser.
- *
- * author: Max Kellermann <mk@cm4all.com>
- */
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
 
 #include "CommandLine.hxx"
 #include "Config.hxx"

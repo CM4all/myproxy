@@ -55,7 +55,6 @@ struct Connection final
 		Peer peer;
 
 		Outgoing(Connection &_connection,
-			 enum socket_state state,
 			 UniqueSocketDescriptor fd) noexcept;
 
 		/* virtual methods from PeerSocketHandler */

@@ -12,24 +12,14 @@
 
 #include <cstddef> // for std::byte
 
-enum socket_state {
-	SOCKET_CLOSED,
-
-	SOCKET_CONNECTING,
-
-	SOCKET_ALIVE,
-};
-
 struct Socket {
-	enum socket_state state;
-
 	BufferedSocket socket;
 
 	CoarseTimerEvent read_timeout;
 
 	BufferedSocketHandler &handler;
 
-	Socket(EventLoop &event_loop, enum socket_state _state,
+	Socket(EventLoop &event_loop,
 	       UniqueSocketDescriptor fd,
 	       BufferedSocketHandler &_handler) noexcept;
 

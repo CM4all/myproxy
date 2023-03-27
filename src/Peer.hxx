@@ -32,11 +32,10 @@ struct Peer final : BufferedSocketHandler {
 	PeerHandler &handler;
 
 	Peer(EventLoop &event_loop,
-	     enum socket_state state,
 	     UniqueSocketDescriptor fd,
 	     PeerHandler &_handler,
 	     const MysqlHandler &_mysql_handler, void *_ctx) noexcept
-		:socket(event_loop, state, std::move(fd), *this),
+		:socket(event_loop, std::move(fd), *this),
 		 reader(_mysql_handler, _ctx),
 		 handler(_handler) {}
 

@@ -92,7 +92,7 @@ Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 {
 	assert(!outgoing);
 
-	outgoing.emplace(*this, SOCKET_ALIVE, std::move(fd));
+	outgoing.emplace(*this, std::move(fd));
 	socket_schedule_read(&outgoing->peer.socket, true);
 }
 
@@ -182,10 +182,9 @@ static constexpr MysqlHandler connection_mysql_server_handler = {
 };
 
 Connection::Outgoing::Outgoing(Connection &_connection,
-			       enum socket_state state,
 			       UniqueSocketDescriptor fd) noexcept
 	:connection(_connection),
-	 peer(connection.GetEventLoop(), state, std::move(fd), *this,
+	 peer(connection.GetEventLoop(), std::move(fd), *this,
 	      connection_mysql_server_handler, &connection)
 {
 }
@@ -204,7 +203,7 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 		       SocketAddress)
 	:instance(&_instance),
 	 delay_timer(instance->event_loop, BIND_THIS_METHOD(OnDelayTimer)),
-	 incoming(instance->event_loop, SOCKET_ALIVE, std::move(fd), *this,
+	 incoming(instance->event_loop, std::move(fd), *this,
 		  connection_mysql_client_handler, this),
 	 connect(instance->event_loop, *this)
 {

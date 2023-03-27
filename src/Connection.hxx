@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Peer.hxx"
+#include "MysqlHandler.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "util/IntrusiveList.hxx"
 
@@ -17,7 +18,8 @@ struct Instance;
  */
 struct Connection final
 	: IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
-	  PeerHandler, ConnectSocketHandler
+	  PeerHandler, MysqlHandler,
+	  ConnectSocketHandler
 {
 	Instance *const instance;
 
@@ -49,7 +51,7 @@ struct Connection final
 	/**
 	 * The connection to the server.
 	 */
-	struct Outgoing final : PeerHandler {
+	struct Outgoing final : PeerHandler, MysqlHandler {
 		Connection &connection;
 
 		Peer peer;
@@ -62,6 +64,10 @@ struct Connection final
 		void OnPeerClosed() noexcept override;
 		bool OnPeerWrite() override;
 		void OnPeerError(std::exception_ptr e) noexcept override;
+
+		/* virtual methods from MysqlHandler */
+		void OnMysqlPacket(unsigned number, size_t length,
+				   const void *data, size_t available) override;
 	};
 
 	std::optional<Outgoing> outgoing;
@@ -86,6 +92,10 @@ private:
 	void OnPeerClosed() noexcept override;
 	bool OnPeerWrite() override;
 	void OnPeerError(std::exception_ptr e) noexcept override;
+
+	/* virtual methods from MysqlHandler */
+	void OnMysqlPacket(unsigned number, size_t length,
+			   const void *data, size_t available) override;
 
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;

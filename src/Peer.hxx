@@ -34,9 +34,9 @@ struct Peer final : BufferedSocketHandler {
 	Peer(EventLoop &event_loop,
 	     UniqueSocketDescriptor fd,
 	     PeerHandler &_handler,
-	     const MysqlHandler &_mysql_handler, void *_ctx) noexcept
+	     MysqlHandler &_mysql_handler) noexcept
 		:socket(event_loop, std::move(fd), *this),
-		 reader(_mysql_handler, _ctx),
+		 reader(_mysql_handler),
 		 handler(_handler) {}
 
 	std::pair<PeerHandler::ForwardResult, std::size_t> Forward(std::span<std::byte> src) noexcept;

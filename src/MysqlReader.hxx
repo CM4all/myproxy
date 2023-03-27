@@ -7,23 +7,10 @@
 #include <cassert>
 #include <cstddef>
 
-struct MysqlHandler {
-	/**
-	 * A packet was received.
-	 *
-	 * @param number the packet number
-	 * @param length the full payload length
-	 * @param data the payload
-	 * @param available the amount of payload that is available now
-	 */
-	void (*packet)(unsigned number, size_t length,
-		       const void *data, size_t available,
-		       void *ctx);
-};
+class MysqlHandler;
 
 struct MysqlReader {
-	const MysqlHandler *handler;
-	void *handler_ctx;
+	MysqlHandler &handler;
 
 	bool have_packet = false;
 
@@ -52,8 +39,8 @@ struct MysqlReader {
 
 	char payload[1024];
 
-	constexpr MysqlReader(const MysqlHandler &_handler, void *_ctx) noexcept
-		:handler(&_handler), handler_ctx(_ctx) {}
+	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
+		:handler(_handler) {}
 
 	/**
 	 * Feed data into the reader.  It stops at the boundary of a packet,

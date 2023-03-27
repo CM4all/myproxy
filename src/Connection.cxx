@@ -132,60 +132,42 @@ connection_login_packet(Connection *connection,
 	return true;
 }
 
-static void
-connection_mysql_client_packet(unsigned number, size_t length,
-			       const void *data, size_t available,
-			       void *ctx)
+void
+Connection::OnMysqlPacket(unsigned number, size_t length,
+			  const void *data, size_t available)
 {
-	Connection *connection = (Connection *)ctx;
-
 	if (Mysql::IsQueryPacket(number, data, length) &&
-	    connection->request_time == 0)
-		connection->request_time = now_us();
+	    request_time == 0)
+		request_time = now_us();
 
-	if (number == 1 && !connection->login_received) {
-		connection->login_received =
-			connection_login_packet(connection, (const char *)data, available);
+	if (number == 1 && !login_received) {
+		login_received =
+			connection_login_packet(this, (const char *)data, available);
 	}
 }
 
-static constexpr MysqlHandler connection_mysql_client_handler = {
-	.packet = connection_mysql_client_packet,
-};
-
-static void
-connection_mysql_server_packet(unsigned number, size_t length,
-			       const void *data, size_t available,
-			       void *ctx)
+void
+Connection::Outgoing::OnMysqlPacket(unsigned number, size_t length,
+				    const void *data,
+				    [[maybe_unused]] size_t available)
 {
-	Connection *connection = (Connection *)ctx;
-
-	(void)length;
-	(void)data;
-	(void)available;
-
-	if (!connection->greeting_received && number == 0) {
-		connection->greeting_received = true;
+	if (!connection.greeting_received && number == 0) {
+		connection.greeting_received = true;
 	}
 
 	if (Mysql::IsEofPacket(number, data, length) &&
-	    connection->login_received &&
-	    connection->request_time != 0) {
-		uint64_t duration_us = now_us() - connection->request_time;
-		policy_duration(connection->user, (unsigned)(duration_us / 1000));
-		connection->request_time = 0;
+	    connection.login_received &&
+	    connection.request_time != 0) {
+		uint64_t duration_us = now_us() - connection.request_time;
+		policy_duration(connection.user, (unsigned)(duration_us / 1000));
+		connection.request_time = 0;
 	}
 }
-
-static constexpr MysqlHandler connection_mysql_server_handler = {
-	.packet = connection_mysql_server_packet,
-};
 
 Connection::Outgoing::Outgoing(Connection &_connection,
 			       UniqueSocketDescriptor fd) noexcept
 	:connection(_connection),
-	 peer(connection.GetEventLoop(), std::move(fd), *this,
-	      connection_mysql_server_handler, &connection)
+	 peer(connection.GetEventLoop(), std::move(fd), *this, *this)
 {
 }
 
@@ -203,8 +185,7 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 		       SocketAddress)
 	:instance(&_instance),
 	 delay_timer(instance->event_loop, BIND_THIS_METHOD(OnDelayTimer)),
-	 incoming(instance->event_loop, std::move(fd), *this,
-		  connection_mysql_client_handler, this),
+	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
 	socket_schedule_read(&incoming.socket, false);

@@ -3,6 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "MysqlReader.hxx"
+#include "MysqlHandler.hxx"
 #include "MysqlProtocol.hxx"
 
 #include <cstring>
@@ -74,9 +75,8 @@ MysqlReader::Feed(const void *data, size_t length) noexcept
 	if (payload_available == payload_length ||
 	    payload_available == sizeof(payload)) {
 		have_packet = false;
-		handler->packet(number, payload_length,
-					payload, payload_available,
-					handler_ctx);
+		handler.OnMysqlPacket(number, payload_length,
+				      payload, payload_available);
 
 		remaining = payload_length - payload_available;
 	}

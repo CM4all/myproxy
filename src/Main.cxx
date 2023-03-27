@@ -1,4 +1,5 @@
 #include "Instance.hxx"
+#include "Config.hxx"
 #include "CommandLine.hxx"
 #include "Policy.hxx"
 #include "Listener.hxx"
@@ -53,8 +54,10 @@ init_signals(Instance *instance)
 
 int main(int argc, char **argv)
 {
-	Instance instance;
-	parse_cmdline(&instance, argc, argv);
+	Config config;
+	parse_cmdline(config, argc, argv);
+
+	Instance instance{config};
 
 	init_signals(&instance);
 

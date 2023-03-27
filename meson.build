@@ -131,6 +131,7 @@ executable(
   'src/Connection.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
+  'src/Config.cxx',
   'src/Main.cxx',
   include_directories: inc,
   dependencies: [

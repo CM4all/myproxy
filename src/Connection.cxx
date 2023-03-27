@@ -5,6 +5,7 @@
  */
 
 #include "Connection.hxx"
+#include "Config.hxx"
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "fd_util.h"
@@ -317,7 +318,7 @@ Connection::Connection(Instance &_instance, int fd)
 	mysql_reader_init(&client.reader,
 			  &connection_mysql_client_handler, this);
 
-	const struct addrinfo *address = instance->server_address;
+	const struct addrinfo *address = instance->config.server_address;
 	assert(address != NULL);
 	fd = socket_cloexec_nonblock(address->ai_family, address->ai_socktype,
 				     address->ai_protocol);

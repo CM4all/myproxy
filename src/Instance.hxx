@@ -10,13 +10,13 @@
 
 #include <event.h>
 
-struct addrinfo;
+struct Config;
 struct Connection;
 
 struct Instance {
-	struct event_base *const event_base = event_init();
+	const Config &config;
 
-	struct addrinfo *server_address = nullptr;
+	struct event_base *const event_base = event_init();
 
 	bool should_exit;
 	struct event sigterm_event, sigint_event, sigquit_event;
@@ -26,6 +26,6 @@ struct Instance {
 
 	IntrusiveList<Connection> connections;
 
-	Instance();
+	explicit Instance(const Config &config);
 	~Instance() noexcept;
 };

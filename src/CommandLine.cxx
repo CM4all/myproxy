@@ -5,7 +5,7 @@
  */
 
 #include "CommandLine.hxx"
-#include "Instance.hxx"
+#include "Config.hxx"
 
 #include <socket/resolver.h>
 
@@ -15,7 +15,7 @@
 #include <netdb.h>
 
 void
-parse_cmdline(Instance *instance, int argc, char **argv)
+parse_cmdline(Config &config, int argc, char **argv)
 {
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s HOST[:PORT]\n", argv[0]);
@@ -34,5 +34,5 @@ parse_cmdline(Instance *instance, int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	instance->server_address = ai;
+	config.server_address = ai;
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-struct Instance;
+struct Config;
 
 void
-parse_cmdline(Instance *instance, int argc, char **argv);
+parse_cmdline(Config &config, int argc, char **argv);

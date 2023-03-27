@@ -9,16 +9,12 @@
 
 #include <cstddef>
 
-#include <netdb.h>
-
-Instance::Instance()
+Instance::Instance(const Config &_config)
+	:config(_config)
 {
 }
 
 Instance::~Instance() noexcept
 {
 	event_base_free(event_base);
-
-	if (server_address != NULL)
-		freeaddrinfo(server_address);
 }

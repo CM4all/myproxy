@@ -21,16 +21,13 @@
 #include <netdb.h>
 #include <string.h>
 
-void
-connection_close(Connection *connection)
+Connection::~Connection() noexcept
 {
-	socket_close(&connection->client.socket);
-	socket_close(&connection->server.socket);
-	event_del(&connection->delay_timer);
+	socket_close(&client.socket);
+	socket_close(&server.socket);
+	event_del(&delay_timer);
 
-	list_remove(&connection->siblings);
-
-	free(connection);
+	list_remove(&siblings);
 }
 
 /**
@@ -45,7 +42,7 @@ connection_send_to_socket(Connection *connection,
 	assert(remaining != -2);
 
 	if (remaining < 0) {
-		connection_close(connection);
+		delete connection;
 		return false;
 	}
 
@@ -118,7 +115,7 @@ connection_client_read_callback([[maybe_unused]] int fd,
 	assert(!connection->delayed);
 
 	if (event & EV_TIMEOUT) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -129,7 +126,7 @@ connection_client_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (nbytes <= 0) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -144,7 +141,7 @@ connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx
 	Connection *connection = (Connection *)ctx;
 
 	if (event & EV_TIMEOUT) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -160,7 +157,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 	Connection *connection = (Connection *)ctx;
 
 	if (event & EV_TIMEOUT) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -171,7 +168,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 		if (getsockopt(connection->server.socket.fd, SOL_SOCKET, SO_ERROR,
 			       (char*)&s_err, &s_err_size) < 0 ||
 		    s_err != 0) {
-			connection_close(connection);
+			delete connection;
 			return;
 		}
 
@@ -187,7 +184,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (nbytes <= 0) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -204,7 +201,7 @@ connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx
 	assert(!connection->delayed);
 
 	if (event & EV_TIMEOUT) {
-		connection_close(connection);
+		delete connection;
 		return;
 	}
 
@@ -308,54 +305,48 @@ connection_delay_timer_callback([[maybe_unused]] int fd,
 		socket_schedule_read(&connection->client.socket, false);
 }
 
-Connection *
-connection_new(Instance *instance, int fd)
+Connection::Connection(Instance &_instance, int fd)
+	:instance(&_instance)
 {
-	Connection *connection = (Connection *)
-		malloc(sizeof(*connection));
-	connection->instance = instance;
+	event_set(&delay_timer, -1, EV_TIMEOUT,
+		  connection_delay_timer_callback, this);
+	delayed = false;
 
-	event_set(&connection->delay_timer, -1, EV_TIMEOUT,
-		  connection_delay_timer_callback, connection);
-	connection->delayed = false;
+	greeting_received = false;
+	login_received = false;
+	request_time = 0;
 
-	connection->greeting_received = false;
-	connection->login_received = false;
-	connection->request_time = 0;
-
-	socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
+	socket_init(&client.socket, SOCKET_ALIVE, fd, 4096,
 		    connection_client_read_callback,
-		    connection_client_write_callback, connection);
-	mysql_reader_init(&connection->client.reader,
-			  &connection_mysql_client_handler, connection);
+		    connection_client_write_callback, this);
+	mysql_reader_init(&client.reader,
+			  &connection_mysql_client_handler, this);
 
-	const struct addrinfo *address = connection->instance->server_address;
+	const struct addrinfo *address = instance->server_address;
 	assert(address != NULL);
 	fd = socket_cloexec_nonblock(address->ai_family, address->ai_socktype,
 				     address->ai_protocol);
 	if (fd < 0) {
-		socket_close(&connection->client.socket);
-		return NULL;
+		socket_close(&client.socket);
+		throw "Failed to create socket";
 	}
 
 	int ret = connect(fd, address->ai_addr, address->ai_addrlen);
 	if (ret < 0 && errno != EINPROGRESS) {
-		socket_close(&connection->client.socket);
-		return NULL;
+		socket_close(&client.socket);
+		throw "Failed to create socket";
 	}
 
-	socket_init(&connection->server.socket, SOCKET_CONNECTING, fd, 4096,
+	socket_init(&server.socket, SOCKET_CONNECTING, fd, 4096,
 		    connection_server_read_callback,
-		    connection_server_write_callback, connection);
-	mysql_reader_init(&connection->server.reader,
-			  &connection_mysql_server_handler, connection);
+		    connection_server_write_callback, this);
+	mysql_reader_init(&server.reader,
+			  &connection_mysql_server_handler, this);
 
-	socket_schedule_read(&connection->client.socket, false);
-	socket_schedule_read(&connection->server.socket, true);
+	socket_schedule_read(&client.socket, false);
+	socket_schedule_read(&server.socket, true);
 
-	event_add(&connection->client.socket.read_event, NULL);
-
-	return connection;
+	event_add(&client.socket.read_event, NULL);
 }
 
 void

@@ -32,7 +32,7 @@ exit_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void 
 	while (!list_empty(&instance->connections)) {
 		Connection *connection =
 			(Connection *)instance->connections.next;
-		connection_close(connection);
+		delete connection;
 	}
 }
 

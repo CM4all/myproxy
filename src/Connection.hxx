@@ -43,13 +43,10 @@ struct Connection {
 	 * The connection to the server.
 	 */
 	Peer server;
+
+	Connection(Instance &_instance, int fd);
+	~Connection() noexcept;
 };
-
-Connection *
-connection_new(Instance *instance, int fd);
-
-void
-connection_close(Connection *connection);
 
 /**
  * Delay forwarding client input for the specified duration.  Can be

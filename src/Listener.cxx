@@ -44,7 +44,7 @@ listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
 		return;
 	}
 
-	Connection *connection = connection_new(instance, remote_fd);
+	Connection *connection = new Connection(*instance, remote_fd);
 	list_add(&connection->siblings, &instance->connections);
 }
 

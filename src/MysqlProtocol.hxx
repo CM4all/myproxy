@@ -10,18 +10,28 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace Mysql {
 
+struct Int3 {
+	uint8_t data[3];
+
+public:
+	constexpr operator uint_least32_t() const noexcept {
+		return static_cast<uint_least32_t>(data[0]) |
+			(static_cast<uint_least32_t>(data[1]) << 8) |
+			(static_cast<uint_least32_t>(data[2]) << 16);
+	}
+};
+
 struct PacketHeader {
-	uint8_t length[3];
+	Int3 length;
 	uint8_t number;
 
 	constexpr std::size_t GetLength() const noexcept {
-		return static_cast<std::size_t>(length[0]) |
-			(static_cast<std::size_t>(length[1]) << 8) |
-			(static_cast<std::size_t>(length[2]) << 16);
+		return length;
 	}
 };
 

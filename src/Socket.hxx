@@ -16,7 +16,7 @@ enum socket_state {
 	SOCKET_ALIVE,
 };
 
-struct socket {
+struct Socket {
 	enum socket_state state;
 
 	int fd;
@@ -27,33 +27,33 @@ struct socket {
 };
 
 void
-socket_init(struct socket *s, enum socket_state state,
+socket_init(Socket *s, enum socket_state state,
 	    int fd, size_t input_buffer_size,
 	    void (*read_callback)(int, short, void *),
 	    void (*write_callback)(int, short, void *),
 	    void *arg);
 
 void
-socket_close(struct socket *s);
+socket_close(Socket *s);
 
 void
-socket_schedule_read(struct socket *s, bool timeout);
+socket_schedule_read(Socket *s, bool timeout);
 
 void
-socket_unschedule_read(struct socket *s);
+socket_unschedule_read(Socket *s);
 
 void
-socket_schedule_write(struct socket *s, bool timeout);
+socket_schedule_write(Socket *s, bool timeout);
 
 void
-socket_unschedule_write(struct socket *s);
+socket_unschedule_write(Socket *s);
 
 ssize_t
-socket_recv_to_buffer(struct socket *s);
+socket_recv_to_buffer(Socket *s);
 
 ssize_t
-socket_send_from_buffer(struct socket *s, struct fifo_buffer *buffer);
+socket_send_from_buffer(Socket *s, struct fifo_buffer *buffer);
 
 ssize_t
-socket_send_from_buffer_n(struct socket *s, struct fifo_buffer *buffer,
+socket_send_from_buffer_n(Socket *s, struct fifo_buffer *buffer,
 			  size_t max);

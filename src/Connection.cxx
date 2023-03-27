@@ -33,7 +33,7 @@ Connection::~Connection() noexcept
  */
 static bool
 connection_send_to_socket(Connection *connection,
-			  struct socket *s, struct fifo_buffer *buffer,
+			  Socket *s, struct fifo_buffer *buffer,
 			  size_t max)
 {
 	ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);

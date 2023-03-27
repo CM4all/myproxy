@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_INSTANCE_HXX
-#define MYPROXY_INSTANCE_HXX
+#pragma once
 
 #include <event.h>
 
@@ -32,5 +31,3 @@ instance_init(Instance *instance);
 
 void
 instance_deinit(Instance *instance);
-
-#endif

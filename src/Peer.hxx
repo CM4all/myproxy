@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_PEER_HXX
-#define MYPROXY_PEER_HXX
+#pragma once
 
 #include "Socket.hxx"
 #include "MySQLReader.hxx"
@@ -24,5 +23,3 @@ struct Peer {
  */
 size_t
 peer_feed(Peer *peer);
-
-#endif

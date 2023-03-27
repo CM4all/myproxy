@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_SOCKET_H
-#define MYPROXY_SOCKET_H
+#pragma once
 
 #include <event.h>
 
@@ -58,5 +57,3 @@ socket_send_from_buffer(struct socket *s, struct fifo_buffer *buffer);
 ssize_t
 socket_send_from_buffer_n(struct socket *s, struct fifo_buffer *buffer,
                           size_t max);
-
-#endif

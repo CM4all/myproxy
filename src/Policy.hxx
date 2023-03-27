@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_POLICY_HXX
-#define MYPROXY_POLICY_HXX
+#pragma once
 
 /**
  * Global initialization.
@@ -41,5 +40,3 @@ policy_execute(const char *user);
  */
 void
 policy_duration(const char *user, unsigned duration_ms);
-
-#endif

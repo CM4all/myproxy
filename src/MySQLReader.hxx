@@ -6,8 +6,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_MYSQL_READER_HXX
-#define MYPROXY_MYSQL_READER_HXX
+#pragma once
 
 #include <cassert>
 #include <cstddef>
@@ -85,5 +84,3 @@ mysql_reader_forwarded(struct mysql_reader *reader, size_t nbytes)
 
     reader->forward -= nbytes;
 }
-
-#endif

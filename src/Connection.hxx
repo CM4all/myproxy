@@ -4,8 +4,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_CONNECTION_HXX
-#define MYPROXY_CONNECTION_HXX
+#pragma once
 
 #include "Peer.hxx"
 
@@ -58,5 +57,3 @@ connection_close(Connection *connection);
  */
 void
 connection_delay(Connection *c, unsigned delay_ms);
-
-#endif

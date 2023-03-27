@@ -6,8 +6,7 @@
  * author: Max Kellermann <mk@cm4all.com>
  */
 
-#ifndef MYPROXY_MYSQL_PROTOCOL_H
-#define MYPROXY_MYSQL_PROTOCOL_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -35,5 +34,3 @@ mysql_is_eof_packet(unsigned number, const void *data, size_t length)
 {
     return number > 0 && length >= 1 && *(const uint8_t *)data == 0xfe;
 }
-
-#endif

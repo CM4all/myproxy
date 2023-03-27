@@ -20,11 +20,6 @@ parse_cmdline(Config &config, int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	config.server_address = Resolve(argv[1], 3306, &hints).GetBest();
+	static constexpr auto active_hints = MakeAddrInfo(0, AF_UNSPEC, SOCK_STREAM);
+	config.server_address = Resolve(argv[1], 3306, &active_hints).GetBest();
 }

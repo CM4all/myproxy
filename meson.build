@@ -125,7 +125,6 @@ subdir('libcommon/src/net')
 
 executable(
   'cm4all-myproxy',
-  'src/fd_util.c',
   'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/Listener.cxx',

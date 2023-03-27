@@ -56,7 +56,7 @@ init_signals(Instance *instance)
 
 int main(int argc, char **argv)
 {
-	static Instance instance;
+	Instance instance;
 	instance_init(&instance);
 	parse_cmdline(&instance, argc, argv);
 

@@ -14,7 +14,7 @@ struct Instance;
 
 struct Connection {
 	struct list_head siblings;
-	Instance *instance;
+	Instance *const instance;
 
 	/**
 	 * Used to insert delay in the connection: it gets fired after the

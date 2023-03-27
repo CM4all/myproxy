@@ -20,8 +20,6 @@
 #ifndef __FIFO_BUFFER_H
 #define __FIFO_BUFFER_H
 
-#include <inline/compiler.h>
-
 #include <stddef.h>
 
 struct fifo_buffer;
@@ -30,7 +28,7 @@ struct fifo_buffer;
 extern "C" {
 #endif
 
-struct fifo_buffer *__attr_malloc
+struct fifo_buffer *
 fifo_buffer_new(size_t size);
 
 void

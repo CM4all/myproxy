@@ -93,7 +93,7 @@ Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 	assert(!outgoing);
 
 	outgoing.emplace(*this, std::move(fd));
-	socket_schedule_read(&outgoing->peer.socket, true);
+	socket_schedule_read(&outgoing->peer.socket);
 }
 
 void
@@ -188,7 +188,7 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
-	socket_schedule_read(&incoming.socket, false);
+	socket_schedule_read(&incoming.socket);
 
 	delayed = false;
 
@@ -199,7 +199,7 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	// TODO move this call out of the ctor
 	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 
-	socket_schedule_read(&incoming.socket, false);
+	socket_schedule_read(&incoming.socket);
 }
 
 void

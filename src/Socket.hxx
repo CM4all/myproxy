@@ -7,15 +7,12 @@
 #include "event/net/BufferedSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "event/SocketEvent.hxx"
-#include "event/CoarseTimerEvent.hxx"
 #include "util/StaticFifoBuffer.hxx"
 
 #include <cstddef> // for std::byte
 
 struct Socket {
 	BufferedSocket socket;
-
-	CoarseTimerEvent read_timeout;
 
 	BufferedSocketHandler &handler;
 
@@ -30,7 +27,7 @@ private:
 };
 
 void
-socket_schedule_read(Socket *s, bool timeout);
+socket_schedule_read(Socket *s);
 
 void
 socket_unschedule_read(Socket *s);

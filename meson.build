@@ -127,7 +127,7 @@ executable(
   'src/Policy.cxx',
   'src/Listener.cxx',
   'src/Socket.cxx',
-  'src/MySQLReader.cxx',
+  'src/MysqlReader.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/Instance.cxx',

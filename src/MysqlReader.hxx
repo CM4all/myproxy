@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cstddef>
 
-struct mysql_handler {
+struct MysqlHandler {
 	/**
 	 * A packet was received.
 	 *
@@ -21,8 +21,8 @@ struct mysql_handler {
 		       void *ctx);
 };
 
-struct mysql_reader {
-	const struct mysql_handler *handler;
+struct MysqlReader {
+	const MysqlHandler *handler;
 	void *handler_ctx;
 
 	bool have_packet;
@@ -54,8 +54,8 @@ struct mysql_reader {
 };
 
 void
-mysql_reader_init(struct mysql_reader *reader,
-		  const struct mysql_handler *handler, void *ctx);
+mysql_reader_init(MysqlReader *reader,
+		  const MysqlHandler *handler, void *ctx);
 
 /**
  * Feed data into the reader.  It stops at the boundary of a packet,
@@ -64,7 +64,7 @@ mysql_reader_init(struct mysql_reader *reader,
  * @return the number of bytes that should be forwarded in this step
  */
 size_t
-mysql_reader_feed(struct mysql_reader *reader,
+mysql_reader_feed(MysqlReader *reader,
 		  const void *data, size_t length);
 
 /**
@@ -72,7 +72,7 @@ mysql_reader_feed(struct mysql_reader *reader,
  * bytes.
  */
 static inline void
-mysql_reader_forwarded(struct mysql_reader *reader, size_t nbytes)
+mysql_reader_forwarded(MysqlReader *reader, size_t nbytes)
 {
 	assert(nbytes > 0);
 	assert(reader->forward > 0);

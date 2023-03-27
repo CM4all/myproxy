@@ -2,14 +2,14 @@
 // Copyright CM4all GmbH
 // author: Max Kellermann <mk@cm4all.com>
 
-#include "MySQLReader.hxx"
+#include "MysqlReader.hxx"
 #include "mysql_protocol.h"
 
 #include <cstring>
 
 void
-mysql_reader_init(struct mysql_reader *reader,
-		  const struct mysql_handler *handler, void *ctx)
+mysql_reader_init(MysqlReader *reader,
+		  const MysqlHandler *handler, void *ctx)
 {
 	assert(handler != NULL);
 	assert(handler->packet != NULL);
@@ -22,7 +22,7 @@ mysql_reader_init(struct mysql_reader *reader,
 }
 
 size_t
-mysql_reader_feed(struct mysql_reader *reader,
+mysql_reader_feed(MysqlReader *reader,
 		  const void *data, size_t length)
 {
 	size_t nbytes = 0;

@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Socket.hxx"
-#include "MySQLReader.hxx"
+#include "MysqlReader.hxx"
 
 /*
  * A connection to one peer.
@@ -13,7 +13,7 @@
 struct Peer {
 	Socket socket;
 
-	struct mysql_reader reader;
+	MysqlReader reader;
 
 	Peer(enum socket_state _state,
 	     UniqueSocketDescriptor _fd,

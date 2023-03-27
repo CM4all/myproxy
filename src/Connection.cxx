@@ -244,7 +244,7 @@ connection_mysql_client_packet(unsigned number, size_t length,
 	}
 }
 
-static const struct mysql_handler connection_mysql_client_handler = {
+static constexpr MysqlHandler connection_mysql_client_handler = {
 	.packet = connection_mysql_client_packet,
 };
 
@@ -272,7 +272,7 @@ connection_mysql_server_packet(unsigned number, size_t length,
 	}
 }
 
-static const struct mysql_handler connection_mysql_server_handler = {
+static constexpr MysqlHandler connection_mysql_server_handler = {
 	.packet = connection_mysql_server_packet,
 };
 

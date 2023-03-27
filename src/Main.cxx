@@ -57,7 +57,6 @@ init_signals(Instance *instance)
 int main(int argc, char **argv)
 {
 	Instance instance;
-	instance_init(&instance);
 	parse_cmdline(&instance, argc, argv);
 
 	init_signals(&instance);
@@ -69,8 +68,6 @@ int main(int argc, char **argv)
 	event_dispatch();
 
 	policy_deinit();
-
-	instance_deinit(&instance);
 
 	return EXIT_SUCCESS;
 }

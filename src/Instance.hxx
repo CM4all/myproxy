@@ -13,9 +13,9 @@
 struct addrinfo;
 
 struct Instance {
-	struct event_base *event_base;
+	struct event_base *const event_base = event_init();
 
-	struct addrinfo *server_address;
+	struct addrinfo *server_address = nullptr;
 
 	bool should_exit;
 	struct event sigterm_event, sigint_event, sigquit_event;
@@ -24,10 +24,7 @@ struct Instance {
 	struct event listener_event;
 
 	struct list_head connections;
+
+	Instance();
+	~Instance() noexcept;
 };
-
-void
-instance_init(Instance *instance);
-
-void
-instance_deinit(Instance *instance);

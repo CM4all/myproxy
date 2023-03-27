@@ -10,21 +10,15 @@
 
 #include <netdb.h>
 
-void
-instance_init(Instance *instance)
+Instance::Instance()
 {
-	instance->event_base = event_init();
-	instance->server_address = NULL;
-
-	list_init(&instance->connections);
+	list_init(&connections);
 }
 
-void
-instance_deinit(Instance *instance)
+Instance::~Instance() noexcept
 {
-	event_base_free(instance->event_base);
+	event_base_free(event_base);
 
-	if (instance->server_address != NULL)
-		freeaddrinfo(instance->server_address);
+	if (server_address != NULL)
+		freeaddrinfo(server_address);
 }
-

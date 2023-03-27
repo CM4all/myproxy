@@ -7,7 +7,6 @@
 #ifndef MYPROXY_SOCKET_H
 #define MYPROXY_SOCKET_H
 
-#include <stdbool.h>
 #include <event.h>
 
 enum socket_state {

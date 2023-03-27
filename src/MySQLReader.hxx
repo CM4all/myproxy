@@ -9,9 +9,8 @@
 #ifndef MYPROXY_MYSQL_READER_HXX
 #define MYPROXY_MYSQL_READER_HXX
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdbool.h>
+#include <cassert>
+#include <cstddef>
 
 struct mysql_handler {
     /**

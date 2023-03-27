@@ -11,8 +11,6 @@
 
 #include <inline/list.h>
 
-#include <stdbool.h>
-
 struct Instance;
 
 struct Connection {

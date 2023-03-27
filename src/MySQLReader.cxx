@@ -9,7 +9,7 @@
 #include "MySQLReader.hxx"
 #include "mysql_protocol.h"
 
-#include <string.h>
+#include <cstring>
 
 void
 mysql_reader_init(struct mysql_reader *reader,

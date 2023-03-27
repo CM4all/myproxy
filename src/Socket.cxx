@@ -11,7 +11,8 @@ extern "C" {
 #include "buffered_io.h"
 }
 
-#include <assert.h>
+#include <cassert>
+
 #include <unistd.h>
 #include <limits.h>
 

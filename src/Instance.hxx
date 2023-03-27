@@ -8,7 +8,6 @@
 #define MYPROXY_INSTANCE_HXX
 
 #include <event.h>
-#include <stdbool.h>
 
 #include <inline/list.h>
 

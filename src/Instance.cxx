@@ -6,7 +6,8 @@
 
 #include "Instance.hxx"
 
-#include <stddef.h>
+#include <cstddef>
+
 #include <netdb.h>
 
 void

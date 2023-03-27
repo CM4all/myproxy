@@ -111,22 +111,6 @@ listener_init(Instance *instance, unsigned port)
 {
 	assert(port > 0);
 
-#if 0
-	/* try IPv6 first */
-
-	struct sockaddr_in6 sa6;
-	memset(&sa6, 0, sizeof(sa6));
-	sa6.sin6_family = AF_INET6;
-	sa6.sin6_addr = in6addr_any;
-	sa6.sin6_port = htons((uint16_t)port);
-
-	if (listener_init_address(instance, PF_INET6, SOCK_STREAM, 0,
-				  (const struct sockaddr *)&sa6, sizeof(sa6)))
-		return;
-#endif
-
-	/* fall back to IPv4 first */
-
 	struct sockaddr_in sa4;
 	memset(&sa4, 0, sizeof(sa4));
 	sa4.sin_family = AF_INET;

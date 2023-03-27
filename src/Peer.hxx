@@ -10,9 +10,9 @@
 #include "MySQLReader.hxx"
 
 struct Peer {
-    struct socket socket;
+	struct socket socket;
 
-    struct mysql_reader reader;
+	struct mysql_reader reader;
 };
 
 /**

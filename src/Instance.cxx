@@ -13,18 +13,18 @@
 void
 instance_init(Instance *instance)
 {
-    instance->event_base = event_init();
-    instance->server_address = NULL;
+	instance->event_base = event_init();
+	instance->server_address = NULL;
 
-    list_init(&instance->connections);
+	list_init(&instance->connections);
 }
 
 void
 instance_deinit(Instance *instance)
 {
-    event_base_free(instance->event_base);
+	event_base_free(instance->event_base);
 
-    if (instance->server_address != NULL)
-        freeaddrinfo(instance->server_address);
+	if (instance->server_address != NULL)
+		freeaddrinfo(instance->server_address);
 }
 

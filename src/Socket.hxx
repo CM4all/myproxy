@@ -9,29 +9,29 @@
 #include <event.h>
 
 enum socket_state {
-    SOCKET_CLOSED,
+	SOCKET_CLOSED,
 
-    SOCKET_CONNECTING,
+	SOCKET_CONNECTING,
 
-    SOCKET_ALIVE,
+	SOCKET_ALIVE,
 };
 
 struct socket {
-    enum socket_state state;
+	enum socket_state state;
 
-    int fd;
+	int fd;
 
-    struct fifo_buffer *input;
+	struct fifo_buffer *input;
 
-    struct event read_event, write_event;
+	struct event read_event, write_event;
 };
 
 void
 socket_init(struct socket *s, enum socket_state state,
-            int fd, size_t input_buffer_size,
-            void (*read_callback)(int, short, void *),
-            void (*write_callback)(int, short, void *),
-            void *arg);
+	    int fd, size_t input_buffer_size,
+	    void (*read_callback)(int, short, void *),
+	    void (*write_callback)(int, short, void *),
+	    void *arg);
 
 void
 socket_close(struct socket *s);
@@ -56,4 +56,4 @@ socket_send_from_buffer(struct socket *s, struct fifo_buffer *buffer);
 
 ssize_t
 socket_send_from_buffer_n(struct socket *s, struct fifo_buffer *buffer,
-                          size_t max);
+			  size_t max);

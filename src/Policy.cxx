@@ -19,20 +19,20 @@ policy_deinit()
 unsigned
 policy_login(const char *user)
 {
-    (void)user;
-    return 0;
+	(void)user;
+	return 0;
 }
 
 unsigned
 policy_execute(const char *user)
 {
-    (void)user;
-    return 0;
+	(void)user;
+	return 0;
 }
 
 void
 policy_duration(const char *user, unsigned duration_ms)
 {
-    (void)user;
-    (void)duration_ms;
+	(void)user;
+	(void)duration_ms;
 }

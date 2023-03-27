@@ -24,13 +24,13 @@
 void
 connection_close(Connection *connection)
 {
-    socket_close(&connection->client.socket);
-    socket_close(&connection->server.socket);
-    event_del(&connection->delay_timer);
+	socket_close(&connection->client.socket);
+	socket_close(&connection->server.socket);
+	event_del(&connection->delay_timer);
 
-    list_remove(&connection->siblings);
+	list_remove(&connection->siblings);
 
-    free(connection);
+	free(connection);
 }
 
 /**
@@ -38,255 +38,255 @@ connection_close(Connection *connection)
  */
 static bool
 connection_send_to_socket(Connection *connection,
-                          struct socket *s, struct fifo_buffer *buffer,
-                          size_t max)
+			  struct socket *s, struct fifo_buffer *buffer,
+			  size_t max)
 {
-    ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);
-    assert(remaining != -2);
+	ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);
+	assert(remaining != -2);
 
-    if (remaining < 0) {
-        connection_close(connection);
-        return false;
-    }
+	if (remaining < 0) {
+		connection_close(connection);
+		return false;
+	}
 
-    if (remaining > 0)
-        socket_schedule_write(s, fifo_buffer_full(buffer));
-    else
-        socket_unschedule_write(s);
+	if (remaining > 0)
+		socket_schedule_write(s, fifo_buffer_full(buffer));
+	else
+		socket_unschedule_write(s);
 
-    return true;
+	return true;
 }
 
 static bool
 connection_forward(Connection *connection,
-                   Peer *src, Peer *dest, size_t length)
+		   Peer *src, Peer *dest, size_t length)
 {
-    size_t before = fifo_buffer_available(src->socket.input);
+	size_t before = fifo_buffer_available(src->socket.input);
 
-    if (!connection_send_to_socket(connection, &dest->socket,
-                                   src->socket.input, length))
-        return false;
+	if (!connection_send_to_socket(connection, &dest->socket,
+				       src->socket.input, length))
+		return false;
 
-    size_t after = fifo_buffer_available(src->socket.input);
-    assert(after <= before);
-    size_t nbytes = before - after;
+	size_t after = fifo_buffer_available(src->socket.input);
+	assert(after <= before);
+	size_t nbytes = before - after;
 
-    if (nbytes > 0)
-        mysql_reader_forwarded(&src->reader, nbytes);
+	if (nbytes > 0)
+		mysql_reader_forwarded(&src->reader, nbytes);
 
-    return true;
+	return true;
 }
 
 static bool
 connection_handle_client_input(Connection *connection)
 {
-    while (true) {
-        size_t nbytes = peer_feed(&connection->client);
-        if (nbytes == 0)
-            return !connection->delayed;
+	while (true) {
+		size_t nbytes = peer_feed(&connection->client);
+		if (nbytes == 0)
+			return !connection->delayed;
 
-        if (!connection_forward(connection, &connection->client,
-                                &connection->server, nbytes))
-            return false;
+		if (!connection_forward(connection, &connection->client,
+					&connection->server, nbytes))
+			return false;
 
-        if (connection->delayed)
-            /* don't continue reading now */
-            return false;
-    }
+		if (connection->delayed)
+			/* don't continue reading now */
+			return false;
+	}
 }
 
 static bool
 connection_handle_server_input(Connection *connection)
 {
-    while (true) {
-        size_t nbytes = peer_feed(&connection->server);
-        if (nbytes == 0)
-            return true;
+	while (true) {
+		size_t nbytes = peer_feed(&connection->server);
+		if (nbytes == 0)
+			return true;
 
-        if (!connection_forward(connection, &connection->server,
-                                &connection->client, nbytes))
-            return false;
-    }
+		if (!connection_forward(connection, &connection->server,
+					&connection->client, nbytes))
+			return false;
+	}
 }
 
 static void
 connection_client_read_callback([[maybe_unused]] int fd,
-                                short event, void *ctx)
+				short event, void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    assert(!connection->delayed);
+	assert(!connection->delayed);
 
-    if (event & EV_TIMEOUT) {
-        connection_close(connection);
-        return;
-    }
+	if (event & EV_TIMEOUT) {
+		connection_close(connection);
+		return;
+	}
 
-    ssize_t nbytes = socket_recv_to_buffer(&connection->client.socket);
-    if (nbytes < 0 && errno == EAGAIN) {
-        socket_schedule_read(&connection->client.socket, false);
-        return;
-    }
+	ssize_t nbytes = socket_recv_to_buffer(&connection->client.socket);
+	if (nbytes < 0 && errno == EAGAIN) {
+		socket_schedule_read(&connection->client.socket, false);
+		return;
+	}
 
-    if (nbytes <= 0) {
-        connection_close(connection);
-        return;
-    }
+	if (nbytes <= 0) {
+		connection_close(connection);
+		return;
+	}
 
-    if (connection_handle_client_input(connection) &&
-        !fifo_buffer_full(connection->client.socket.input))
-        socket_schedule_read(&connection->client.socket, false);
+	if (connection_handle_client_input(connection) &&
+	    !fifo_buffer_full(connection->client.socket.input))
+		socket_schedule_read(&connection->client.socket, false);
 }
 
 static void
 connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    if (event & EV_TIMEOUT) {
-        connection_close(connection);
-        return;
-    }
+	if (event & EV_TIMEOUT) {
+		connection_close(connection);
+		return;
+	}
 
-    if (connection_handle_server_input(connection) &&
-        !fifo_buffer_full(connection->server.socket.input))
-        socket_schedule_read(&connection->server.socket, false);
+	if (connection_handle_server_input(connection) &&
+	    !fifo_buffer_full(connection->server.socket.input))
+		socket_schedule_read(&connection->server.socket, false);
 }
 
 static void
 connection_server_read_callback([[maybe_unused]] int fd,
-                                short event, void *ctx)
+				short event, void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    if (event & EV_TIMEOUT) {
-        connection_close(connection);
-        return;
-    }
+	if (event & EV_TIMEOUT) {
+		connection_close(connection);
+		return;
+	}
 
-    if (connection->server.socket.state == SOCKET_CONNECTING) {
-        int s_err = 0;
-        socklen_t s_err_size = sizeof(s_err);
+	if (connection->server.socket.state == SOCKET_CONNECTING) {
+		int s_err = 0;
+		socklen_t s_err_size = sizeof(s_err);
 
-        if (getsockopt(connection->server.socket.fd, SOL_SOCKET, SO_ERROR,
-                       (char*)&s_err, &s_err_size) < 0 ||
-            s_err != 0) {
-            connection_close(connection);
-            return;
-        }
+		if (getsockopt(connection->server.socket.fd, SOL_SOCKET, SO_ERROR,
+			       (char*)&s_err, &s_err_size) < 0 ||
+		    s_err != 0) {
+			connection_close(connection);
+			return;
+		}
 
-        connection->server.socket.state = SOCKET_ALIVE;
-        socket_schedule_read(&connection->server.socket, false);
-        return;
-    }
+		connection->server.socket.state = SOCKET_ALIVE;
+		socket_schedule_read(&connection->server.socket, false);
+		return;
+	}
 
-    ssize_t nbytes = socket_recv_to_buffer(&connection->server.socket);
-    if (nbytes < 0 && errno == EAGAIN) {
-        socket_schedule_read(&connection->server.socket, false);
-        return;
-    }
+	ssize_t nbytes = socket_recv_to_buffer(&connection->server.socket);
+	if (nbytes < 0 && errno == EAGAIN) {
+		socket_schedule_read(&connection->server.socket, false);
+		return;
+	}
 
-    if (nbytes <= 0) {
-        connection_close(connection);
-        return;
-    }
+	if (nbytes <= 0) {
+		connection_close(connection);
+		return;
+	}
 
-    if (connection_handle_server_input(connection) &&
-        !fifo_buffer_full(connection->server.socket.input))
-        socket_schedule_read(&connection->server.socket, false);
+	if (connection_handle_server_input(connection) &&
+	    !fifo_buffer_full(connection->server.socket.input))
+		socket_schedule_read(&connection->server.socket, false);
 }
 
 static void
 connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    assert(!connection->delayed);
+	assert(!connection->delayed);
 
-    if (event & EV_TIMEOUT) {
-        connection_close(connection);
-        return;
-    }
+	if (event & EV_TIMEOUT) {
+		connection_close(connection);
+		return;
+	}
 
-    if (connection_handle_client_input(connection) &&
-        !fifo_buffer_full(connection->client.socket.input))
-        socket_schedule_read(&connection->client.socket, false);
+	if (connection_handle_client_input(connection) &&
+	    !fifo_buffer_full(connection->client.socket.input))
+		socket_schedule_read(&connection->client.socket, false);
 }
 
 static bool
 connection_login_packet(Connection *connection,
-                        const char *data, size_t length)
+			const char *data, size_t length)
 {
-    if (length < 33)
-        return false;
+	if (length < 33)
+		return false;
 
-    const char *user = data + 32;
-    const char *user_end = (const char *)
-        memchr((const void *)user, 0, data + length - user);
-    if (user_end == NULL || user_end == user)
-        return false;
+	const char *user = data + 32;
+	const char *user_end = (const char *)
+		memchr((const void *)user, 0, data + length - user);
+	if (user_end == NULL || user_end == user)
+		return false;
 
-    size_t user_length = user_end - user;
-    if (user_length >= sizeof(connection->user))
-        user_length = sizeof(connection->user) - 1;
+	size_t user_length = user_end - user;
+	if (user_length >= sizeof(connection->user))
+		user_length = sizeof(connection->user) - 1;
 
-    memcpy(connection->user, user, user_length);
-    connection->user[user_length] = 0;
+	memcpy(connection->user, user, user_length);
+	connection->user[user_length] = 0;
 
-    unsigned delay_ms = policy_login(connection->user);
-    if (delay_ms > 0)
-        connection_delay(connection, delay_ms);
+	unsigned delay_ms = policy_login(connection->user);
+	if (delay_ms > 0)
+		connection_delay(connection, delay_ms);
 
-    return true;
+	return true;
 }
 
 static void
 connection_mysql_client_packet(unsigned number, size_t length,
-                               const void *data, size_t available,
-                               void *ctx)
+			       const void *data, size_t available,
+			       void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    if (mysql_is_query_packet(number, data, length) &&
-        connection->request_time == 0)
-        connection->request_time = now_us();
+	if (mysql_is_query_packet(number, data, length) &&
+	    connection->request_time == 0)
+		connection->request_time = now_us();
 
-    if (number == 1 && !connection->login_received) {
-        connection->login_received =
-            connection_login_packet(connection, (const char *)data, available);
-    }
+	if (number == 1 && !connection->login_received) {
+		connection->login_received =
+			connection_login_packet(connection, (const char *)data, available);
+	}
 }
 
 static const struct mysql_handler connection_mysql_client_handler = {
-    .packet = connection_mysql_client_packet,
+	.packet = connection_mysql_client_packet,
 };
 
 static void
 connection_mysql_server_packet(unsigned number, size_t length,
-                               const void *data, size_t available,
-                               void *ctx)
+			       const void *data, size_t available,
+			       void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    (void)length;
-    (void)data;
-    (void)available;
+	(void)length;
+	(void)data;
+	(void)available;
 
-    if (!connection->greeting_received && number == 0) {
-        connection->greeting_received = true;
-    }
+	if (!connection->greeting_received && number == 0) {
+		connection->greeting_received = true;
+	}
 
-    if (mysql_is_eof_packet(number, data, length) &&
-        connection->login_received &&
-        connection->request_time != 0) {
-        uint64_t duration_us = now_us() - connection->request_time;
-        policy_duration(connection->user, (unsigned)(duration_us / 1000));
-        connection->request_time = 0;
-    }
+	if (mysql_is_eof_packet(number, data, length) &&
+	    connection->login_received &&
+	    connection->request_time != 0) {
+		uint64_t duration_us = now_us() - connection->request_time;
+		policy_duration(connection->user, (unsigned)(duration_us / 1000));
+		connection->request_time = 0;
+	}
 }
 
 static const struct mysql_handler connection_mysql_server_handler = {
-    .packet = connection_mysql_server_packet,
+	.packet = connection_mysql_server_packet,
 };
 
 /**
@@ -295,82 +295,82 @@ static const struct mysql_handler connection_mysql_server_handler = {
  */
 static void
 connection_delay_timer_callback([[maybe_unused]] int fd,
-                                [[maybe_unused]] short event, void *ctx)
+				[[maybe_unused]] short event, void *ctx)
 {
-    Connection *connection = (Connection *)ctx;
+	Connection *connection = (Connection *)ctx;
 
-    assert(connection->delayed);
+	assert(connection->delayed);
 
-    connection->delayed = false;
+	connection->delayed = false;
 
-    if (connection_handle_client_input(connection) &&
-        !fifo_buffer_full(connection->client.socket.input))
-        socket_schedule_read(&connection->client.socket, false);
+	if (connection_handle_client_input(connection) &&
+	    !fifo_buffer_full(connection->client.socket.input))
+		socket_schedule_read(&connection->client.socket, false);
 }
 
 Connection *
 connection_new(Instance *instance, int fd)
 {
-    Connection *connection = (Connection *)
-        malloc(sizeof(*connection));
-    connection->instance = instance;
+	Connection *connection = (Connection *)
+		malloc(sizeof(*connection));
+	connection->instance = instance;
 
-    event_set(&connection->delay_timer, -1, EV_TIMEOUT,
-              connection_delay_timer_callback, connection);
-    connection->delayed = false;
+	event_set(&connection->delay_timer, -1, EV_TIMEOUT,
+		  connection_delay_timer_callback, connection);
+	connection->delayed = false;
 
-    connection->greeting_received = false;
-    connection->login_received = false;
-    connection->request_time = 0;
+	connection->greeting_received = false;
+	connection->login_received = false;
+	connection->request_time = 0;
 
-    socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
-                connection_client_read_callback,
-                connection_client_write_callback, connection);
-    mysql_reader_init(&connection->client.reader,
-                      &connection_mysql_client_handler, connection);
+	socket_init(&connection->client.socket, SOCKET_ALIVE, fd, 4096,
+		    connection_client_read_callback,
+		    connection_client_write_callback, connection);
+	mysql_reader_init(&connection->client.reader,
+			  &connection_mysql_client_handler, connection);
 
-    const struct addrinfo *address = connection->instance->server_address;
-    assert(address != NULL);
-    fd = socket_cloexec_nonblock(address->ai_family, address->ai_socktype,
-                                 address->ai_protocol);
-    if (fd < 0) {
-        socket_close(&connection->client.socket);
-        return NULL;
-    }
+	const struct addrinfo *address = connection->instance->server_address;
+	assert(address != NULL);
+	fd = socket_cloexec_nonblock(address->ai_family, address->ai_socktype,
+				     address->ai_protocol);
+	if (fd < 0) {
+		socket_close(&connection->client.socket);
+		return NULL;
+	}
 
-    int ret = connect(fd, address->ai_addr, address->ai_addrlen);
-    if (ret < 0 && errno != EINPROGRESS) {
-        socket_close(&connection->client.socket);
-        return NULL;
-    }
+	int ret = connect(fd, address->ai_addr, address->ai_addrlen);
+	if (ret < 0 && errno != EINPROGRESS) {
+		socket_close(&connection->client.socket);
+		return NULL;
+	}
 
-    socket_init(&connection->server.socket, SOCKET_CONNECTING, fd, 4096,
-                connection_server_read_callback,
-                connection_server_write_callback, connection);
-    mysql_reader_init(&connection->server.reader,
-                      &connection_mysql_server_handler, connection);
+	socket_init(&connection->server.socket, SOCKET_CONNECTING, fd, 4096,
+		    connection_server_read_callback,
+		    connection_server_write_callback, connection);
+	mysql_reader_init(&connection->server.reader,
+			  &connection_mysql_server_handler, connection);
 
-    socket_schedule_read(&connection->client.socket, false);
-    socket_schedule_read(&connection->server.socket, true);
+	socket_schedule_read(&connection->client.socket, false);
+	socket_schedule_read(&connection->server.socket, true);
 
-    event_add(&connection->client.socket.read_event, NULL);
+	event_add(&connection->client.socket.read_event, NULL);
 
-    return connection;
+	return connection;
 }
 
 void
 connection_delay(Connection *c, unsigned delay_ms)
 {
-    assert(delay_ms > 0);
+	assert(delay_ms > 0);
 
-    c->delayed = true;
+	c->delayed = true;
 
-    socket_unschedule_read(&c->client.socket);
+	socket_unschedule_read(&c->client.socket);
 
-    const struct timeval timeout = {
-        .tv_sec = delay_ms / 1000,
-        .tv_usec = (delay_ms % 1000) * 1000,
-    };
+	const struct timeval timeout = {
+		.tv_sec = delay_ms / 1000,
+		.tv_usec = (delay_ms % 1000) * 1000,
+	};
 
-    event_add(&c->delay_timer, &timeout);
+	event_add(&c->delay_timer, &timeout);
 }

@@ -12,54 +12,54 @@
 #include <cstddef>
 
 struct mysql_handler {
-    /**
-     * A packet was received.
-     *
-     * @param number the packet number
-     * @param length the full payload length
-     * @param data the payload
-     * @param available the amount of payload that is available now
-     */
-    void (*packet)(unsigned number, size_t length,
-                   const void *data, size_t available,
-                   void *ctx);
+	/**
+	 * A packet was received.
+	 *
+	 * @param number the packet number
+	 * @param length the full payload length
+	 * @param data the payload
+	 * @param available the amount of payload that is available now
+	 */
+	void (*packet)(unsigned number, size_t length,
+		       const void *data, size_t available,
+		       void *ctx);
 };
 
 struct mysql_reader {
-    const struct mysql_handler *handler;
-    void *handler_ctx;
+	const struct mysql_handler *handler;
+	void *handler_ctx;
 
-    bool have_packet;
+	bool have_packet;
 
-    /**
-     * The number of bytes to forward.
-     */
-    size_t forward;
+	/**
+	 * The number of bytes to forward.
+	 */
+	size_t forward;
 
-    /**
-     * The remaining number of the previous packet that should be
-     * forwarded as-is.
-     */
-    size_t remaining;
+	/**
+	 * The remaining number of the previous packet that should be
+	 * forwarded as-is.
+	 */
+	size_t remaining;
 
-    unsigned number;
+	unsigned number;
 
-    /**
-     * Total length of the current packet payload.
-     */
-    size_t payload_length;
+	/**
+	 * Total length of the current packet payload.
+	 */
+	size_t payload_length;
 
-    /**
-     * The amount of payload that is available in the #payload buffer.
-     */
-    size_t payload_available;
+	/**
+	 * The amount of payload that is available in the #payload buffer.
+	 */
+	size_t payload_available;
 
-    char payload[1024];
+	char payload[1024];
 };
 
 void
 mysql_reader_init(struct mysql_reader *reader,
-                  const struct mysql_handler *handler, void *ctx);
+		  const struct mysql_handler *handler, void *ctx);
 
 /**
  * Feed data into the reader.  It stops at the boundary of a packet,
@@ -69,7 +69,7 @@ mysql_reader_init(struct mysql_reader *reader,
  */
 size_t
 mysql_reader_feed(struct mysql_reader *reader,
-                  const void *data, size_t length);
+		  const void *data, size_t length);
 
 /**
  * Indicates that the caller has forwarded the specified number of
@@ -78,9 +78,9 @@ mysql_reader_feed(struct mysql_reader *reader,
 static inline void
 mysql_reader_forwarded(struct mysql_reader *reader, size_t nbytes)
 {
-    assert(nbytes > 0);
-    assert(reader->forward > 0);
-    assert(nbytes <= reader->forward);
+	assert(nbytes > 0);
+	assert(reader->forward > 0);
+	assert(nbytes <= reader->forward);
 
-    reader->forward -= nbytes;
+	reader->forward -= nbytes;
 }

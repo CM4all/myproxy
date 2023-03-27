@@ -12,25 +12,25 @@
 #include <stdint.h>
 
 struct mysql_packet_header {
-    uint8_t length[3];
-    uint8_t number;
+	uint8_t length[3];
+	uint8_t number;
 };
 
 static inline size_t
 mysql_packet_length(const struct mysql_packet_header *header)
 {
-    return header->length[0] | (header->length[1] << 8) |
-        (header->length[2] << 16);
+	return header->length[0] | (header->length[1] << 8) |
+		(header->length[2] << 16);
 }
 
 static inline bool
 mysql_is_query_packet(unsigned number, const void *data, size_t length)
 {
-    return number == 0 && length >= 1 && *(const uint8_t *)data == 0x03;
+	return number == 0 && length >= 1 && *(const uint8_t *)data == 0x03;
 }
 
 static inline bool
 mysql_is_eof_packet(unsigned number, const void *data, size_t length)
 {
-    return number > 0 && length >= 1 && *(const uint8_t *)data == 0xfe;
+	return number > 0 && length >= 1 && *(const uint8_t *)data == 0xfe;
 }

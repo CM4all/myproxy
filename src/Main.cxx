@@ -6,7 +6,6 @@
 #include "Config.hxx"
 #include "CommandLine.hxx"
 #include "Policy.hxx"
-#include "Listener.hxx"
 #include "Connection.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
@@ -25,8 +24,6 @@ try {
 	Instance instance{config};
 
 	policy_init();
-
-	listener_init(&instance, 3306);
 
 	instance.event_loop.Run();
 

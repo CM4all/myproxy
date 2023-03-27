@@ -5,7 +5,10 @@
 #pragma once
 
 #include "net/AllocatedSocketAddress.hxx"
+#include "net/SocketConfig.hxx"
 
 struct Config {
+	SocketConfig listener;
+
 	AllocatedSocketAddress server_address;
 };

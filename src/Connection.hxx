@@ -30,9 +30,9 @@ struct Connection final
 	 */
 	CoarseTimerEvent delay_timer;
 
-	bool delayed;
+	bool delayed = false;
 
-	bool greeting_received, login_received;
+	bool greeting_received = false, login_received = false;
 
 	char user[64];
 

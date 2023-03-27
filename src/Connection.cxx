@@ -186,11 +186,6 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
-	delayed = false;
-
-	greeting_received = false;
-	login_received = false;
-
 	// TODO move this call out of the ctor
 	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 }

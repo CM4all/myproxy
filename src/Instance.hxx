@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include "util/IntrusiveList.hxx"
+
 #include <event.h>
 
-#include <inline/list.h>
-
 struct addrinfo;
+struct Connection;
 
 struct Instance {
 	struct event_base *const event_base = event_init();
@@ -23,7 +24,7 @@ struct Instance {
 	int listener_socket;
 	struct event listener_event;
 
-	struct list_head connections;
+	IntrusiveList<Connection> connections;
 
 	Instance();
 	~Instance() noexcept;

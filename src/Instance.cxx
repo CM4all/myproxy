@@ -5,6 +5,7 @@
  */
 
 #include "Instance.hxx"
+#include "Connection.hxx"
 
 #include <cstddef>
 
@@ -12,7 +13,6 @@
 
 Instance::Instance()
 {
-	list_init(&connections);
 }
 
 Instance::~Instance() noexcept

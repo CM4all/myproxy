@@ -7,13 +7,11 @@
 #pragma once
 
 #include "Peer.hxx"
-
-#include <inline/list.h>
+#include "util/IntrusiveList.hxx"
 
 struct Instance;
 
-struct Connection {
-	struct list_head siblings;
+struct Connection : IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
 	Instance *const instance;
 
 	/**

@@ -45,7 +45,7 @@ listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
 	}
 
 	Connection *connection = new Connection(*instance, remote_fd);
-	list_add(&connection->siblings, &instance->connections);
+	instance->connections.push_back(*connection);
 }
 
 static int

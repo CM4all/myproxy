@@ -106,7 +106,6 @@ add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language:
 
 libevent = dependency('libevent_core')
 libdaemon = dependency('libcm4all-daemon', version: '>= 0.1.2')
-libinline = dependency('libcm4all-inline', version: '>= 0.1.1')
 libsocket = dependency('libcm4all-socket')
 
 inc = include_directories(
@@ -117,6 +116,8 @@ inc = include_directories(
 libcommon_enable_c = false
 libcommon_enable_DefaultFifoBuffer = false
 libcommon_enable_boost = false
+
+subdir('libcommon/src/util')
 
 executable(
   'cm4all-myproxy',
@@ -134,9 +135,9 @@ executable(
   'src/Main.cxx',
   include_directories: inc,
   dependencies: [
+    util_dep,
     libevent,
     libdaemon,
-    libinline,
     libsocket,
   ],
   install: true,

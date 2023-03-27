@@ -3,6 +3,7 @@
 #include "Policy.hxx"
 #include "Listener.hxx"
 #include "Connection.hxx"
+#include "util/DeleteDisposer.hxx"
 
 #include <event.h>
 #include <signal.h>
@@ -29,11 +30,7 @@ exit_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void 
 	deinit_signals(instance);
 	listener_deinit(instance);
 
-	while (!list_empty(&instance->connections)) {
-		Connection *connection =
-			(Connection *)instance->connections.next;
-		delete connection;
-	}
+	instance->connections.clear_and_dispose(DeleteDisposer{});
 }
 
 static void

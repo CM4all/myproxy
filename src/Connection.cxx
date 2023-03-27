@@ -26,8 +26,6 @@ Connection::~Connection() noexcept
 	socket_close(&client.socket);
 	socket_close(&server.socket);
 	event_del(&delay_timer);
-
-	list_remove(&siblings);
 }
 
 /**

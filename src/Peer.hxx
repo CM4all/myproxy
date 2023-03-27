@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "Socket.hxx"
 #include "MysqlReader.hxx"
+#include "event/net/BufferedSocket.hxx"
+#include "net/UniqueSocketDescriptor.hxx"
 
 class PeerHandler {
 public:
@@ -25,7 +26,7 @@ public:
  * A connection to one peer.
  */
 struct Peer final : BufferedSocketHandler {
-	Socket socket;
+	BufferedSocket socket;
 
 	MysqlReader reader;
 
@@ -35,9 +36,13 @@ struct Peer final : BufferedSocketHandler {
 	     UniqueSocketDescriptor fd,
 	     PeerHandler &_handler,
 	     MysqlHandler &_mysql_handler) noexcept
-		:socket(event_loop, std::move(fd), *this),
+		:socket(event_loop),
 		 reader(_mysql_handler),
-		 handler(_handler) {}
+		 handler(_handler)
+	{
+		socket.Init(fd.Release(), FD_TCP, std::chrono::minutes{1}, *this);
+		socket.ScheduleRead();
+	}
 
 	std::pair<PeerHandler::ForwardResult, std::size_t> Forward(std::span<std::byte> src) noexcept;
 

@@ -7,7 +7,7 @@
 std::pair<PeerHandler::ForwardResult, std::size_t>
 Peer::Forward(std::span<std::byte> src) noexcept
 {
-	const auto r = socket.socket.Write(src.data(), src.size());
+	const auto r = socket.Write(src.data(), src.size());
 	if (r > 0)
 		return {PeerHandler::ForwardResult::OK, static_cast<std::size_t>(r)};
 
@@ -23,7 +23,7 @@ Peer::Forward(std::span<std::byte> src) noexcept
 BufferedResult
 Peer::OnBufferedData()
 {
-	const auto r = socket.socket.ReadBuffer();
+	const auto r = socket.ReadBuffer();
 	if (r.empty())
 		return BufferedResult::OK;
 
@@ -44,7 +44,7 @@ Peer::OnBufferedData()
 	}
 
 	if (n_forwarded > 0) {
-		socket.socket.DisposeConsumed(n_forwarded);
+		socket.DisposeConsumed(n_forwarded);
 		reader.Forwarded(n_forwarded);
 		return BufferedResult::AGAIN;
 	}

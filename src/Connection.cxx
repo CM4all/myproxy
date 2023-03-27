@@ -36,7 +36,7 @@ Connection::Outgoing::OnPeerWrite()
 		/* don't continue reading now */
 		return true;
 
-	return connection.incoming.socket.socket.Read(); // TODO return value?
+	return connection.incoming.socket.Read(); // TODO return value?
 }
 
 void
@@ -77,7 +77,7 @@ Connection::OnPeerWrite()
 	if (!outgoing)
 		return true;
 
-	return outgoing->peer.socket.socket.Read(); // TODO return value?
+	return outgoing->peer.socket.Read(); // TODO return value?
 }
 
 void
@@ -93,7 +93,6 @@ Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 	assert(!outgoing);
 
 	outgoing.emplace(*this, std::move(fd));
-	socket_schedule_read(&outgoing->peer.socket);
 }
 
 void
@@ -178,7 +177,7 @@ Connection::OnDelayTimer() noexcept
 
 	delayed = false;
 
-	incoming.socket.socket.Read();
+	incoming.socket.Read();
 }
 
 Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
@@ -188,8 +187,6 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
-	socket_schedule_read(&incoming.socket);
-
 	delayed = false;
 
 	greeting_received = false;
@@ -198,8 +195,6 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 
 	// TODO move this call out of the ctor
 	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
-
-	socket_schedule_read(&incoming.socket);
 }
 
 void
@@ -209,7 +204,7 @@ connection_delay(Connection *c, unsigned delay_ms)
 
 	c->delayed = true;
 
-	socket_unschedule_read(&c->incoming.socket);
+	c->incoming.socket.UnscheduleRead();
 
 	c->delay_timer.Schedule(std::chrono::milliseconds{delay_ms});
 }

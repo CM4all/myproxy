@@ -25,18 +25,18 @@ struct MysqlReader {
 	const MysqlHandler *handler;
 	void *handler_ctx;
 
-	bool have_packet;
+	bool have_packet = false;
 
 	/**
 	 * The number of bytes to forward.
 	 */
-	size_t forward;
+	size_t forward = 0;
 
 	/**
 	 * The remaining number of the previous packet that should be
 	 * forwarded as-is.
 	 */
-	size_t remaining;
+	size_t remaining = 0;
 
 	unsigned number;
 
@@ -51,11 +51,10 @@ struct MysqlReader {
 	size_t payload_available;
 
 	char payload[1024];
-};
 
-void
-mysql_reader_init(MysqlReader *reader,
-		  const MysqlHandler *handler, void *ctx);
+	constexpr MysqlReader(const MysqlHandler &_handler, void *_ctx) noexcept
+		:handler(&_handler), handler_ctx(_ctx) {}
+};
 
 /**
  * Feed data into the reader.  It stops at the boundary of a packet,

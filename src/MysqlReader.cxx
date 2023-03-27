@@ -7,20 +7,6 @@
 
 #include <cstring>
 
-void
-mysql_reader_init(MysqlReader *reader,
-		  const MysqlHandler *handler, void *ctx)
-{
-	assert(handler != NULL);
-	assert(handler->packet != NULL);
-
-	reader->handler = handler;
-	reader->handler_ctx = ctx;
-	reader->have_packet = false;
-	reader->forward = 0;
-	reader->remaining = 0;
-}
-
 size_t
 mysql_reader_feed(MysqlReader *reader,
 		  const void *data, size_t length)

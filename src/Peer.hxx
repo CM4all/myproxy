@@ -19,9 +19,11 @@ struct Peer {
 	     UniqueSocketDescriptor _fd,
 	     void (*read_callback)(int, short, void *),
 	     void (*write_callback)(int, short, void *),
-	     void *arg) noexcept
+	     void *arg,
+	     const MysqlHandler &_handler, void *_ctx) noexcept
 		:socket(_state, std::move(_fd),
-			read_callback, write_callback, arg) {}
+			read_callback, write_callback, arg),
+		 reader(_handler, _ctx) {}
 };
 
 /**

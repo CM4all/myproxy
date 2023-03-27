@@ -106,7 +106,6 @@ add_project_arguments(c_compiler.get_supported_arguments(test_cflags), language:
 
 libevent = dependency('libevent_core')
 libdaemon = dependency('libcm4all-daemon', version: '>= 0.1.2')
-libsocket = dependency('libcm4all-socket')
 
 inc = include_directories(
   'src',
@@ -141,7 +140,6 @@ executable(
     net_dep,
     libevent,
     libdaemon,
-    libsocket,
   ],
   install: true,
   install_dir: 'sbin',

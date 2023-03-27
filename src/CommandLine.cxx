@@ -9,8 +9,6 @@
 #include "net/AddressInfo.hxx"
 #include "net/Resolver.hxx"
 
-#include <socket/resolver.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

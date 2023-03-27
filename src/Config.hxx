@@ -6,8 +6,8 @@
 
 #pragma once
 
-struct Config {
-	struct addrinfo *server_address = nullptr;
+#include "net/AllocatedSocketAddress.hxx"
 
-	~Config() noexcept;
+struct Config {
+	AllocatedSocketAddress server_address;
 };

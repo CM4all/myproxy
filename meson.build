@@ -118,6 +118,10 @@ libcommon_enable_DefaultFifoBuffer = false
 libcommon_enable_boost = false
 
 subdir('libcommon/src/util')
+subdir('libcommon/src/lib/fmt')
+subdir('libcommon/src/io')
+subdir('libcommon/src/system')
+subdir('libcommon/src/net')
 
 executable(
   'cm4all-myproxy',
@@ -131,11 +135,11 @@ executable(
   'src/Connection.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
-  'src/Config.cxx',
   'src/Main.cxx',
   include_directories: inc,
   dependencies: [
     util_dep,
+    net_dep,
     libevent,
     libdaemon,
     libsocket,

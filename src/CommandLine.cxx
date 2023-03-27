@@ -6,6 +6,8 @@
 
 #include "CommandLine.hxx"
 #include "Config.hxx"
+#include "net/AddressInfo.hxx"
+#include "net/Resolver.hxx"
 
 #include <socket/resolver.h>
 
@@ -28,11 +30,5 @@ parse_cmdline(Config &config, int argc, char **argv)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	struct addrinfo *ai;
-	if (socket_resolve_host_port(argv[1], 3306, &hints, &ai) != 0) {
-		fprintf(stderr, "Failed to resolve %s\n", argv[1]);
-		exit(EXIT_FAILURE);
-	}
-
-	config.server_address = ai;
+	config.server_address = Resolve(argv[1], 3306, &hints).GetBest();
 }

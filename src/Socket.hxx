@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include "util/StaticFifoBuffer.hxx"
+
+#include <cstddef> // for std::byte
+
 #include <event.h>
 
 enum socket_state {
@@ -21,12 +25,12 @@ struct Socket {
 
 	const int fd;
 
-	struct fifo_buffer *input;
+	StaticFifoBuffer<std::byte, 4096> input;
 
 	struct event read_event, write_event;
 
 	Socket(enum socket_state _state,
-	       int _fd, size_t input_buffer_size,
+	       int _fd,
 	       void (*read_callback)(int, short, void *),
 	       void (*write_callback)(int, short, void *),
 	       void *arg) noexcept;
@@ -50,8 +54,8 @@ ssize_t
 socket_recv_to_buffer(Socket *s);
 
 ssize_t
-socket_send_from_buffer(Socket *s, struct fifo_buffer *buffer);
+socket_send_from_buffer(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer);
 
 ssize_t
-socket_send_from_buffer_n(Socket *s, struct fifo_buffer *buffer,
+socket_send_from_buffer_n(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer,
 			  size_t max);

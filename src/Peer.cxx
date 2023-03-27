@@ -5,17 +5,15 @@
  */
 
 #include "Peer.hxx"
-#include "fifo_buffer.h"
 
 size_t
 peer_feed(Peer *peer)
 {
-	size_t length;
-	const void *data = fifo_buffer_read(peer->socket.input, &length);
-	if (data == NULL)
+	const auto r = peer->socket.input.Read();
+	if (r.empty())
 		return 0;
 
-	size_t nbytes = mysql_reader_feed(&peer->reader, data, length);
+	size_t nbytes = mysql_reader_feed(&peer->reader, r.data(), r.size());
 	assert(nbytes > 0);
 	return nbytes;
 }

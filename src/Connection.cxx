@@ -8,7 +8,6 @@
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "fd_util.h"
-#include "fifo_buffer.h"
 #include "mysql_protocol.h"
 #include "clock.h"
 #include "Policy.hxx"
@@ -31,7 +30,7 @@ Connection::~Connection() noexcept
  */
 static bool
 connection_send_to_socket(Connection *connection,
-			  Socket *s, struct fifo_buffer *buffer,
+			  Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer,
 			  size_t max)
 {
 	ssize_t remaining = socket_send_from_buffer_n(s, buffer, max);
@@ -43,7 +42,7 @@ connection_send_to_socket(Connection *connection,
 	}
 
 	if (remaining > 0)
-		socket_schedule_write(s, fifo_buffer_full(buffer));
+		socket_schedule_write(s, buffer.IsFull());
 	else
 		socket_unschedule_write(s);
 
@@ -54,13 +53,13 @@ static bool
 connection_forward(Connection *connection,
 		   Peer *src, Peer *dest, size_t length)
 {
-	size_t before = fifo_buffer_available(src->socket.input);
+	size_t before = src->socket.input.GetAvailable();
 
 	if (!connection_send_to_socket(connection, &dest->socket,
 				       src->socket.input, length))
 		return false;
 
-	size_t after = fifo_buffer_available(src->socket.input);
+	size_t after = src->socket.input.GetAvailable();
 	assert(after <= before);
 	size_t nbytes = before - after;
 
@@ -127,7 +126,7 @@ connection_client_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (connection_handle_client_input(connection) &&
-	    !fifo_buffer_full(connection->client.socket.input))
+	    !connection->client.socket.input.IsFull())
 		socket_schedule_read(&connection->client.socket, false);
 }
 
@@ -142,7 +141,7 @@ connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx
 	}
 
 	if (connection_handle_server_input(connection) &&
-	    !fifo_buffer_full(connection->server->socket.input))
+	    !connection->server->socket.input.IsFull())
 		socket_schedule_read(&connection->server->socket, false);
 }
 
@@ -185,7 +184,7 @@ connection_server_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (connection_handle_server_input(connection) &&
-	    !fifo_buffer_full(connection->server->socket.input))
+	    !connection->server->socket.input.IsFull())
 		socket_schedule_read(&connection->server->socket, false);
 }
 
@@ -202,7 +201,7 @@ connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx
 	}
 
 	if (connection_handle_client_input(connection) &&
-	    !fifo_buffer_full(connection->client.socket.input))
+	    !connection->client.socket.input.IsFull())
 		socket_schedule_read(&connection->client.socket, false);
 }
 
@@ -297,13 +296,13 @@ connection_delay_timer_callback([[maybe_unused]] int fd,
 	connection->delayed = false;
 
 	if (connection_handle_client_input(connection) &&
-	    !fifo_buffer_full(connection->client.socket.input))
+	    !connection->client.socket.input.IsFull())
 		socket_schedule_read(&connection->client.socket, false);
 }
 
 Connection::Connection(Instance &_instance, int fd)
 	:instance(&_instance),
-	 client(SOCKET_ALIVE, fd, 4096,
+	 client(SOCKET_ALIVE, fd,
 		connection_client_read_callback,
 		connection_client_write_callback, this)
 {
@@ -329,7 +328,7 @@ Connection::Connection(Instance &_instance, int fd)
 	if (ret < 0 && errno != EINPROGRESS)
 		throw "Failed to create socket";
 
-	server.emplace(SOCKET_CONNECTING, fd, 4096,
+	server.emplace(SOCKET_CONNECTING, fd,
 		       connection_server_read_callback,
 		       connection_server_write_callback, this);
 	mysql_reader_init(&server->reader,

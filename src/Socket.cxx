@@ -5,7 +5,6 @@
  */
 
 #include "Socket.hxx"
-#include "fifo_buffer.h"
 #include "BufferedIO.hxx"
 
 #include <cassert>
@@ -19,16 +18,14 @@ static const struct timeval socket_timeout = {
 };
 
 Socket::Socket(enum socket_state _state,
-	       int _fd, size_t input_buffer_size,
+	       int _fd,
 	       void (*read_callback)(int, short, void *),
 	       void (*write_callback)(int, short, void *),
 	       void *arg) noexcept
-	:state(_state), fd(_fd),
-	 input(fifo_buffer_new(input_buffer_size))
+	:state(_state), fd(_fd)
 {
 	assert(state == SOCKET_CONNECTING || state == SOCKET_ALIVE);
 	assert(fd >= 0);
-	assert(input_buffer_size > 0);
 	assert(read_callback != NULL);
 	assert(write_callback != NULL);
 
@@ -45,8 +42,6 @@ Socket::~Socket() noexcept
 	event_del(&write_event);
 
 	close(fd);
-
-	fifo_buffer_free(input);
 }
 
 void
@@ -100,7 +95,7 @@ socket_recv_to_buffer(Socket *s)
 }
 
 ssize_t
-socket_send_from_buffer(Socket *s, struct fifo_buffer *buffer)
+socket_send_from_buffer(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer)
 {
 	assert(s != NULL);
 	assert(s->state == SOCKET_ALIVE);
@@ -110,7 +105,7 @@ socket_send_from_buffer(Socket *s, struct fifo_buffer *buffer)
 }
 
 ssize_t
-socket_send_from_buffer_n(Socket *s, struct fifo_buffer *buffer,
+socket_send_from_buffer_n(Socket *s, StaticFifoBuffer<std::byte, 4096> &buffer,
 			  size_t max)
 {
 	assert(s != NULL);

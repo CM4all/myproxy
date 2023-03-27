@@ -5,7 +5,6 @@
  */
 
 #include "BufferedIO.hxx"
-#include "fifo_buffer.h"
 
 #include <cassert>
 #include <cerrno>
@@ -14,117 +13,106 @@
 #include <sys/socket.h>
 
 ssize_t
-read_to_buffer(int fd, struct fifo_buffer *buffer, size_t length)
+read_to_buffer(int fd, StaticFifoBuffer<std::byte, 4096> &buffer, size_t length)
 {
-	void *dest;
-	size_t max_length;
 	ssize_t nbytes;
 
 	assert(fd >= 0);
-	assert(buffer != NULL);
 
-	dest = fifo_buffer_write(buffer, &max_length);
-	if (dest == NULL)
+	const auto w = buffer.Write();
+	if (w.empty())
 		return -2;
 
-	if (length > max_length)
-		length = max_length;
+	if (length > w.size())
+		length = w.size();
 
-	nbytes = read(fd, dest, length);
+	nbytes = read(fd, w.data(), length);
 	if (nbytes > 0)
-		fifo_buffer_append(buffer, (size_t)nbytes);
+		buffer.Append((size_t)nbytes);
 
 	return nbytes;
 }
 
 ssize_t
-write_from_buffer(int fd, struct fifo_buffer *buffer)
+write_from_buffer(int fd, StaticFifoBuffer<std::byte, 4096> &buffer)
 {
-	const void *data;
-	size_t length;
 	ssize_t nbytes;
 
-	data = fifo_buffer_read(buffer, &length);
-	if (data == NULL)
+	const auto r = buffer.Read();
+	if (r.empty())
 		return -2;
 
-	nbytes = write(fd, data, length);
+	nbytes = write(fd, r.data(), r.size());
 	if (nbytes < 0 && errno != EAGAIN)
 		return -1;
 
 	if (nbytes <= 0)
-		return length;
+		return r.size();
 
-	fifo_buffer_consume(buffer, (size_t)nbytes);
-	return (ssize_t)length - nbytes;
+	buffer.Consume((size_t)nbytes);
+	return (ssize_t)r.size() - nbytes;
 }
 
 ssize_t
-recv_to_buffer(int fd, struct fifo_buffer *buffer, size_t length)
+recv_to_buffer(int fd, StaticFifoBuffer<std::byte, 4096> &buffer, size_t length)
 {
-	void *dest;
-	size_t max_length;
 	ssize_t nbytes;
 
 	assert(fd >= 0);
-	assert(buffer != NULL);
 
-	dest = fifo_buffer_write(buffer, &max_length);
-	if (dest == NULL)
+	const auto w = buffer.Write();
+	if (w.empty())
 		return -2;
 
-	if (length > max_length)
-		length = max_length;
+	if (length > w.size())
+		length = w.size();
 
-	nbytes = recv(fd, dest, length, MSG_DONTWAIT);
+	nbytes = recv(fd, w.data(), length, MSG_DONTWAIT);
 	if (nbytes > 0)
-		fifo_buffer_append(buffer, (size_t)nbytes);
+		buffer.Append((size_t)nbytes);
 
 	return nbytes;
 }
 
 ssize_t
-send_from_buffer(int fd, struct fifo_buffer *buffer)
+send_from_buffer(int fd, StaticFifoBuffer<std::byte, 4096> &buffer)
 {
-	const void *data;
-	size_t length;
 	ssize_t nbytes;
 
-	data = fifo_buffer_read(buffer, &length);
-	if (data == NULL)
+	const auto r = buffer.Read();
+	if (r.empty())
 		return -2;
 
-	nbytes = send(fd, data, length, MSG_DONTWAIT|MSG_NOSIGNAL);
+	nbytes = send(fd, r.data(), r.size(), MSG_DONTWAIT|MSG_NOSIGNAL);
 	if (nbytes < 0 && errno != EAGAIN)
 		return -1;
 
 	if (nbytes <= 0)
-		return length;
+		return r.size();
 
-	fifo_buffer_consume(buffer, (size_t)nbytes);
-	return (ssize_t)length - nbytes;
+	buffer.Consume((size_t)nbytes);
+	return (ssize_t)r.size() - nbytes;
 }
 
 ssize_t
-send_from_buffer_n(int fd, struct fifo_buffer *buffer, size_t max)
+send_from_buffer_n(int fd, StaticFifoBuffer<std::byte, 4096> &buffer, size_t max)
 {
 	assert(max > 0);
 
-	size_t length;
-	const void *data = fifo_buffer_read(buffer, &length);
-	if (data == NULL)
+	auto r = buffer.Read();
+	if (r.empty())
 		return -2;
 
-	if (length > max)
-		length = max;
+	if (r.size() > max)
+		r = r.first(max);
 
-	ssize_t nbytes = send(fd, data, length, MSG_DONTWAIT|MSG_NOSIGNAL);
+	ssize_t nbytes = send(fd, r.data(), r.size(), MSG_DONTWAIT|MSG_NOSIGNAL);
 	if (nbytes < 0 && errno != EAGAIN)
 		return -1;
 
 	if (nbytes <= 0)
-		return length;
+		return r.size();
 
-	fifo_buffer_consume(buffer, (size_t)nbytes);
-	return (ssize_t)length - nbytes;
+	buffer.Consume((size_t)nbytes);
+	return (ssize_t)r.size() - nbytes;
 }

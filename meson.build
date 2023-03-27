@@ -122,7 +122,6 @@ subdir('libcommon/src/util')
 executable(
   'cm4all-myproxy',
   'src/fd_util.c',
-  'src/fifo_buffer.c',
   'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/Listener.cxx',

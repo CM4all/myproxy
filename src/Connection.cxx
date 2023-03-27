@@ -23,8 +23,6 @@
 
 Connection::~Connection() noexcept
 {
-	socket_close(&client.socket);
-	socket_close(&server.socket);
 	event_del(&delay_timer);
 }
 
@@ -81,7 +79,7 @@ connection_handle_client_input(Connection *connection)
 			return !connection->delayed;
 
 		if (!connection_forward(connection, &connection->client,
-					&connection->server, nbytes))
+					&*connection->server, nbytes))
 			return false;
 
 		if (connection->delayed)
@@ -94,11 +92,11 @@ static bool
 connection_handle_server_input(Connection *connection)
 {
 	while (true) {
-		size_t nbytes = peer_feed(&connection->server);
+		size_t nbytes = peer_feed(&*connection->server);
 		if (nbytes == 0)
 			return true;
 
-		if (!connection_forward(connection, &connection->server,
+		if (!connection_forward(connection, &*connection->server,
 					&connection->client, nbytes))
 			return false;
 	}
@@ -144,8 +142,8 @@ connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx
 	}
 
 	if (connection_handle_server_input(connection) &&
-	    !fifo_buffer_full(connection->server.socket.input))
-		socket_schedule_read(&connection->server.socket, false);
+	    !fifo_buffer_full(connection->server->socket.input))
+		socket_schedule_read(&connection->server->socket, false);
 }
 
 static void
@@ -159,25 +157,25 @@ connection_server_read_callback([[maybe_unused]] int fd,
 		return;
 	}
 
-	if (connection->server.socket.state == SOCKET_CONNECTING) {
+	if (connection->server->socket.state == SOCKET_CONNECTING) {
 		int s_err = 0;
 		socklen_t s_err_size = sizeof(s_err);
 
-		if (getsockopt(connection->server.socket.fd, SOL_SOCKET, SO_ERROR,
+		if (getsockopt(connection->server->socket.fd, SOL_SOCKET, SO_ERROR,
 			       (char*)&s_err, &s_err_size) < 0 ||
 		    s_err != 0) {
 			delete connection;
 			return;
 		}
 
-		connection->server.socket.state = SOCKET_ALIVE;
-		socket_schedule_read(&connection->server.socket, false);
+		connection->server->socket.state = SOCKET_ALIVE;
+		socket_schedule_read(&connection->server->socket, false);
 		return;
 	}
 
-	ssize_t nbytes = socket_recv_to_buffer(&connection->server.socket);
+	ssize_t nbytes = socket_recv_to_buffer(&connection->server->socket);
 	if (nbytes < 0 && errno == EAGAIN) {
-		socket_schedule_read(&connection->server.socket, false);
+		socket_schedule_read(&connection->server->socket, false);
 		return;
 	}
 
@@ -187,8 +185,8 @@ connection_server_read_callback([[maybe_unused]] int fd,
 	}
 
 	if (connection_handle_server_input(connection) &&
-	    !fifo_buffer_full(connection->server.socket.input))
-		socket_schedule_read(&connection->server.socket, false);
+	    !fifo_buffer_full(connection->server->socket.input))
+		socket_schedule_read(&connection->server->socket, false);
 }
 
 static void
@@ -286,7 +284,7 @@ static const struct mysql_handler connection_mysql_server_handler = {
 
 /**
  * Called when the artificial delay is over, and restarts the transfer
- * from the client to the server.
+ * from the client to the server->
  */
 static void
 connection_delay_timer_callback([[maybe_unused]] int fd,
@@ -304,7 +302,10 @@ connection_delay_timer_callback([[maybe_unused]] int fd,
 }
 
 Connection::Connection(Instance &_instance, int fd)
-	:instance(&_instance)
+	:instance(&_instance),
+	 client(SOCKET_ALIVE, fd, 4096,
+		connection_client_read_callback,
+		connection_client_write_callback, this)
 {
 	event_set(&delay_timer, -1, EV_TIMEOUT,
 		  connection_delay_timer_callback, this);
@@ -314,9 +315,6 @@ Connection::Connection(Instance &_instance, int fd)
 	login_received = false;
 	request_time = 0;
 
-	socket_init(&client.socket, SOCKET_ALIVE, fd, 4096,
-		    connection_client_read_callback,
-		    connection_client_write_callback, this);
 	mysql_reader_init(&client.reader,
 			  &connection_mysql_client_handler, this);
 
@@ -324,25 +322,21 @@ Connection::Connection(Instance &_instance, int fd)
 	assert(address != NULL);
 	fd = socket_cloexec_nonblock(address->ai_family, address->ai_socktype,
 				     address->ai_protocol);
-	if (fd < 0) {
-		socket_close(&client.socket);
+	if (fd < 0)
 		throw "Failed to create socket";
-	}
 
 	int ret = connect(fd, address->ai_addr, address->ai_addrlen);
-	if (ret < 0 && errno != EINPROGRESS) {
-		socket_close(&client.socket);
+	if (ret < 0 && errno != EINPROGRESS)
 		throw "Failed to create socket";
-	}
 
-	socket_init(&server.socket, SOCKET_CONNECTING, fd, 4096,
-		    connection_server_read_callback,
-		    connection_server_write_callback, this);
-	mysql_reader_init(&server.reader,
+	server.emplace(SOCKET_CONNECTING, fd, 4096,
+		       connection_server_read_callback,
+		       connection_server_write_callback, this);
+	mysql_reader_init(&server->reader,
 			  &connection_mysql_server_handler, this);
 
 	socket_schedule_read(&client.socket, false);
-	socket_schedule_read(&server.socket, true);
+	socket_schedule_read(&server->socket, true);
 
 	event_add(&client.socket.read_event, NULL);
 }

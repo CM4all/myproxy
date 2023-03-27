@@ -19,22 +19,20 @@ enum socket_state {
 struct Socket {
 	enum socket_state state;
 
-	int fd;
+	const int fd;
 
 	struct fifo_buffer *input;
 
 	struct event read_event, write_event;
+
+	Socket(enum socket_state _state,
+	       int _fd, size_t input_buffer_size,
+	       void (*read_callback)(int, short, void *),
+	       void (*write_callback)(int, short, void *),
+	       void *arg) noexcept;
+
+	~Socket() noexcept;
 };
-
-void
-socket_init(Socket *s, enum socket_state state,
-	    int fd, size_t input_buffer_size,
-	    void (*read_callback)(int, short, void *),
-	    void (*write_callback)(int, short, void *),
-	    void *arg);
-
-void
-socket_close(Socket *s);
 
 void
 socket_schedule_read(Socket *s, bool timeout);

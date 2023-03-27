@@ -9,6 +9,8 @@
 #include "Peer.hxx"
 #include "util/IntrusiveList.hxx"
 
+#include <optional>
+
 struct Instance;
 
 struct Connection : IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
@@ -40,7 +42,7 @@ struct Connection : IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
 	/**
 	 * The connection to the server.
 	 */
-	Peer server;
+	std::optional<Peer> server;
 
 	Connection(Instance &_instance, int fd);
 	~Connection() noexcept;

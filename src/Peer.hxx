@@ -13,6 +13,14 @@ struct Peer {
 	Socket socket;
 
 	struct mysql_reader reader;
+
+	Peer(enum socket_state _state,
+	     int _fd, size_t input_buffer_size,
+	     void (*read_callback)(int, short, void *),
+	     void (*write_callback)(int, short, void *),
+	     void *arg) noexcept
+		:socket(_state, _fd, input_buffer_size,
+			read_callback, write_callback, arg) {}
 };
 
 /**

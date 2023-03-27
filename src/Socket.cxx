@@ -21,41 +21,35 @@ static const struct timeval socket_timeout = {
 	.tv_usec = 0,
 };
 
-void
-socket_init(Socket *s, enum socket_state state,
-	    int fd, size_t input_buffer_size,
-	    void (*read_callback)(int, short, void *),
-	    void (*write_callback)(int, short, void *),
-	    void *arg)
+Socket::Socket(enum socket_state _state,
+	       int _fd, size_t input_buffer_size,
+	       void (*read_callback)(int, short, void *),
+	       void (*write_callback)(int, short, void *),
+	       void *arg) noexcept
+	:state(_state), fd(_fd),
+	 input(fifo_buffer_new(input_buffer_size))
 {
-	assert(s != NULL);
 	assert(state == SOCKET_CONNECTING || state == SOCKET_ALIVE);
 	assert(fd >= 0);
 	assert(input_buffer_size > 0);
 	assert(read_callback != NULL);
 	assert(write_callback != NULL);
 
-	s->state = state;
-	s->fd = fd;
-	s->input = fifo_buffer_new(input_buffer_size);
-
-	event_set(&s->read_event, fd, EV_READ|EV_TIMEOUT, read_callback, arg);
-	event_set(&s->write_event, fd, EV_WRITE|EV_TIMEOUT, write_callback, arg);
+	event_set(&read_event, fd, EV_READ|EV_TIMEOUT, read_callback, arg);
+	event_set(&write_event, fd, EV_WRITE|EV_TIMEOUT, write_callback, arg);
 }
 
-void
-socket_close(Socket *s)
+Socket::~Socket() noexcept
 {
-	assert(s != NULL);
-	assert(s->state != SOCKET_CLOSED);
-	assert(s->fd >= 0);
+	assert(state != SOCKET_CLOSED);
+	assert(fd >= 0);
 
-	event_del(&s->read_event);
-	event_del(&s->write_event);
+	event_del(&read_event);
+	event_del(&write_event);
 
-	close(s->fd);
+	close(fd);
 
-	fifo_buffer_free(s->input);
+	fifo_buffer_free(input);
 }
 
 void

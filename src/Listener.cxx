@@ -24,7 +24,7 @@ extern "C" {
 #include <stdlib.h>
 
 static void
-listener_event_callback(int fd, short event __attr_unused, void *ctx)
+listener_event_callback(int fd, [[maybe_unused]] short event, void *ctx)
 {
     struct instance *instance = (struct instance *)ctx;
 

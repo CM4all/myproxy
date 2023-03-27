@@ -4,8 +4,6 @@
 #include "Listener.hxx"
 #include "Connection.hxx"
 
-#include <inline/compiler.h>
-
 #include <event.h>
 #include <signal.h>
 #include <stddef.h>
@@ -20,7 +18,7 @@ deinit_signals(struct instance *instance)
 }
 
 static void
-exit_event_callback(int fd __attr_unused, short event __attr_unused, void *ctx)
+exit_event_callback([[maybe_unused]] int fd, [[maybe_unused]] short event, void *ctx)
 {
     struct instance *instance = (struct instance*)ctx;
 

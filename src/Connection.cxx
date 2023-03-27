@@ -13,8 +13,6 @@
 #include "clock.h"
 #include "Policy.hxx"
 
-#include <inline/compiler.h>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -112,7 +110,7 @@ connection_handle_server_input(struct connection *connection)
 }
 
 static void
-connection_client_read_callback(__attr_unused int fd,
+connection_client_read_callback([[maybe_unused]] int fd,
                                 short event, void *ctx)
 {
     struct connection *connection = (struct connection *)ctx;
@@ -141,7 +139,7 @@ connection_client_read_callback(__attr_unused int fd,
 }
 
 static void
-connection_client_write_callback(__attr_unused int fd, short event, void *ctx)
+connection_client_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
     struct connection *connection = (struct connection *)ctx;
 
@@ -156,7 +154,7 @@ connection_client_write_callback(__attr_unused int fd, short event, void *ctx)
 }
 
 static void
-connection_server_read_callback(__attr_unused int fd,
+connection_server_read_callback([[maybe_unused]] int fd,
                                 short event, void *ctx)
 {
     struct connection *connection = (struct connection *)ctx;
@@ -199,7 +197,7 @@ connection_server_read_callback(__attr_unused int fd,
 }
 
 static void
-connection_server_write_callback(__attr_unused int fd, short event, void *ctx)
+connection_server_write_callback([[maybe_unused]] int fd, short event, void *ctx)
 {
     struct connection *connection = (struct connection *)ctx;
 
@@ -296,8 +294,8 @@ static const struct mysql_handler connection_mysql_server_handler = {
  * from the client to the server.
  */
 static void
-connection_delay_timer_callback(__attr_unused int fd,
-                                __attr_unused short event, void *ctx)
+connection_delay_timer_callback([[maybe_unused]] int fd,
+                                [[maybe_unused]] short event, void *ctx)
 {
     struct connection *connection = (struct connection *)ctx;
 

@@ -61,14 +61,14 @@ struct Connection final
 			 UniqueSocketDescriptor fd) noexcept;
 
 		/* virtual methods from PeerSocketHandler */
-		std::pair<ForwardResult, std::size_t> OnPeerForward(std::span<const std::byte> src) override;
 		void OnPeerClosed() noexcept override;
 		bool OnPeerWrite() override;
 		void OnPeerError(std::exception_ptr e) noexcept override;
 
 		/* virtual methods from MysqlHandler */
-		void OnMysqlPacket(unsigned number, size_t length,
-				   std::span<const std::byte> payload) override;
+		Result OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
+				     bool complete) noexcept override;
+		std::pair<Result, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
 	};
 
 	std::optional<Outgoing> outgoing;
@@ -93,14 +93,14 @@ private:
 	void OnDelayTimer() noexcept;
 
 	/* virtual methods from PeerSocketHandler */
-	std::pair<ForwardResult, std::size_t> OnPeerForward(std::span<const std::byte> src) override;
 	void OnPeerClosed() noexcept override;
 	bool OnPeerWrite() override;
 	void OnPeerError(std::exception_ptr e) noexcept override;
 
 	/* virtual methods from MysqlHandler */
-	void OnMysqlPacket(unsigned number, size_t length,
-			   std::span<const std::byte> payload) override;
+	Result OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
+			     bool complete) noexcept override;
+	std::pair<Result, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
 
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;

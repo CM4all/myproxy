@@ -9,58 +9,49 @@
 #include <span>
 
 class MysqlHandler;
+class BufferedSocket;
 
 class MysqlReader {
 	MysqlHandler &handler;
 
-	bool have_packet = false;
-
 	/**
-	 * The number of bytes to forward.
+	 * The remaining number of bytes of the current packet that
+	 * should be passed to OnMysqlRaw().
 	 */
-	size_t forward = 0;
+	std::size_t remaining = 0;
 
-	/**
-	 * The remaining number of the previous packet that should be
-	 * forwarded as-is.
-	 */
-	size_t remaining = 0;
-
-	unsigned number;
-
-	/**
-	 * Total length of the current packet payload.
-	 */
-	size_t payload_length;
-
-	/**
-	 * The amount of payload that is available in the #payload buffer.
-	 */
-	size_t payload_available;
-
-	std::array<std::byte, 1024> payload;
+	bool ignore;
 
 public:
 	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
 		:handler(_handler) {}
 
-	/**
-	 * Feed data into the reader.  It stops at the boundary of a packet,
-	 * to allow the caller to inspect each packet.
-	 *
-	 * @return the number of bytes that should be forwarded in this step
-	 */
-	size_t Feed(std::span<const std::byte> src) noexcept;
+	enum class ProcessResult {
+		/**
+		 * The buffer is empty.
+		 */
+		EMPTY,
+
+		/**
+		 * Some data has been consumed.  Call Process() again
+		 * until #EMPTY is returned.
+		 */
+		OK,
+
+		/**
+		 * Need more data.1
+		 */
+		MORE,
+
+		/**
+		 * The #MysqlReader has been closed.
+		 */
+		CLOSED,
+	};
 
 	/**
-	 * Indicates that the caller has forwarded the specified number of
-	 * bytes.
+	 * Process data from a #BufferedSocket.  It will invoke
+	 * #MysqlReader.
 	 */
-	void Forwarded(size_t nbytes) noexcept {
-		assert(nbytes > 0);
-		assert(forward > 0);
-		assert(nbytes <= forward);
-
-		forward -= nbytes;
-	}
+	ProcessResult Process(BufferedSocket &socket) noexcept;
 };

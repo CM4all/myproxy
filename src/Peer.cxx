@@ -3,53 +3,27 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "Peer.hxx"
-
-std::pair<PeerHandler::ForwardResult, std::size_t>
-Peer::Forward(std::span<const std::byte> src) noexcept
-{
-	const auto r = socket.Write(src.data(), src.size());
-	if (r > 0)
-		return {PeerHandler::ForwardResult::OK, static_cast<std::size_t>(r)};
-
-	switch (r) {
-	case WRITE_BLOCKING:
-		return {PeerHandler::ForwardResult::OK, 0};
-
-	default:
-		return {PeerHandler::ForwardResult::ERROR, 0};
-	}
-}
+#include "util/Compiler.h"
 
 BufferedResult
 Peer::OnBufferedData()
 {
-	const auto r = socket.ReadBuffer();
-	if (r.empty())
+	switch (reader.Process(socket)) {
+	case MysqlReader::ProcessResult::EMPTY:
 		return BufferedResult::OK;
 
-	size_t nbytes = reader.Feed(r);
-	assert(nbytes > 0);
+	case MysqlReader::ProcessResult::OK:
+		return BufferedResult::AGAIN;
 
-	const auto [result, n_forwarded] = handler.OnPeerForward(r.first(nbytes));
-	switch (result) {
-	case PeerHandler::ForwardResult::OK:
-		break;
+	case MysqlReader::ProcessResult::MORE:
+		return BufferedResult::MORE;
 
-	case PeerHandler::ForwardResult::ERROR:
-		// TODO
-		throw "Error";
-
-	case PeerHandler::ForwardResult::CLOSED:
+	case MysqlReader::ProcessResult::CLOSED:
 		return BufferedResult::CLOSED;
 	}
 
-	if (n_forwarded > 0) {
-		socket.DisposeConsumed(n_forwarded);
-		reader.Forwarded(n_forwarded);
-		return BufferedResult::AGAIN;
-	}
-
-	return BufferedResult::OK;
+	assert(false);
+	gcc_unreachable();
 }
 
 bool

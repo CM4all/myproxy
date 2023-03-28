@@ -5,79 +5,75 @@
 #include "MysqlReader.hxx"
 #include "MysqlHandler.hxx"
 #include "MysqlProtocol.hxx"
+#include "event/net/BufferedSocket.hxx"
 
-#include <cstring>
-
-size_t
-MysqlReader::Feed(std::span<const std::byte> src) noexcept
+MysqlReader::ProcessResult
+MysqlReader::Process(BufferedSocket &socket) noexcept
 {
-	assert(!src.empty());
+	const auto src = socket.ReadBuffer();
+	if (src.empty())
+		return ProcessResult::EMPTY;
 
-	size_t nbytes = 0;
-
-	if (forward > 0)
-		return forward;
-
-	if (remaining > 0) {
-		/* consume the remainder of the previous packet */
-		assert(!have_packet);
-
-		if (src.size() <= remaining) {
-			/* previous packet not yet done, consume all of the
-			   caller's input buffer */
-			remaining -= src.size();
-			forward = src.size();
-			return src.size();
-		}
-
-		/* consume the remainder and then continue with the next
-		   packet */
-		src = src.subspan(remaining);
-		nbytes += remaining;
-		remaining = 0;
-	}
-
-	assert(remaining == 0);
-
-	if (!have_packet) {
-		/* start of a new packet */
+	if (remaining == 0) {
 		const auto &header = *(const Mysql::PacketHeader *)src.data();
 
-		if (src.size() < sizeof(header)) {
+		if (src.size() < sizeof(header))
 			/* need more data to complete the header */
-			forward = nbytes;
-			return nbytes;
+			return ProcessResult::MORE;
+
+		const auto payload = src.subspan(sizeof(header));
+
+		const std::size_t total_payload_size = header.GetLength();
+		if (payload.size() < total_payload_size && !socket.IsFull())
+			/* incomplete payload, but the buffer would be
+			   able to hold more */
+			return ProcessResult::MORE;
+
+		remaining = sizeof(header) + total_payload_size;
+
+		switch (handler.OnMysqlPacket(header.number, payload,
+					      payload.size() < total_payload_size)) {
+		case MysqlHandler::Result::OK:
+			ignore = false;
+			break;
+
+		case MysqlHandler::Result::IGNORE:
+			ignore = false;
+			break;
+
+		case MysqlHandler::Result::CLOSED:
+			return ProcessResult::CLOSED;
 		}
-
-		have_packet = true;
-		number = header.number;
-		payload_length = header.GetLength();
-		payload_available = 0;
-
-		src = src.subspan(sizeof(header));
-		nbytes += sizeof(header);
 	}
 
-	if (src.size() > payload_length - payload_available)
-		/* limit "length" to the rest of the current packet */
-		src = src.first(payload_length - payload_available);
+	assert(remaining > 0);
 
-	if (src.size() > sizeof(payload) - payload_available)
-		src = src.first(sizeof(payload) - payload_available);
+	const auto raw = src.first(std::min(src.size(), remaining));
 
-	std::copy(src.begin(), src.end(), payload.begin());
-	payload_available += src.size();
-	nbytes += src.size();
-
-	if (payload_available == payload_length ||
-	    payload_available == sizeof(payload)) {
-		have_packet = false;
-		handler.OnMysqlPacket(number, payload_length,
-				      std::span{payload}.first(payload_available));
-
-		remaining = payload_length - payload_available;
+	if (ignore) {
+		const auto consumed = raw.size();
+		remaining -= consumed;
+		socket.DisposeConsumed(consumed);
+		return ProcessResult::OK;
 	}
 
-	forward = nbytes;
-	return nbytes;
+	auto [result, consumed] = handler.OnMysqlRaw(raw);
+	switch (result) {
+	case MysqlHandler::Result::IGNORE:
+		assert(consumed == 0);
+		ignore = true;
+		consumed = raw.size();
+		[[fallthrough]];
+
+	case MysqlHandler::Result::OK:
+		remaining -= consumed;
+		socket.DisposeConsumed(consumed);
+		break;
+
+	case MysqlHandler::Result::CLOSED:
+		assert(consumed == 0);
+		return ProcessResult::CLOSED;
+	}
+
+	return ProcessResult::OK;
 }

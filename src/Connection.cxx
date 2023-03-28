@@ -18,12 +18,6 @@
 
 Connection::~Connection() noexcept = default;
 
-std::pair<PeerHandler::ForwardResult, std::size_t>
-Connection::Outgoing::OnPeerForward(std::span<const std::byte> src)
-{
-	return connection.incoming.Forward(src);
-}
-
 bool
 Connection::Outgoing::OnPeerWrite()
 {
@@ -45,19 +39,6 @@ Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 {
 	PrintException(e);
 	delete &connection;
-}
-
-std::pair<PeerHandler::ForwardResult, std::size_t>
-Connection::OnPeerForward(std::span<const std::byte> src)
-{
-	if (delayed)
-		/* don't continue reading now */
-		return {PeerHandler::ForwardResult::OK, 0};
-
-	if (!outgoing)
-		return {PeerHandler::ForwardResult::OK, 0};
-
-	return outgoing->peer.Forward(src);
 }
 
 void
@@ -120,9 +101,9 @@ Connection::OnLoginPacket(std::span<const std::byte> payload)
 	return true;
 }
 
-void
-Connection::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
-			  std::span<const std::byte> payload)
+MysqlHandler::Result
+Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
+			  [[maybe_unused]] bool complete) noexcept
 {
 	if (Mysql::IsQueryPacket(number, payload) &&
 	    request_time == Event::TimePoint{})
@@ -131,11 +112,37 @@ Connection::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
 	if (number == 1 && !login_received) {
 		login_received = OnLoginPacket(payload);
 	}
+
+	return Result::OK;
 }
 
-void
-Connection::Outgoing::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
-				    std::span<const std::byte> payload)
+std::pair<MysqlHandler::Result, std::size_t>
+Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
+{
+	if (delayed)
+		/* don't continue reading now */
+		return {Result::OK, 0U};
+
+	if (!outgoing)
+		return {Result::OK, 0U};
+
+	const auto result = outgoing->peer.socket.Write(src.data(), src.size());
+	if (result > 0) [[likely]]
+		return {Result::OK, static_cast<std::size_t>(result)};
+
+	switch (result) {
+	case WRITE_BLOCKING:
+		return {Result::OK, 0U};
+
+	default:
+		// TODO
+		return {Result::CLOSED, 0U};
+	}
+}
+
+MysqlHandler::Result
+Connection::Outgoing::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
+				    [[maybe_unused]] bool complete) noexcept
 {
 	if (!connection.greeting_received && number == 0) {
 		connection.greeting_received = true;
@@ -147,6 +154,25 @@ Connection::Outgoing::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t len
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
 		policy_duration(connection.user.c_str(), duration);
 		connection.request_time = Event::TimePoint{};
+	}
+
+	return Result::OK;
+}
+
+std::pair<MysqlHandler::Result, std::size_t>
+Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
+{
+	const auto result = connection.incoming.socket.Write(src.data(), src.size());
+	if (result > 0) [[likely]]
+		return {Result::OK, static_cast<std::size_t>(result)};
+
+	switch (result) {
+	case WRITE_BLOCKING:
+		return {Result::OK, 0U};
+
+	default:
+		// TODO
+		return {Result::CLOSED, 0U};
 	}
 }
 

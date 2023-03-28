@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 namespace Mysql {
 
@@ -36,15 +37,15 @@ struct PacketHeader {
 };
 
 static constexpr bool
-IsQueryPacket(unsigned number, const void *data, size_t length) noexcept
+IsQueryPacket(unsigned number, std::span<const std::byte> payload) noexcept
 {
-	return number == 0 && length >= 1 && *(const uint8_t *)data == 0x03;
+	return number == 0 && !payload.empty() && payload.front() == std::byte{0x03};
 }
 
 static constexpr bool
-IsEofPacket(unsigned number, const void *data, size_t length) noexcept
+IsEofPacket(unsigned number, std::span<const std::byte> payload) noexcept
 {
-	return number > 0 && length >= 1 && *(const uint8_t *)data == 0xfe;
+	return number > 0 && !payload.empty() && payload.front() == std::byte{0xfe};
 }
 
 } // namespace Mysql

@@ -10,7 +10,7 @@
 
 class MysqlHandler;
 
-struct MysqlReader {
+class MysqlReader {
 	MysqlHandler &handler;
 
 	bool have_packet = false;
@@ -40,6 +40,7 @@ struct MysqlReader {
 
 	std::array<std::byte, 1024> payload;
 
+public:
 	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
 		:handler(_handler) {}
 

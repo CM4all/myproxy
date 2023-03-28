@@ -27,6 +27,18 @@ public:
 	}
 };
 
+struct Int4 {
+	uint8_t data[4];
+
+public:
+	constexpr operator uint_least32_t() const noexcept {
+		return static_cast<uint_least32_t>(data[0]) |
+			(static_cast<uint_least32_t>(data[1]) << 8) |
+			(static_cast<uint_least32_t>(data[2]) << 16) |
+			(static_cast<uint_least32_t>(data[3]) << 24);
+	}
+};
+
 struct PacketHeader {
 	Int3 length;
 	uint8_t number;

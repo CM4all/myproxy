@@ -18,7 +18,7 @@
 Connection::~Connection() noexcept = default;
 
 std::pair<PeerHandler::ForwardResult, std::size_t>
-Connection::Outgoing::OnPeerForward(std::span<std::byte> src)
+Connection::Outgoing::OnPeerForward(std::span<const std::byte> src)
 {
 	return connection.incoming.Forward(src);
 }
@@ -47,7 +47,7 @@ Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 }
 
 std::pair<PeerHandler::ForwardResult, std::size_t>
-Connection::OnPeerForward(std::span<std::byte> src)
+Connection::OnPeerForward(std::span<const std::byte> src)
 {
 	if (delayed)
 		/* don't continue reading now */

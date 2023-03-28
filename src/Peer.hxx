@@ -16,7 +16,7 @@ public:
 		CLOSED,
 	};
 
-	virtual std::pair<ForwardResult, std::size_t> OnPeerForward(std::span<std::byte> src) = 0;
+	virtual std::pair<ForwardResult, std::size_t> OnPeerForward(std::span<const std::byte> src) = 0;
 	virtual void OnPeerClosed() noexcept = 0;
 	virtual bool OnPeerWrite() = 0;
 	virtual void OnPeerError(std::exception_ptr e) noexcept = 0;
@@ -44,7 +44,7 @@ struct Peer final : BufferedSocketHandler {
 		socket.ScheduleRead();
 	}
 
-	std::pair<PeerHandler::ForwardResult, std::size_t> Forward(std::span<std::byte> src) noexcept;
+	std::pair<PeerHandler::ForwardResult, std::size_t> Forward(std::span<const std::byte> src) noexcept;
 
 private:
 	/* virtual methods from BufferedSocketHandler */

@@ -5,7 +5,7 @@
 #include "Peer.hxx"
 
 std::pair<PeerHandler::ForwardResult, std::size_t>
-Peer::Forward(std::span<std::byte> src) noexcept
+Peer::Forward(std::span<const std::byte> src) noexcept
 {
 	const auto r = socket.Write(src.data(), src.size());
 	if (r > 0)

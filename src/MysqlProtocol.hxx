@@ -16,6 +16,12 @@
 
 namespace Mysql {
 
+static constexpr uint_least32_t CLIENT_CONNECT_WITH_DB = 8;
+static constexpr uint_least32_t CLIENT_PROTOCOL_41 = 512;
+static constexpr uint_least32_t CLIENT_PLUGIN_AUTH = (1UL << 19);
+static constexpr uint_least32_t CLIENT_CONNECT_ATTRS = (1UL << 20);
+static constexpr uint_least32_t CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA = 1UL << 21;
+
 struct Int2 {
 	uint8_t data[2];
 

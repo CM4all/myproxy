@@ -7,11 +7,13 @@
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "MysqlProtocol.hxx"
+#include "MysqlParser.hxx"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/PrintException.hxx"
-#include "util/SpanCast.hxx"
+
+#include <fmt/core.h>
 
 #include <cassert>
 #include <cstring>
@@ -80,40 +82,90 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	delete this;
 }
 
-bool
-Connection::OnLoginPacket(std::span<const std::byte> payload)
+inline void
+Connection::OnHandshakeResponse(Mysql::PacketParser p)
 {
-	if (payload.size() < 33)
-		return false;
+	std::string_view username, auth_response, database;
 
-	payload = payload.subspan(32);
+	uint_least32_t client_flag = p.ReadInt2();
+	if (client_flag & Mysql::CLIENT_PROTOCOL_41) {
+		// HandshakeResponse41
 
-	auto nul = std::find(payload.begin(), payload.end(), std::byte{});
-	if (nul == payload.begin() && nul == payload.end())
-		return false;
+		client_flag |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
+		p.ReadInt4(); // max_packet_size
+		p.ReadInt1(); // character_set
+		p.ReadN(23); // filler
+		username = p.ReadNullTerminatedString();
 
-	user = ToStringView(std::span{payload.begin(), nul});
+		if (client_flag & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
+			auth_response = p.ReadLengthEncodedString();
+		} else {
+			const std::size_t auth_response_length = p.ReadInt1();
+			auth_response = p.ReadVariableLengthString(auth_response_length);
+		}
+
+		if (client_flag & Mysql::CLIENT_CONNECT_WITH_DB) {
+			database = p.ReadNullTerminatedString();
+		}
+
+		if (client_flag & Mysql::CLIENT_PLUGIN_AUTH) {
+			p.ReadNullTerminatedString(); // client_plugin_name
+		}
+
+		/* https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase_packets_protocol_handshake_response.html
+		   does not mention that the packet can end here, but
+		   apparently it does, therefore we have the "empty"
+		   checks */
+
+		if (!p.empty() && (client_flag & Mysql::CLIENT_CONNECT_ATTRS)) {
+			const std::size_t length = p.ReadLengthEncodedInteger();
+			p.ReadN(length);
+		}
+
+		if (!p.empty())
+			p.ReadInt1(); // zstd_compression_level
+	} else {
+		// HandshakeResponse320
+
+		p.ReadInt3(); // max_packet_size
+		username = p.ReadNullTerminatedString();
+
+		if (client_flag & Mysql::CLIENT_CONNECT_WITH_DB) {
+			auth_response = p.ReadNullTerminatedString();
+			database = p.ReadNullTerminatedString();
+		} else {
+			auth_response = p.ReadRestOfPacketString();
+		}
+	}
+
+	p.MustBeEmpty();
+
+	fmt::print("login username='{}' database='{}'\n", username, database);
+
+	user = username;
 
 	const auto delay = policy_login(user.c_str());
 	if (delay.count() > 0)
 		Delay(delay);
-
-	return true;
 }
 
 MysqlHandler::Result
 Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
-{
+try {
 	if (Mysql::IsQueryPacket(number, payload) &&
 	    request_time == Event::TimePoint{})
 		request_time = GetEventLoop().SteadyNow();
 
 	if (number == 1 && !login_received) {
-		login_received = OnLoginPacket(payload);
+		OnHandshakeResponse(payload);
+		login_received = true;
 	}
 
 	return Result::OK;
+} catch (Mysql::MalformedPacket) {
+	delete this;
+	return Result::CLOSED;
 }
 
 std::pair<MysqlHandler::Result, std::size_t>
@@ -140,11 +192,53 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
+void
+Connection::Outgoing::OnHandshake(Mysql::PacketParser p)
+{
+	const auto protocol_version = p.ReadInt1();
+
+	std::string_view server_version;
+
+	if (protocol_version == 10) {
+		server_version = p.ReadNullTerminatedString();
+		p.ReadInt4(); // thread id
+		p.ReadVariableLengthString(8); // auth-plugin-data-part-1
+		p.ReadInt1(); //  filler
+		uint_least32_t capability_flags = p.ReadInt2();
+		p.ReadInt1(); // character_set
+		p.ReadInt2(); // status_flags
+		capability_flags |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
+
+		std::size_t auth_plugin_data_len = 0;
+		if (capability_flags & Mysql::CLIENT_PLUGIN_AUTH) {
+			auth_plugin_data_len = p.ReadInt1();
+		} else {
+			p.ReadInt1(); // 00
+		}
+
+		p.ReadVariableLengthString(10); // reserved
+
+		if (auth_plugin_data_len > 8)
+			p.ReadVariableLengthString(auth_plugin_data_len - 8);
+
+		if (capability_flags & Mysql::CLIENT_PLUGIN_AUTH)
+			p.ReadNullTerminatedString(); // auth_plugin_name
+	} else if (protocol_version == 9) {
+		server_version = p.ReadNullTerminatedString();
+		p.ReadInt4(); // thread id
+		p.ReadNullTerminatedString(); // scramble
+	} else
+		throw Mysql::MalformedPacket{};
+
+	fmt::print("handshake server_version='{}'\n", server_version);
+}
+
 MysqlHandler::Result
 Connection::Outgoing::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 				    [[maybe_unused]] bool complete) noexcept
-{
+try {
 	if (!connection.greeting_received && number == 0) {
+		OnHandshake(payload);
 		connection.greeting_received = true;
 	}
 
@@ -157,6 +251,9 @@ Connection::Outgoing::OnMysqlPacket(unsigned number, std::span<const std::byte> 
 	}
 
 	return Result::OK;
+} catch (Mysql::MalformedPacket) {
+	delete &connection;
+	return Result::CLOSED;
 }
 
 std::pair<MysqlHandler::Result, std::size_t>

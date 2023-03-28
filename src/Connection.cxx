@@ -11,6 +11,7 @@
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/PrintException.hxx"
+#include "util/SpanCast.hxx"
 
 #include <cassert>
 #include <cstring>
@@ -99,19 +100,18 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 }
 
 bool
-Connection::OnLoginPacket(const char *data, size_t length)
+Connection::OnLoginPacket(std::span<const std::byte> payload)
 {
-	if (length < 33)
+	if (payload.size() < 33)
 		return false;
 
-	const char *user_ = data + 32;
-	const char *user_end = (const char *)
-		memchr((const void *)user_, 0, data + length - user_);
-	if (user_end == NULL || user_end == user_)
+	payload = payload.subspan(32);
+
+	auto nul = std::find(payload.begin(), payload.end(), std::byte{});
+	if (nul == payload.begin() && nul == payload.end())
 		return false;
 
-	size_t user_length = user_end - user_;
-	user = std::string_view{user_, user_length};
+	user = ToStringView(std::span{payload.begin(), nul});
 
 	const auto delay = policy_login(user.c_str());
 	if (delay.count() > 0)
@@ -129,7 +129,7 @@ Connection::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
 		request_time = GetEventLoop().SteadyNow();
 
 	if (number == 1 && !login_received) {
-		login_received = OnLoginPacket((const char *)payload.data(), payload.size());
+		login_received = OnLoginPacket(payload);
 	}
 }
 

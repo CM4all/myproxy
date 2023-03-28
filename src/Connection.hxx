@@ -84,7 +84,7 @@ struct Connection final
 	void Delay(Event::Duration duration) noexcept;
 
 private:
-	bool OnLoginPacket(const char *data, size_t length);
+	bool OnLoginPacket(std::span<const std::byte> payload);
 
 	/**
 	 * Called when the artificial delay is over, and restarts the

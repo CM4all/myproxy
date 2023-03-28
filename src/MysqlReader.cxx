@@ -9,12 +9,11 @@
 #include <cstring>
 
 size_t
-MysqlReader::Feed(const void *data, size_t length) noexcept
+MysqlReader::Feed(std::span<const std::byte> src) noexcept
 {
-	size_t nbytes = 0;
+	assert(!src.empty());
 
-	assert(data != NULL);
-	assert(length > 0);
+	size_t nbytes = 0;
 
 	if (forward > 0)
 		return forward;
@@ -23,18 +22,17 @@ MysqlReader::Feed(const void *data, size_t length) noexcept
 		/* consume the remainder of the previous packet */
 		assert(!have_packet);
 
-		if (length <= remaining) {
+		if (src.size() <= remaining) {
 			/* previous packet not yet done, consume all of the
 			   caller's input buffer */
-			remaining -= length;
-			forward = length;
-			return length;
+			remaining -= src.size();
+			forward = src.size();
+			return src.size();
 		}
 
 		/* consume the remainder and then continue with the next
 		   packet */
-		data = (const uint8_t *)data + remaining;
-		length -= remaining;
+		src = src.subspan(remaining);
 		nbytes += remaining;
 		remaining = 0;
 	}
@@ -43,9 +41,9 @@ MysqlReader::Feed(const void *data, size_t length) noexcept
 
 	if (!have_packet) {
 		/* start of a new packet */
-		const auto &header = *(const Mysql::PacketHeader *)data;
+		const auto &header = *(const Mysql::PacketHeader *)src.data();
 
-		if (length < sizeof(header)) {
+		if (src.size() < sizeof(header)) {
 			/* need more data to complete the header */
 			forward = nbytes;
 			return nbytes;
@@ -56,27 +54,26 @@ MysqlReader::Feed(const void *data, size_t length) noexcept
 		payload_length = header.GetLength();
 		payload_available = 0;
 
-		data = &header + 1;
-		length -= sizeof(header);
+		src = src.subspan(sizeof(header));
 		nbytes += sizeof(header);
 	}
 
-	if (length > payload_length - payload_available)
+	if (src.size() > payload_length - payload_available)
 		/* limit "length" to the rest of the current packet */
-		length = payload_length - payload_available;
+		src = src.first(payload_length - payload_available);
 
-	if (length > sizeof(payload) - payload_available)
-		length = sizeof(payload) - payload_available;
+	if (src.size() > sizeof(payload) - payload_available)
+		src = src.first(sizeof(payload) - payload_available);
 
-	memcpy(payload + payload_available, data, length);
-	payload_available += length;
-	nbytes += length;
+	std::copy(src.begin(), src.end(), payload.begin());
+	payload_available += src.size();
+	nbytes += src.size();
 
 	if (payload_available == payload_length ||
 	    payload_available == sizeof(payload)) {
 		have_packet = false;
 		handler.OnMysqlPacket(number, payload_length,
-				      payload, payload_available);
+				      std::span{payload}.first(payload_available));
 
 		remaining = payload_length - payload_available;
 	}

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <span>
 
 class MysqlHandler {
 public:
@@ -13,9 +14,8 @@ public:
 	 *
 	 * @param number the packet number
 	 * @param length the full payload length
-	 * @param data the payload
-	 * @param available the amount of payload that is available now
+	 * @param payload the portion of payload that is available now
 	 */
 	virtual void OnMysqlPacket(unsigned number, size_t length,
-				   const void *data, size_t available) = 0;
+				   std::span<const std::byte> payload) = 0;
 };

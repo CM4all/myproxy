@@ -68,7 +68,7 @@ struct Connection final
 
 		/* virtual methods from MysqlHandler */
 		void OnMysqlPacket(unsigned number, size_t length,
-				   const void *data, size_t available) override;
+				   std::span<const std::byte> payload) override;
 	};
 
 	std::optional<Outgoing> outgoing;
@@ -100,7 +100,7 @@ private:
 
 	/* virtual methods from MysqlHandler */
 	void OnMysqlPacket(unsigned number, size_t length,
-			   const void *data, size_t available) override;
+			   std::span<const std::byte> payload) override;
 
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;

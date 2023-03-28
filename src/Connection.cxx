@@ -121,28 +121,27 @@ Connection::OnLoginPacket(const char *data, size_t length)
 }
 
 void
-Connection::OnMysqlPacket(unsigned number, size_t length,
-			  const void *data, size_t available)
+Connection::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
+			  std::span<const std::byte> payload)
 {
-	if (Mysql::IsQueryPacket(number, data, length) &&
+	if (Mysql::IsQueryPacket(number, payload.data(), payload.size()) &&
 	    request_time == Event::TimePoint{})
 		request_time = GetEventLoop().SteadyNow();
 
 	if (number == 1 && !login_received) {
-		login_received = OnLoginPacket((const char *)data, available);
+		login_received = OnLoginPacket((const char *)payload.data(), payload.size());
 	}
 }
 
 void
-Connection::Outgoing::OnMysqlPacket(unsigned number, size_t length,
-				    const void *data,
-				    [[maybe_unused]] size_t available)
+Connection::Outgoing::OnMysqlPacket(unsigned number, [[maybe_unused]] size_t length,
+				    std::span<const std::byte> payload)
 {
 	if (!connection.greeting_received && number == 0) {
 		connection.greeting_received = true;
 	}
 
-	if (Mysql::IsEofPacket(number, data, length) &&
+	if (Mysql::IsEofPacket(number, payload.data(), payload.size()) &&
 	    connection.login_received &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;

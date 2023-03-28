@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <span>
 
 class MysqlHandler;
 
@@ -37,7 +38,7 @@ struct MysqlReader {
 	 */
 	size_t payload_available;
 
-	char payload[1024];
+	std::array<std::byte, 1024> payload;
 
 	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
 		:handler(_handler) {}
@@ -48,7 +49,7 @@ struct MysqlReader {
 	 *
 	 * @return the number of bytes that should be forwarded in this step
 	 */
-	size_t Feed(const void *data, size_t length) noexcept;
+	size_t Feed(std::span<const std::byte> src) noexcept;
 
 	/**
 	 * Indicates that the caller has forwarded the specified number of

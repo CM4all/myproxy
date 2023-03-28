@@ -27,7 +27,7 @@ Peer::OnBufferedData()
 	if (r.empty())
 		return BufferedResult::OK;
 
-	size_t nbytes = reader.Feed(r.data(), r.size());
+	size_t nbytes = reader.Feed(r);
 	assert(nbytes > 0);
 
 	const auto [result, n_forwarded] = handler.OnPeerForward(r.first(nbytes));

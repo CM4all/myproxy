@@ -31,6 +31,8 @@ struct Peer final : BufferedSocketHandler {
 
 	PeerHandler &handler;
 
+	uint_least32_t capabilities;
+
 	bool handshake = false, handshake_response = false, command_phase = false;
 
 	Peer(EventLoop &event_loop,

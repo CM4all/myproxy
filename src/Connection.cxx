@@ -87,28 +87,28 @@ Connection::OnHandshakeResponse(Mysql::PacketParser p)
 {
 	std::string_view username, auth_response, database;
 
-	uint_least32_t client_flag = p.ReadInt2();
-	if (client_flag & Mysql::CLIENT_PROTOCOL_41) {
+	incoming.capabilities = p.ReadInt2();
+	if (incoming.capabilities & Mysql::CLIENT_PROTOCOL_41) {
 		// HandshakeResponse41
 
-		client_flag |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
+		incoming.capabilities |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
 		p.ReadInt4(); // max_packet_size
 		p.ReadInt1(); // character_set
 		p.ReadN(23); // filler
 		username = p.ReadNullTerminatedString();
 
-		if (client_flag & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
+		if (incoming.capabilities & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
 			auth_response = p.ReadLengthEncodedString();
 		} else {
 			const std::size_t auth_response_length = p.ReadInt1();
 			auth_response = p.ReadVariableLengthString(auth_response_length);
 		}
 
-		if (client_flag & Mysql::CLIENT_CONNECT_WITH_DB) {
+		if (incoming.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
 			database = p.ReadNullTerminatedString();
 		}
 
-		if (client_flag & Mysql::CLIENT_PLUGIN_AUTH) {
+		if (incoming.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
 			p.ReadNullTerminatedString(); // client_plugin_name
 		}
 
@@ -117,7 +117,7 @@ Connection::OnHandshakeResponse(Mysql::PacketParser p)
 		   apparently it does, therefore we have the "empty"
 		   checks */
 
-		if (!p.empty() && (client_flag & Mysql::CLIENT_CONNECT_ATTRS)) {
+		if (!p.empty() && (incoming.capabilities & Mysql::CLIENT_CONNECT_ATTRS)) {
 			const std::size_t length = p.ReadLengthEncodedInteger();
 			p.ReadN(length);
 		}
@@ -130,7 +130,7 @@ Connection::OnHandshakeResponse(Mysql::PacketParser p)
 		p.ReadInt3(); // max_packet_size
 		username = p.ReadNullTerminatedString();
 
-		if (client_flag & Mysql::CLIENT_CONNECT_WITH_DB) {
+		if (incoming.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
 			auth_response = p.ReadNullTerminatedString();
 			database = p.ReadNullTerminatedString();
 		} else {
@@ -210,13 +210,13 @@ Connection::Outgoing::OnHandshake(Mysql::PacketParser p)
 		p.ReadInt4(); // thread id
 		p.ReadVariableLengthString(8); // auth-plugin-data-part-1
 		p.ReadInt1(); //  filler
-		uint_least32_t capability_flags = p.ReadInt2();
+		peer.capabilities = p.ReadInt2();
 		p.ReadInt1(); // character_set
 		p.ReadInt2(); // status_flags
-		capability_flags |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
+		peer.capabilities |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
 
 		std::size_t auth_plugin_data_len = 0;
-		if (capability_flags & Mysql::CLIENT_PLUGIN_AUTH) {
+		if (peer.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
 			auth_plugin_data_len = p.ReadInt1();
 		} else {
 			p.ReadInt1(); // 00
@@ -227,7 +227,7 @@ Connection::Outgoing::OnHandshake(Mysql::PacketParser p)
 		if (auth_plugin_data_len > 8)
 			p.ReadVariableLengthString(auth_plugin_data_len - 8);
 
-		if (capability_flags & Mysql::CLIENT_PLUGIN_AUTH)
+		if (peer.capabilities & Mysql::CLIENT_PLUGIN_AUTH)
 			p.ReadNullTerminatedString(); // auth_plugin_name
 	} else if (protocol_version == 9) {
 		server_version = p.ReadNullTerminatedString();

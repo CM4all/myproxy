@@ -9,6 +9,8 @@
 #include "MysqlProtocol.hxx"
 #include "MysqlParser.hxx"
 #include "MysqlDeserializer.hxx"
+#include "MysqlSerializer.hxx"
+#include "MysqlMakePacket.hxx"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
@@ -18,6 +20,8 @@
 
 #include <cassert>
 #include <cstring>
+
+using std::string_view_literals::operator""sv;
 
 Connection::~Connection() noexcept = default;
 
@@ -53,6 +57,19 @@ Connection::OnPeerClosed() noexcept
 bool
 Connection::OnPeerWrite()
 {
+	if (!incoming.handshake) {
+		static constexpr std::array<std::byte, 0x15> auth_plugin_data{};
+
+		auto s = Mysql::MakeHandshakeV10("5.7.30"sv,
+						 "mysql_clear_password"sv,
+						 auth_plugin_data);
+		if (!incoming.Send(s.Finish()))
+			return false;
+
+		incoming.handshake = true;
+		return true;
+	}
+
 	if (!outgoing)
 		return true;
 
@@ -83,9 +100,14 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	delete this;
 }
 
-inline void
-Connection::OnHandshakeResponse(std::span<const std::byte> payload)
+inline MysqlHandler::Result
+Connection::OnHandshakeResponse(uint_least8_t sequence_id,
+				std::span<const std::byte> payload)
 {
+	assert(incoming.handshake);
+	assert(!incoming.handshake_response);
+	assert(!incoming.command_phase);
+
 	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
 	incoming.capabilities = packet.capabilities;
@@ -99,6 +121,18 @@ Connection::OnHandshakeResponse(std::span<const std::byte> payload)
 	const auto delay = policy_login(username.c_str());
 	if (delay.count() > 0)
 		Delay(delay);
+
+	incoming.handshake_response = true;
+
+	if (!incoming.SendOk(sequence_id + 1))
+		return Result::CLOSED;
+
+	incoming.command_phase = true;
+
+	if (!MaybeSendHandshakeResponse())
+		return Result::CLOSED;
+
+	return Result::IGNORE;
 }
 
 MysqlHandler::Result
@@ -108,13 +142,11 @@ try {
 	if (!incoming.handshake)
 		throw Mysql::MalformedPacket{};
 
-	if (!incoming.handshake_response) {
-		OnHandshakeResponse(payload);
-		incoming.handshake_response = true;
-		if (outgoing)
-			outgoing->peer.handshake_response = true;
-		return Result::OK;
-	}
+	if (!incoming.handshake_response)
+		return OnHandshakeResponse(number, payload);
+
+	if (!outgoing || !outgoing->peer.command_phase)
+		return Result::BLOCKING;
 
 	if (Mysql::IsQueryPacket(number, payload) &&
 	    request_time == Event::TimePoint{})
@@ -150,6 +182,28 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
+bool
+Connection::MaybeSendHandshakeResponse() noexcept
+{
+	assert(incoming.handshake);
+	assert(incoming.handshake_response);
+
+	if (!outgoing || !outgoing->peer.handshake)
+		return true;
+
+	assert(!outgoing->peer.handshake_response);
+
+	// TODO implement "mysql_native_password"
+	auto s = Mysql::MakeHandshakeResponse41(username, auth_response,
+						database,
+						"mysql_clear_password"sv);
+	if (!outgoing->peer.Send(s.Finish()))
+		return false;
+
+	outgoing->peer.handshake_response = true;
+	return true;
+}
+
 void
 Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
@@ -169,14 +223,21 @@ try {
 		peer.handshake = true;
 		OnHandshake(payload);
 		connection.incoming.handshake = true;
-		return Result::OK;
+
+		if (!connection.MaybeSendHandshakeResponse())
+			return Result::CLOSED;
+
+		return Result::IGNORE;
 	}
 
 	if (!peer.command_phase) {
 		if (Mysql::IsOkPacket(payload)) {
 			peer.command_phase = true;
-			connection.incoming.command_phase = true;
-			return Result::OK;
+
+			/* now process postponed packets */
+			connection.incoming.socket.DeferRead();
+
+			return Result::IGNORE;
 		} else if (Mysql::IsErrPacket(payload)) {
 			// TODO extract message
 			throw Mysql::MalformedPacket{};
@@ -238,6 +299,8 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
+	incoming.socket.DeferWrite();
+
 	// TODO move this call out of the ctor
 	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 }

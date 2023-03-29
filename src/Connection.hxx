@@ -84,7 +84,10 @@ struct Connection final
 	void Delay(Event::Duration duration) noexcept;
 
 private:
-	void OnHandshakeResponse(std::span<const std::byte> payload);
+	bool MaybeSendHandshakeResponse() noexcept;
+
+	MysqlHandler::Result OnHandshakeResponse(uint_least8_t sequence_id,
+						 std::span<const std::byte> payload);
 
 	/**
 	 * Called when the artificial delay is over, and restarts the

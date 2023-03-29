@@ -51,6 +51,10 @@ struct Peer final : BufferedSocketHandler {
 		socket.Close();
 	}
 
+	bool Send(std::span<const std::byte> src) noexcept;
+
+	bool SendOk(uint8_t sequence_id) noexcept;
+
 private:
 	/* virtual methods from BufferedSocketHandler */
 	BufferedResult OnBufferedData() override;

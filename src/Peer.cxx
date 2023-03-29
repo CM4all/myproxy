@@ -15,6 +15,9 @@ Peer::OnBufferedData()
 	case MysqlReader::ProcessResult::OK:
 		return BufferedResult::AGAIN;
 
+	case MysqlReader::ProcessResult::BLOCKING:
+		return BufferedResult::OK;
+
 	case MysqlReader::ProcessResult::MORE:
 		return BufferedResult::MORE;
 

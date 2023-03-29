@@ -39,7 +39,12 @@ public:
 		OK,
 
 		/**
-		 * Need more data.1
+		 * Currently, no data can be consumed.
+		 */
+		BLOCKING,
+
+		/**
+		 * Need more data.
 		 */
 		MORE,
 

@@ -68,6 +68,10 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 	case MysqlHandler::Result::OK:
 		remaining -= consumed;
 		socket.DisposeConsumed(consumed);
+
+		if (consumed == 0)
+			return ProcessResult::BLOCKING;
+
 		break;
 
 	case MysqlHandler::Result::CLOSED:

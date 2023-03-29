@@ -47,6 +47,10 @@ struct Peer final : BufferedSocketHandler {
 		socket.ScheduleRead();
 	}
 
+	~Peer() noexcept {
+		socket.Close();
+	}
+
 private:
 	/* virtual methods from BufferedSocketHandler */
 	BufferedResult OnBufferedData() override;

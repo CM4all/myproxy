@@ -35,8 +35,6 @@ struct Connection final
 
 	bool delayed = false;
 
-	bool greeting_received = false, login_received = false;
-
 	std::string user;
 
 	/**

@@ -153,14 +153,20 @@ MysqlHandler::Result
 Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
+	if (!incoming.handshake)
+		throw Mysql::MalformedPacket{};
+
+	if (!incoming.handshake_response) {
+		OnHandshakeResponse(payload);
+		incoming.handshake_response = true;
+		if (outgoing)
+			outgoing->peer.handshake_response = true;
+		return Result::OK;
+	}
+
 	if (Mysql::IsQueryPacket(number, payload) &&
 	    request_time == Event::TimePoint{})
 		request_time = GetEventLoop().SteadyNow();
-
-	if (number == 1 && !login_received) {
-		OnHandshakeResponse(payload);
-		login_received = true;
-	}
 
 	return Result::OK;
 } catch (Mysql::MalformedPacket) {
@@ -234,16 +240,30 @@ Connection::Outgoing::OnHandshake(Mysql::PacketParser p)
 }
 
 MysqlHandler::Result
-Connection::Outgoing::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
+Connection::Outgoing::OnMysqlPacket([[maybe_unused]] unsigned number,
+				    std::span<const std::byte> payload,
 				    [[maybe_unused]] bool complete) noexcept
 try {
-	if (!connection.greeting_received && number == 0) {
+	if (!peer.handshake) {
+		peer.handshake = true;
 		OnHandshake(payload);
-		connection.greeting_received = true;
+		connection.incoming.handshake = true;
+		return Result::OK;
 	}
 
-	if (Mysql::IsEofPacket(number, payload) &&
-	    connection.login_received &&
+	if (!peer.command_phase) {
+		if (Mysql::IsOkPacket(payload)) {
+			peer.command_phase = true;
+			connection.incoming.command_phase = true;
+			return Result::OK;
+		} else if (Mysql::IsErrPacket(payload)) {
+			// TODO extract message
+			throw Mysql::MalformedPacket{};
+		} else
+			throw Mysql::MalformedPacket{};
+	}
+
+	if (Mysql::IsEofPacket(payload) &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
 		policy_duration(connection.user.c_str(), duration);

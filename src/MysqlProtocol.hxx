@@ -101,9 +101,22 @@ IsQueryPacket(unsigned number, std::span<const std::byte> payload) noexcept
 }
 
 static constexpr bool
-IsEofPacket(unsigned number, std::span<const std::byte> payload) noexcept
+IsEofPacket(std::span<const std::byte> payload) noexcept
 {
-	return number > 0 && !payload.empty() && payload.front() == std::byte{0xfe};
+	return !payload.empty() && payload.size() < 9 && payload.front() == std::byte{0xfe};
+}
+
+static constexpr bool
+IsOkPacket(std::span<const std::byte> payload) noexcept
+{
+	return !payload.empty() &&
+		(payload.front() == std::byte{0x00} || payload.front() == std::byte{0xfe});
+}
+
+static constexpr bool
+IsErrPacket(std::span<const std::byte> payload) noexcept
+{
+	return !payload.empty() && payload.front() == std::byte{0xff};
 }
 
 } // namespace Mysql

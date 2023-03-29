@@ -38,7 +38,7 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 			break;
 
 		case MysqlHandler::Result::IGNORE:
-			ignore = false;
+			ignore = true;
 			break;
 
 		case MysqlHandler::Result::CLOSED:

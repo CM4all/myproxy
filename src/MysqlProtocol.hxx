@@ -26,9 +26,9 @@ struct Int2 {
 	uint8_t data[2];
 
 public:
-	constexpr operator uint_least32_t() const noexcept {
-		return static_cast<uint_least32_t>(data[0]) |
-			(static_cast<uint_least32_t>(data[1]) << 8);
+	constexpr operator uint_least16_t() const noexcept {
+		return static_cast<uint_least16_t>(data[0]) |
+			(static_cast<uint_least16_t>(data[1]) << 8);
 	}
 };
 

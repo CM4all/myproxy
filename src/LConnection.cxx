@@ -26,7 +26,7 @@ public:
 		lua_pop(L, 1);
 	}
 
-	int Index(lua_State *L, const char *name);
+	int Index(lua_State *L, const char *name) const;
 };
 
 static constexpr char lua_connection_class[] = "myproxy.connection";
@@ -36,7 +36,7 @@ struct lua_State;
 class SocketAddress;
 
 inline int
-LConnection::Index(lua_State *L, const char *name)
+LConnection::Index(lua_State *L, const char *name) const
 {
 	if (StringIsEqual(name, "address")) {
 		address.Push(L);

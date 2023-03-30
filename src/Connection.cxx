@@ -107,6 +107,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	assert(incoming.handshake);
 	assert(!incoming.handshake_response);
 	assert(!incoming.command_phase);
+	assert(!outgoing);
 
 	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
@@ -129,8 +130,10 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.command_phase = true;
 
-	if (!MaybeSendHandshakeResponse())
-		return Result::CLOSED;
+	/* now that the incoming connection has finished the
+	   handshake, we can connect to the outgoing server and
+	   perform the handshake to it */
+	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 
 	return Result::IGNORE;
 }
@@ -299,10 +302,8 @@ Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 	 incoming(instance->event_loop, std::move(fd), *this, *this),
 	 connect(instance->event_loop, *this)
 {
+	/* write the handshake */
 	incoming.socket.DeferWrite();
-
-	// TODO move this call out of the ctor
-	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
 }
 
 void

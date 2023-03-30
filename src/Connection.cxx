@@ -133,7 +133,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	/* now that the incoming connection has finished the
 	   handshake, we can connect to the outgoing server and
 	   perform the handshake to it */
-	connect.Connect(instance->config.server_address, std::chrono::seconds{30});
+	connect.Connect(instance->GetConfig().server_address, std::chrono::seconds{30});
 
 	return Result::IGNORE;
 }
@@ -298,9 +298,9 @@ Connection::OnDelayTimer() noexcept
 Connection::Connection(Instance &_instance, UniqueSocketDescriptor fd,
 		       SocketAddress)
 	:instance(&_instance),
-	 delay_timer(instance->event_loop, BIND_THIS_METHOD(OnDelayTimer)),
-	 incoming(instance->event_loop, std::move(fd), *this, *this),
-	 connect(instance->event_loop, *this)
+	 delay_timer(instance->GetEventLoop(), BIND_THIS_METHOD(OnDelayTimer)),
+	 incoming(instance->GetEventLoop(), std::move(fd), *this, *this),
+	 connect(instance->GetEventLoop(), *this)
 {
 	/* write the handshake */
 	incoming.socket.DeferWrite();

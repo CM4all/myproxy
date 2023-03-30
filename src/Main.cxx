@@ -25,7 +25,7 @@ try {
 
 	policy_init();
 
-	instance.event_loop.Run();
+	instance.GetEventLoop().Run();
 
 	policy_deinit();
 

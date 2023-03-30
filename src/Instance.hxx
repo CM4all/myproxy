@@ -15,7 +15,7 @@
 struct Config;
 struct Connection;
 
-struct Instance {
+class Instance {
 	const Config &config;
 
 	EventLoop event_loop;
@@ -24,7 +24,16 @@ struct Instance {
 
 	std::forward_list<MyProxyListener> listeners;
 
+public:
 	explicit Instance(const Config &config);
+
+	const auto &GetConfig() const noexcept {
+		return config;
+	}
+
+	auto &GetEventLoop() noexcept {
+		return event_loop;
+	}
 
 private:
 	void OnShutdown() noexcept;

@@ -7,6 +7,7 @@
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "MysqlProtocol.hxx"
+#include "MysqlParser.hxx"
 #include "MysqlDeserializer.hxx"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
@@ -83,66 +84,15 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 }
 
 inline void
-Connection::OnHandshakeResponse(Mysql::PacketDeserializer p)
+Connection::OnHandshakeResponse(std::span<const std::byte> payload)
 {
-	std::string_view username, auth_response, database;
+	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
-	incoming.capabilities = p.ReadInt2();
-	if (incoming.capabilities & Mysql::CLIENT_PROTOCOL_41) {
-		// HandshakeResponse41
+	incoming.capabilities = packet.capabilities;
 
-		incoming.capabilities |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
-		p.ReadInt4(); // max_packet_size
-		p.ReadInt1(); // character_set
-		p.ReadN(23); // filler
-		username = p.ReadNullTerminatedString();
+	fmt::print("login username='{}' database='{}'\n", packet.username, packet.database);
 
-		if (incoming.capabilities & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
-			auth_response = p.ReadLengthEncodedString();
-		} else {
-			const std::size_t auth_response_length = p.ReadInt1();
-			auth_response = p.ReadVariableLengthString(auth_response_length);
-		}
-
-		if (incoming.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
-			database = p.ReadNullTerminatedString();
-		}
-
-		if (incoming.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
-			p.ReadNullTerminatedString(); // client_plugin_name
-		}
-
-		/* https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase_packets_protocol_handshake_response.html
-		   does not mention that the packet can end here, but
-		   apparently it does, therefore we have the "empty"
-		   checks */
-
-		if (!p.empty() && (incoming.capabilities & Mysql::CLIENT_CONNECT_ATTRS)) {
-			const std::size_t length = p.ReadLengthEncodedInteger();
-			p.ReadN(length);
-		}
-
-		if (!p.empty())
-			p.ReadInt1(); // zstd_compression_level
-	} else {
-		// HandshakeResponse320
-
-		p.ReadInt3(); // max_packet_size
-		username = p.ReadNullTerminatedString();
-
-		if (incoming.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
-			auth_response = p.ReadNullTerminatedString();
-			database = p.ReadNullTerminatedString();
-		} else {
-			auth_response = p.ReadRestOfPacketString();
-		}
-	}
-
-	p.MustBeEmpty();
-
-	fmt::print("login username='{}' database='{}'\n", username, database);
-
-	user = username;
+	user = packet.username;
 
 	const auto delay = policy_login(user.c_str());
 	if (delay.count() > 0)
@@ -199,44 +149,13 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 }
 
 void
-Connection::Outgoing::OnHandshake(Mysql::PacketDeserializer p)
+Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
-	const auto protocol_version = p.ReadInt1();
+	const auto packet = Mysql::ParseHandshake(payload);
 
-	std::string_view server_version;
+	peer.capabilities = packet.capabilities;
 
-	if (protocol_version == 10) {
-		server_version = p.ReadNullTerminatedString();
-		p.ReadInt4(); // thread id
-		p.ReadVariableLengthString(8); // auth-plugin-data-part-1
-		p.ReadInt1(); //  filler
-		peer.capabilities = p.ReadInt2();
-		p.ReadInt1(); // character_set
-		p.ReadInt2(); // status_flags
-		peer.capabilities |= static_cast<uint_least32_t>(p.ReadInt2()) << 16;
-
-		std::size_t auth_plugin_data_len = 0;
-		if (peer.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
-			auth_plugin_data_len = p.ReadInt1();
-		} else {
-			p.ReadInt1(); // 00
-		}
-
-		p.ReadVariableLengthString(10); // reserved
-
-		if (auth_plugin_data_len > 8)
-			p.ReadVariableLengthString(auth_plugin_data_len - 8);
-
-		if (peer.capabilities & Mysql::CLIENT_PLUGIN_AUTH)
-			p.ReadNullTerminatedString(); // auth_plugin_name
-	} else if (protocol_version == 9) {
-		server_version = p.ReadNullTerminatedString();
-		p.ReadInt4(); // thread id
-		p.ReadNullTerminatedString(); // scramble
-	} else
-		throw Mysql::MalformedPacket{};
-
-	fmt::print("handshake server_version='{}'\n", server_version);
+	fmt::print("handshake server_version='{}'\n", packet.server_version);
 }
 
 MysqlHandler::Result

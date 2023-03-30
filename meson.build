@@ -126,6 +126,7 @@ executable(
   'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/MysqlReader.cxx',
+  'src/MysqlParser.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/Instance.cxx',

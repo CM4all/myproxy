@@ -14,8 +14,6 @@
 
 struct Instance;
 
-namespace Mysql { class PacketDeserializer; }
-
 /**
  * Manage connections from MySQL clients.
  */
@@ -60,7 +58,7 @@ struct Connection final
 		Outgoing(Connection &_connection,
 			 UniqueSocketDescriptor fd) noexcept;
 
-		void OnHandshake(Mysql::PacketDeserializer p);
+		void OnHandshake(std::span<const std::byte> payload);
 
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
@@ -86,7 +84,7 @@ struct Connection final
 	void Delay(Event::Duration duration) noexcept;
 
 private:
-	void OnHandshakeResponse(Mysql::PacketDeserializer p);
+	void OnHandshakeResponse(std::span<const std::byte> payload);
 
 	/**
 	 * Called when the artificial delay is over, and restarts the

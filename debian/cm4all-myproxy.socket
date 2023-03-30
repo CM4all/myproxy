@@ -1,0 +1,6 @@
+[Socket]
+ListenStream=/run/cm4all/myproxy/socket
+PassCredentials=true
+
+[Install]
+WantedBy=sockets.target

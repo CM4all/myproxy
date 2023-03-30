@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+
+MESON_OPTIONS = \
+	-Dpg=enabled \
+	--werror
+
+%:
+	dh $@ --no-start
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(MESON_OPTIONS)

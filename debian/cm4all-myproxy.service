@@ -1,0 +1,31 @@
+[Unit]
+Description=CM4all MySQL proxy
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=cm4all-myproxy
+ExecStart=/usr/sbin/cm4all-myproxy
+
+CPUSchedulingPolicy=batch
+
+# This allows the kernel to merge CPU wakeups, the default of 50ns is
+# too fine.
+TimerSlackNSec=10ms
+
+# enable crash dumps
+LimitCORE=infinity
+
+# Resource limits
+MemoryMax=1G
+TasksMax=16
+LimitNOFILE=16384
+
+# Paranoid security settings
+NoNewPrivileges=yes
+ProtectSystem=yes
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes

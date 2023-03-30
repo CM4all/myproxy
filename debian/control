@@ -1,0 +1,20 @@
+Source: cm4all-myproxy
+Section: non-free/mail
+Priority: extra
+Maintainer: Max Kellermann <mk@cm4all.com>
+Build-Depends: debhelper (>= 13.3~),
+ meson (>= 0.56),
+ g++ (>= 4:10),
+ libfmt-dev (>= 7),
+ libpq-dev,
+ libsystemd-dev,
+ libluajit-5.1-dev
+Standards-Version: 4.0.0
+Vcs-Browser: https://github.com/CM4all/myproxy
+Vcs-Git: git://github.com/CM4all/myproxy
+
+Package: cm4all-myproxy
+Architecture: any
+Depends: ${shlibs:Depends}, systemd-sysv
+Description: MySQL proxy
+ myproxy is a proxy server for MySQL connections with Lua scripting.

@@ -14,15 +14,12 @@
 #include <cstdint>
 #include <span>
 
-/* don't let this standard C macro break our enum definition */
-#undef EOF
-
 namespace Mysql {
 
 enum class Command : uint_least8_t {
 	OK = 0x00,
 	QUERY = 0x03,
-	EOF = 0xfe,
+	EOF_ = 0xfe,
 	ERR = 0xff,
 };
 

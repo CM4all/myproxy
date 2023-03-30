@@ -140,7 +140,7 @@ OkPacket
 ParseEof(std::span<const std::byte> payload, uint_least32_t capabilities)
 {
 	assert(!payload.empty());
-	assert(payload.front() == static_cast<std::byte>(Command::EOF));
+	assert(payload.front() == static_cast<std::byte>(Command::EOF_));
 
 	PacketDeserializer d{payload};
 	OkPacket packet{};

@@ -248,7 +248,7 @@ try {
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	if (!peer.command_phase) {
-		if (cmd == Mysql::Command::OK || cmd == Mysql::Command::EOF) {
+		if (cmd == Mysql::Command::OK || cmd == Mysql::Command::EOF_) {
 			peer.command_phase = true;
 
 			/* now process postponed packets */
@@ -262,7 +262,7 @@ try {
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
 	}
 
-	if (cmd == Mysql::Command::EOF &&
+	if (cmd == Mysql::Command::EOF_ &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
 		policy_duration(connection.username.c_str(), duration);

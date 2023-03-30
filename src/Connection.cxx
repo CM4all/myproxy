@@ -140,7 +140,7 @@ Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
 	if (!incoming.handshake)
-		throw Mysql::MalformedPacket{};
+		throw std::runtime_error{"Unexpected client data before handshake"};
 
 	if (!incoming.handshake_response)
 		return OnHandshakeResponse(number, payload);
@@ -154,6 +154,11 @@ try {
 
 	return Result::OK;
 } catch (Mysql::MalformedPacket) {
+	fmt::print(stderr, "Malformed packet from client\n");
+	delete this;
+	return Result::CLOSED;
+} catch (...) {
+	PrintException(std::current_exception());
 	delete this;
 	return Result::CLOSED;
 }
@@ -242,7 +247,7 @@ try {
 			// TODO extract message
 			throw Mysql::MalformedPacket{};
 		} else
-			throw Mysql::MalformedPacket{};
+			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
 	}
 
 	if (Mysql::IsEofPacket(payload) &&
@@ -254,7 +259,12 @@ try {
 
 	return Result::OK;
 } catch (Mysql::MalformedPacket) {
+	fmt::print(stderr, "Malformed packet from server\n");
 	delete &connection;
+	return Result::CLOSED;
+} catch (...) {
+	PrintException(std::current_exception());
+	delete this;
 	return Result::CLOSED;
 }
 

@@ -37,6 +37,10 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 			ignore = false;
 			break;
 
+		case MysqlHandler::Result::BLOCKING:
+			remaining = 0;
+			return ProcessResult::BLOCKING;
+
 		case MysqlHandler::Result::IGNORE:
 			ignore = true;
 			break;
@@ -66,13 +70,15 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 		[[fallthrough]];
 
 	case MysqlHandler::Result::OK:
+		assert(consumed > 0);
+
 		remaining -= consumed;
 		socket.DisposeConsumed(consumed);
-
-		if (consumed == 0)
-			return ProcessResult::BLOCKING;
-
 		break;
+
+	case MysqlHandler::Result::BLOCKING:
+		assert(consumed == 0);
+		return ProcessResult::BLOCKING;
 
 	case MysqlHandler::Result::CLOSED:
 		assert(consumed == 0);

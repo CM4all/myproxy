@@ -131,10 +131,10 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
 	if (delayed)
 		/* don't continue reading now */
-		return {Result::OK, 0U};
+		return {Result::BLOCKING, 0U};
 
 	if (!outgoing)
-		return {Result::OK, 0U};
+		return {Result::BLOCKING, 0U};
 
 	const auto result = outgoing->peer.socket.Write(src.data(), src.size());
 	if (result > 0) [[likely]]
@@ -142,7 +142,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 
 	switch (result) {
 	case WRITE_BLOCKING:
-		return {Result::OK, 0U};
+		return {Result::BLOCKING, 0U};
 
 	default:
 		// TODO
@@ -206,7 +206,7 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 
 	switch (result) {
 	case WRITE_BLOCKING:
-		return {Result::OK, 0U};
+		return {Result::BLOCKING, 0U};
 
 	default:
 		// TODO

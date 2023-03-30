@@ -18,6 +18,11 @@ public:
 		OK,
 
 		/**
+		 * Currently, the packet cannot be consumed.
+		 */
+		BLOCKING,
+
+		/**
 		 * Ignore this packet from now on.  Neither raw data
 		 * nor more of the payload will be delivered.
 		 */

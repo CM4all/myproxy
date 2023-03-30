@@ -10,6 +10,8 @@
 #include "event/net/ServerSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 
+#include <forward_list>
+
 struct Config;
 struct Connection;
 
@@ -20,7 +22,7 @@ struct Instance {
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
 
-	MyProxyListener listener;
+	std::forward_list<MyProxyListener> listeners;
 
 	explicit Instance(const Config &config);
 

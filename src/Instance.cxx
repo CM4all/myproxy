@@ -11,18 +11,17 @@
 #include <sys/socket.h>
 
 Instance::Instance(const Config &_config)
-	:config(_config),
-	 listener(event_loop, *this)
+	:config(_config)
 {
 	shutdown_listener.Enable();
 
-	listener.Listen(config.listener.Create(SOCK_STREAM));
+	listeners.emplace_front(event_loop, *this);
+	listeners.front().Listen(config.listener.Create(SOCK_STREAM));
 }
 
 void
 Instance::OnShutdown() noexcept
 {
 	shutdown_listener.Disable();
-	listener.CloseAllConnections();
-	listener.RemoveEvent();
+	listeners.clear();
 }

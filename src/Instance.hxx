@@ -47,6 +47,12 @@ public:
 	void AddListener(SocketAddress address,
 			 Lua::ValuePtr &&handler) noexcept;
 
+	/**
+	 * Listen for incoming connections on sockets passed by systemd
+	 * (systemd socket activation).
+	 */
+	void AddSystemdListener(Lua::ValuePtr &&handler);
+
 	void Check();
 
 private:

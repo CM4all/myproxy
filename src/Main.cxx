@@ -35,6 +35,19 @@ extern "C" {
 #include <stddef.h>
 #include <stdlib.h>
 
+/**
+ * A "magic" pointer used to identify our artificial "systemd" Lua
+ * keyword, which is wrapped as "light user data".
+ */
+static int systemd_magic = 42;
+
+static bool
+IsSystemdMagic(lua_State *L, int idx)
+{
+	return lua_islightuserdata(L, idx) &&
+		lua_touserdata(L, idx) == &systemd_magic;
+}
+
 static int
 l_mysql_listen(lua_State *L)
 try {
@@ -45,7 +58,9 @@ try {
 
 	auto handler = std::make_shared<Lua::Value>(L, Lua::StackIndex(2));
 
-	if (lua_isstring(L, 1)) {
+	if (IsSystemdMagic(L, 1)) {
+		instance.AddSystemdListener(std::move(handler));
+	} else if (lua_isstring(L, 1)) {
 		const char *address_string = lua_tostring(L, 1);
 
 		AllocatedSocketAddress address;
@@ -74,6 +89,7 @@ SetupConfigState(lua_State *L, Instance &instance)
 	Lua::InitSocketAddress(L);
 	RegisterLuaResolver(L);
 
+	Lua::SetGlobal(L, "systemd", Lua::LightUserData(&systemd_magic));
 	Lua::SetGlobal(L, "mysql_listen",
 		       Lua::MakeCClosure(l_mysql_listen,
 					 Lua::LightUserData(&instance)));

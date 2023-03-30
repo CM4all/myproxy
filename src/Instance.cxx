@@ -6,10 +6,13 @@
 #include "Config.hxx"
 #include "Connection.hxx"
 #include "net/SocketConfig.hxx"
+#include "system/Error.hxx"
 
 extern "C" {
 #include <lauxlib.h>
 }
+
+#include <systemd/sd-daemon.h>
 
 #include <cstddef>
 
@@ -51,6 +54,21 @@ Instance::AddListener(SocketAddress address,
 		      Lua::ValuePtr &&handler) noexcept
 {
 	AddListener(MakeListener(address), std::move(handler));
+}
+
+void
+Instance::AddSystemdListener(Lua::ValuePtr &&handler)
+{
+	int n = sd_listen_fds(true);
+	if (n < 0)
+		throw MakeErrno("sd_listen_fds() failed");
+
+	if (n == 0)
+		throw std::runtime_error{"No systemd socket"};
+
+	for (unsigned i = 0; i < unsigned(n); ++i)
+		AddListener(UniqueSocketDescriptor(SD_LISTEN_FDS_START + i),
+			    Lua::ValuePtr(handler));
 }
 
 void

@@ -111,6 +111,52 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 	return packet;
 }
 
+OkPacket
+ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::OK));
+
+	PacketDeserializer d{payload};
+	OkPacket packet{};
+
+	d.ReadInt1(); // command
+	packet.affected_rows = d.ReadLengthEncodedInteger();
+	packet.last_insert_id = d.ReadLengthEncodedInteger();
+
+	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+		packet.status_flags = d.ReadInt2();
+		packet.warnings = d.ReadInt2();
+	} else if (capabilities & Mysql::CLIENT_TRANSACTIONS) {
+		packet.status_flags = d.ReadInt2();
+	}
+
+	// TODO implement the rest
+
+	return packet;
+}
+
+OkPacket
+ParseEof(std::span<const std::byte> payload, uint_least32_t capabilities)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::EOF));
+
+	PacketDeserializer d{payload};
+	OkPacket packet{};
+
+	d.ReadInt1(); // command
+
+	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+		packet.warnings = d.ReadInt2();
+		packet.status_flags = d.ReadInt2();
+	}
+
+	d.MustBeEmpty();
+
+	return packet;
+}
+
 ErrPacket
 ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
 {

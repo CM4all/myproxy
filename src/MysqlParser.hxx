@@ -47,6 +47,19 @@ struct HandshakeResponsePacket {
 HandshakeResponsePacket
 ParseHandshakeResponse(std::span<const std::byte> payload);
 
+struct OkPacket {
+	uint_least64_t affected_rows;
+	uint_least64_t last_insert_id;
+	uint_least16_t status_flags;
+	uint_least16_t warnings;
+};
+
+OkPacket
+ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities);
+
+OkPacket
+ParseEof(std::span<const std::byte> payload, uint_least32_t capabilities);
+
 struct ErrPacket {
 	std::string_view error_message;
 	ErrorCode error_code;

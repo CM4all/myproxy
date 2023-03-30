@@ -6,8 +6,7 @@
 
 #include "Connection.hxx"
 #include "event/net/TemplateServerSocket.hxx"
-
-struct Instance;
+#include "net/AllocatedSocketAddress.hxx"
 
 using MyProxyListener =
-	TemplateServerSocket<Connection, Instance &>;
+	TemplateServerSocket<Connection, EventLoop &, AllocatedSocketAddress>;

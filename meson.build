@@ -109,9 +109,14 @@ subdir('libcommon/src/net')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
 
+subdir('libcommon/src/lua')
+subdir('libcommon/src/lua/net')
+subdir('libcommon/src/lua/event')
+
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
+  'src/LResolver.cxx',
   'src/Policy.cxx',
   'src/MysqlReader.cxx',
   'src/MysqlParser.cxx',
@@ -127,6 +132,9 @@ executable(
     net_dep,
     event_dep,
     event_net_dep,
+    lua_dep,
+    lua_net_dep,
+    lua_event_dep,
   ],
   install: true,
   install_dir: 'sbin',

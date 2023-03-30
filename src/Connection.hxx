@@ -7,12 +7,11 @@
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
 #include "event/net/ConnectSocket.hxx"
+#include "net/SocketAddress.hxx"
 #include "util/IntrusiveList.hxx"
 
 #include <optional>
 #include <string>
-
-struct Instance;
 
 /**
  * Manage connections from MySQL clients.
@@ -22,7 +21,7 @@ struct Connection final
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
-	Instance *const instance;
+	const SocketAddress outgoing_address;
 
 	/**
 	 * Used to insert delay in the connection: it gets fired after the
@@ -73,7 +72,8 @@ struct Connection final
 
 	std::optional<Outgoing> outgoing;
 
-	Connection(Instance &_instance, UniqueSocketDescriptor fd,
+	Connection(EventLoop &event_loop, SocketAddress _outgoing_address,
+		   UniqueSocketDescriptor fd,
 		   SocketAddress address);
 	~Connection() noexcept;
 

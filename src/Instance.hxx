@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Listener.hxx"
+#include "lua/State.hxx"
 #include "event/Loop.hxx"
 #include "event/ShutdownListener.hxx"
 #include "event/net/ServerSocket.hxx"
@@ -22,6 +23,8 @@ class Instance {
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
 
+	Lua::State lua_state;
+
 	std::forward_list<MyProxyListener> listeners;
 
 public:
@@ -34,6 +37,18 @@ public:
 	auto &GetEventLoop() noexcept {
 		return event_loop;
 	}
+
+	lua_State *GetLuaState() const noexcept {
+		return lua_state.get();
+	}
+
+	void AddListener(UniqueSocketDescriptor &&fd,
+			 AllocatedSocketAddress &&outgoing_address) noexcept;
+
+	void AddListener(SocketAddress address,
+			 AllocatedSocketAddress outgoing_address);
+
+	void Check();
 
 private:
 	void OnShutdown() noexcept;

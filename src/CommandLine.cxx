@@ -4,28 +4,13 @@
 
 #include "CommandLine.hxx"
 #include "Config.hxx"
-#include "net/AddressInfo.hxx"
-#include "net/Resolver.hxx"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <netdb.h>
+#include "util/StringAPI.hxx"
 
 void
 parse_cmdline(Config &config, int argc, char **argv)
 {
-	if (argc != 3) {
-		fprintf(stderr, "Usage: %s LISTEN HOST[:PORT]\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	static constexpr auto passive_hints = MakeAddrInfo(AI_PASSIVE|AI_ADDRCONFIG, AF_UNSPEC, SOCK_STREAM);
-	config.listener.bind_address = Resolve(argv[1], 3306, &passive_hints).GetBest();
-	config.listener.listen = 16;
-	config.listener.reuse_port = true;
-	config.listener.tcp_no_delay = true;
-
-	static constexpr auto active_hints = MakeAddrInfo(AI_ADDRCONFIG, AF_UNSPEC, SOCK_STREAM);
-	config.server_address = Resolve(argv[2], 3306, &active_hints).GetBest();
+	if (argc == 3 && StringIsEqual(argv[1], "--config"))
+		config.config_path = argv[2];
+	else if (argc != 1)
+		throw "Usage: cm4all-myrelay [--config PATH]";
 }

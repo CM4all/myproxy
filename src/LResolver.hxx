@@ -4,6 +4,10 @@
 
 #pragma once
 
-struct Config {
-	const char *config_path = "/etc/cm4all/myproxy/config.lua";
-};
+struct lua_State;
+
+void
+RegisterLuaResolver(lua_State *L);
+
+void
+UnregisterLuaResolver(lua_State *L);

@@ -92,9 +92,11 @@ Connection::OnHandshakeResponse(std::span<const std::byte> payload)
 
 	fmt::print("login username='{}' database='{}'\n", packet.username, packet.database);
 
-	user = packet.username;
+	username = packet.username;
+	auth_response = packet.auth_response;
+	database = packet.database;
 
-	const auto delay = policy_login(user.c_str());
+	const auto delay = policy_login(username.c_str());
 	if (delay.count() > 0)
 		Delay(delay);
 }
@@ -185,7 +187,7 @@ try {
 	if (Mysql::IsEofPacket(payload) &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
-		policy_duration(connection.user.c_str(), duration);
+		policy_duration(connection.username.c_str(), duration);
 		connection.request_time = Event::TimePoint{};
 	}
 

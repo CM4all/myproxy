@@ -33,7 +33,7 @@ struct Connection final
 
 	bool delayed = false;
 
-	std::string user;
+	std::string username, auth_response, database;
 
 	/**
 	 * The time stamp of the last request packet [us].

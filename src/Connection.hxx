@@ -8,6 +8,7 @@
 #include "MysqlHandler.hxx"
 #include "lua/Ref.hxx"
 #include "lua/Resume.hxx"
+#include "lua/Value.hxx"
 #include "lua/ValuePtr.hxx"
 #include "lua/CoRunner.hxx"
 #include "event/DeferEvent.hxx"
@@ -27,6 +28,8 @@ class Connection final
 	  ConnectSocketHandler
 {
 	const Lua::ValuePtr handler;
+
+	Lua::Value lua_connection;
 
 	/**
 	 * The Lua thread which runs the handler coroutine.

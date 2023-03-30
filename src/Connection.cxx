@@ -3,6 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "Connection.hxx"
+#include "LConnection.hxx"
 #include "Config.hxx"
 #include "Instance.hxx"
 #include "MysqlProtocol.hxx"
@@ -289,14 +290,19 @@ Connection::OnDelayTimer() noexcept
 
 Connection::Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
 		       UniqueSocketDescriptor fd,
-		       SocketAddress)
+		       SocketAddress address)
 	:handler(std::move(_handler)),
+	 lua_connection(handler->GetState()),
 	 thread(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
 	 delay_timer(event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
+	NewLuaConnection(lua_connection.GetState(), address);
+	lua_connection.Set(lua_connection.GetState(), Lua::RelativeStackIndex{-1});
+	lua_pop(lua_connection.GetState(), 1);
+
 	/* write the handshake */
 	incoming.socket.DeferWrite();
 }
@@ -317,8 +323,7 @@ Connection::OnDeferredStartHandler() noexcept
 
 	handler->Push(L);
 
-	lua_newtable(L);
-	// TODO add connection attributes
+	lua_connection.Push(L);
 
 	lua_newtable(L);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "username", username);

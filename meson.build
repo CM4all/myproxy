@@ -136,6 +136,7 @@ executable(
   'src/MysqlMakePacket.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
+  'src/LConnection.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
   'src/Main.cxx',

@@ -299,7 +299,8 @@ Connection::Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	NewLuaConnection(lua_connection.GetState(), address);
+	NewLuaConnection(lua_connection.GetState(), incoming.socket.GetSocket(),
+			 address);
 	lua_connection.Set(lua_connection.GetState(), Lua::RelativeStackIndex{-1});
 	lua_pop(lua_connection.GetState(), 1);
 

@@ -137,6 +137,7 @@ executable(
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/LConnection.cxx',
+  'src/CgroupProc.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
   'src/Main.cxx',

@@ -6,9 +6,10 @@
 
 struct lua_State;
 class SocketAddress;
+class SocketDescriptor;
 
 void
 RegisterLuaConnection(lua_State *L);
 
 void
-NewLuaConnection(lua_State *L, SocketAddress address);
+NewLuaConnection(lua_State *L, SocketDescriptor socket, SocketAddress address);

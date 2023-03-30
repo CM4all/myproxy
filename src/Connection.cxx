@@ -5,7 +5,6 @@
 #include "Connection.hxx"
 #include "Config.hxx"
 #include "Instance.hxx"
-#include "BufferedIO.hxx"
 #include "MysqlProtocol.hxx"
 #include "MysqlParser.hxx"
 #include "MysqlDeserializer.hxx"

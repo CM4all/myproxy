@@ -112,7 +112,6 @@ subdir('libcommon/src/event/net')
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
-  'src/BufferedIO.cxx',
   'src/Policy.cxx',
   'src/MysqlReader.cxx',
   'src/MysqlParser.cxx',

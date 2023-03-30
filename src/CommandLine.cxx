@@ -12,5 +12,5 @@ parse_cmdline(Config &config, int argc, char **argv)
 	if (argc == 3 && StringIsEqual(argv[1], "--config"))
 		config.config_path = argv[2];
 	else if (argc != 1)
-		throw "Usage: cm4all-myrelay [--config PATH]";
+		throw "Usage: cm4all-myproxy [--config PATH]";
 }

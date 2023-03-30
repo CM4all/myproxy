@@ -12,15 +12,15 @@
 namespace Mysql {
 
 /**
- * Exception class that gets thrown when #PacketParser fails.
+ * Exception class that gets thrown when #PacketDeserializer fails.
  */
 struct MalformedPacket {};
 
-class PacketParser {
+class PacketDeserializer {
 	std::span<const std::byte> payload;
 
 public:
-	constexpr PacketParser(std::span<const std::byte> _payload) noexcept
+	constexpr PacketDeserializer(std::span<const std::byte> _payload) noexcept
 		:payload(_payload) {}
 
 	bool empty() const noexcept {

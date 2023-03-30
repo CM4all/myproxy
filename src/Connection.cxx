@@ -7,7 +7,7 @@
 #include "Instance.hxx"
 #include "BufferedIO.hxx"
 #include "MysqlProtocol.hxx"
-#include "MysqlParser.hxx"
+#include "MysqlDeserializer.hxx"
 #include "Policy.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
@@ -83,7 +83,7 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 }
 
 inline void
-Connection::OnHandshakeResponse(Mysql::PacketParser p)
+Connection::OnHandshakeResponse(Mysql::PacketDeserializer p)
 {
 	std::string_view username, auth_response, database;
 
@@ -199,7 +199,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 }
 
 void
-Connection::Outgoing::OnHandshake(Mysql::PacketParser p)
+Connection::Outgoing::OnHandshake(Mysql::PacketDeserializer p)
 {
 	const auto protocol_version = p.ReadInt1();
 

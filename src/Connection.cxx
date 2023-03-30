@@ -27,7 +27,7 @@ Connection::~Connection() noexcept = default;
 bool
 Connection::Outgoing::OnPeerWrite()
 {
-	if (connection.delayed)
+	if (connection.IsDelayed())
 		/* don't continue reading now */
 		return true;
 
@@ -163,7 +163,7 @@ try {
 std::pair<MysqlHandler::Result, std::size_t>
 Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
-	if (delayed)
+	if (IsDelayed())
 		/* don't continue reading now */
 		return {Result::BLOCKING, 0U};
 
@@ -284,13 +284,9 @@ Connection::Outgoing::Outgoing(Connection &_connection,
 {
 }
 
-void
+inline void
 Connection::OnDelayTimer() noexcept
 {
-	assert(delayed);
-
-	delayed = false;
-
 	incoming.socket.Read();
 }
 
@@ -309,8 +305,6 @@ Connection::Connection(EventLoop &event_loop, SocketAddress _outgoing_address,
 void
 Connection::Delay(Event::Duration duration) noexcept
 {
-	delayed = true;
-
 	incoming.socket.UnscheduleRead();
 
 	delay_timer.Schedule(duration);

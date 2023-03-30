@@ -30,8 +30,6 @@ class Connection final
 	 */
 	CoarseTimerEvent delay_timer;
 
-	bool delayed = false;
-
 	std::string username, auth_response, database;
 
 	/**
@@ -82,9 +80,13 @@ public:
 		return delay_timer.GetEventLoop();
 	}
 
+private:
+	bool IsDelayed() const noexcept {
+		return delay_timer.IsPending();
+	}
+
 	void Delay(Event::Duration duration) noexcept;
 
-private:
 	bool MaybeSendHandshakeResponse() noexcept;
 
 	MysqlHandler::Result OnHandshakeResponse(uint_least8_t sequence_id,

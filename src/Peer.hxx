@@ -9,6 +9,7 @@
 #include "net/UniqueSocketDescriptor.hxx"
 
 #include <cstdint>
+#include <string_view>
 
 namespace Mysql {
 enum class ErrorCode : uint_least16_t;

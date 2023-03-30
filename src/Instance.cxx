@@ -65,4 +65,8 @@ Instance::OnShutdown() noexcept
 {
 	shutdown_listener.Disable();
 	listeners.clear();
+
+	/* TODO this is currently necessary because the Pg::Stock
+	   instances created by Lua code don't call Shutdown() */
+	event_loop.Break();
 }

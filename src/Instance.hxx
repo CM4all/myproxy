@@ -14,7 +14,6 @@
 #include <forward_list>
 
 struct Config;
-struct Connection;
 
 class Instance {
 	const Config &config;

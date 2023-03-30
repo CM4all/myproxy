@@ -16,8 +16,8 @@
 /**
  * Manage connections from MySQL clients.
  */
-struct Connection final
-	: IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
+class Connection final
+	: public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
@@ -72,6 +72,7 @@ struct Connection final
 
 	std::optional<Outgoing> outgoing;
 
+public:
 	Connection(EventLoop &event_loop, SocketAddress _outgoing_address,
 		   UniqueSocketDescriptor fd,
 		   SocketAddress address);

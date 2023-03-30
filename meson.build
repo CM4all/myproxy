@@ -95,6 +95,8 @@ add_global_arguments(common_flags, language: 'cpp')
 add_global_arguments(compiler.get_supported_arguments(test_global_cxxflags), language: 'cpp')
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 
+libsystemd = dependency('libsystemd')
+
 inc = include_directories(
   'src',
   'libcommon/src',
@@ -143,6 +145,7 @@ executable(
   'src/Main.cxx',
   include_directories: inc,
   dependencies: [
+    libsystemd,
     util_dep,
     net_dep,
     event_dep,

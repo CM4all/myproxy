@@ -30,6 +30,8 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <systemd/sd-daemon.h>
+
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -109,6 +111,9 @@ try {
 	SetupRuntimeState(instance.GetLuaState());
 
 	policy_init();
+
+	/* tell systemd we're ready */
+	sd_notify(0, "READY=1");
 
 	instance.GetEventLoop().Run();
 

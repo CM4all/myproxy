@@ -11,6 +11,7 @@
 
 namespace Mysql {
 
+enum class ErrorCode : uint_least16_t;
 class PacketSerializer;
 
 PacketSerializer
@@ -28,7 +29,7 @@ MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities);
 
 PacketSerializer
 MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
-	uint_least16_t error_code,
+	ErrorCode error_code,
 	std::string_view sql_state, std::string_view msg);
 
 } // namespace Mysql

@@ -51,8 +51,7 @@ Peer::SendOk(uint8_t sequence_id) noexcept
 }
 
 bool
-Peer::SendErr(uint_least8_t sequence_id,
-	      uint_least16_t error_code,
+Peer::SendErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
 	      std::string_view sql_state, std::string_view msg) noexcept
 {
 	return Send(Mysql::MakeErr(sequence_id, capabilities, error_code,

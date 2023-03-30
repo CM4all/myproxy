@@ -8,7 +8,12 @@
 #include "event/net/BufferedSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 
-namespace Mysql { class PacketSerializer; }
+#include <cstdint>
+
+namespace Mysql {
+enum class ErrorCode : uint_least16_t;
+class PacketSerializer;
+}
 
 class PeerHandler {
 public:
@@ -58,8 +63,7 @@ struct Peer final : BufferedSocketHandler {
 
 	bool SendOk(uint8_t sequence_id) noexcept;
 
-	bool SendErr(uint_least8_t sequence_id,
-		     uint_least16_t error_code,
+	bool SendErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
 		     std::string_view sql_state, std::string_view msg) noexcept;
 
 private:

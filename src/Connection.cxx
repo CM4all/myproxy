@@ -357,7 +357,7 @@ Connection::OnLuaError(lua_State *L, std::exception_ptr e) noexcept
 	PrintException(e);
 
 	if (incoming.SendErr(handeshake_response_sequence_id + 1,
-			     1043, "08S01"sv,
+			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			     "Lua error"sv))
 	    delete this;
 }

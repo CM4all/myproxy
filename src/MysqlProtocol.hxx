@@ -16,6 +16,10 @@
 
 namespace Mysql {
 
+enum class ErrorCode : uint_least16_t {
+	HANDSHAKE_ERROR = 1043,
+};
+
 static constexpr uint_least32_t CLIENT_CONNECT_WITH_DB = 8;
 static constexpr uint_least32_t CLIENT_PROTOCOL_41 = 512;
 static constexpr uint_least32_t CLIENT_TRANSACTIONS = 8192;

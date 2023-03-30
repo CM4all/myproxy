@@ -119,6 +119,10 @@ public:
 
 		return std::span{buffer}.first(position);
 	}
+
+	void WriteCommand(Command cmd) noexcept {
+		WriteInt1(static_cast<uint8_t>(cmd));
+	}
 };
 
 } // namespace Mysql

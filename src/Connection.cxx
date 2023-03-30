@@ -153,7 +153,9 @@ try {
 	if (payload.empty())
 		throw Mysql::MalformedPacket{};
 
-	if (Mysql::IsQueryPacket(number, payload) &&
+	const auto cmd = static_cast<Mysql::Command>(payload.front());
+
+	if (cmd == Mysql::Command::QUERY &&
 	    request_time == Event::TimePoint{})
 		request_time = GetEventLoop().SteadyNow();
 
@@ -243,22 +245,24 @@ try {
 	if (payload.empty())
 		throw Mysql::MalformedPacket{};
 
+	const auto cmd = static_cast<Mysql::Command>(payload.front());
+
 	if (!peer.command_phase) {
-		if (Mysql::IsOkPacket(payload)) {
+		if (cmd == Mysql::Command::OK || cmd == Mysql::Command::EOF) {
 			peer.command_phase = true;
 
 			/* now process postponed packets */
 			connection.incoming.socket.DeferRead();
 
 			return Result::IGNORE;
-		} else if (Mysql::IsErrPacket(payload)) {
+		} else if (cmd == Mysql::Command::ERR) {
 			// TODO extract message
 			throw Mysql::MalformedPacket{};
 		} else
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
 	}
 
-	if (Mysql::IsEofPacket(payload) &&
+	if (cmd == Mysql::Command::EOF &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
 		policy_duration(connection.username.c_str(), duration);

@@ -14,7 +14,17 @@
 #include <cstdint>
 #include <span>
 
+/* don't let this standard C macro break our enum definition */
+#undef EOF
+
 namespace Mysql {
+
+enum class Command : uint_least8_t {
+	OK = 0x00,
+	QUERY = 0x03,
+	EOF = 0xfe,
+	ERR = 0xff,
+};
 
 enum class ErrorCode : uint_least16_t {
 	HANDSHAKE_ERROR = 1043,
@@ -131,29 +141,5 @@ struct PacketHeader {
 		return length;
 	}
 };
-
-static constexpr bool
-IsQueryPacket(unsigned number, std::span<const std::byte> payload) noexcept
-{
-	return number == 0 && payload.front() == std::byte{0x03};
-}
-
-static constexpr bool
-IsEofPacket(std::span<const std::byte> payload) noexcept
-{
-	return payload.size() < 9 && payload.front() == std::byte{0xfe};
-}
-
-static constexpr bool
-IsOkPacket(std::span<const std::byte> payload) noexcept
-{
-	return payload.front() == std::byte{0x00} || payload.front() == std::byte{0xfe};
-}
-
-static constexpr bool
-IsErrPacket(std::span<const std::byte> payload) noexcept
-{
-	return payload.front() == std::byte{0xff};
-}
 
 } // namespace Mysql

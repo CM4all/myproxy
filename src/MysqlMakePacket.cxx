@@ -4,6 +4,7 @@
 
 #include "MysqlMakePacket.hxx"
 #include "MysqlSerializer.hxx"
+#include "MysqlProtocol.hxx"
 
 #include <array>
 
@@ -61,7 +62,7 @@ PacketSerializer
 MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities)
 {
 	Mysql::PacketSerializer s{sequence_id};
-	s.WriteInt1(0x00); // OK
+	s.WriteCommand(Command::OK);
 	s.WriteLengthEncodedInteger(0); // affected_rows
 	s.WriteLengthEncodedInteger(0); // last_insert_id
 
@@ -97,7 +98,7 @@ MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
 	assert(sql_state.size() == 5);
 
 	Mysql::PacketSerializer s{sequence_id};
-	s.WriteInt1(0xff); // ERR
+	s.WriteCommand(Command::ERR);
 	s.WriteInt2(static_cast<uint_least16_t>(error_code));
 
 	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {

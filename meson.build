@@ -14,6 +14,9 @@ c_compiler = meson.get_compiler('c')
 
 common_flags = [
   '-D_GNU_SOURCE',
+
+  # disable boost specific code in libcommon
+  '-DNO_BOOST',
 ]
 
 test_common_flags = [

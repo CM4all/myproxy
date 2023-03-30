@@ -148,6 +148,11 @@ try {
 	if (!outgoing || !outgoing->peer.command_phase)
 		return Result::BLOCKING;
 
+	assert(incoming.command_phase);
+
+	if (payload.empty())
+		throw Mysql::MalformedPacket{};
+
 	if (Mysql::IsQueryPacket(number, payload) &&
 	    request_time == Event::TimePoint{})
 		request_time = GetEventLoop().SteadyNow();
@@ -234,6 +239,9 @@ try {
 
 		return Result::IGNORE;
 	}
+
+	if (payload.empty())
+		throw Mysql::MalformedPacket{};
 
 	if (!peer.command_phase) {
 		if (Mysql::IsOkPacket(payload)) {

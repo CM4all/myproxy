@@ -135,26 +135,25 @@ struct PacketHeader {
 static constexpr bool
 IsQueryPacket(unsigned number, std::span<const std::byte> payload) noexcept
 {
-	return number == 0 && !payload.empty() && payload.front() == std::byte{0x03};
+	return number == 0 && payload.front() == std::byte{0x03};
 }
 
 static constexpr bool
 IsEofPacket(std::span<const std::byte> payload) noexcept
 {
-	return !payload.empty() && payload.size() < 9 && payload.front() == std::byte{0xfe};
+	return payload.size() < 9 && payload.front() == std::byte{0xfe};
 }
 
 static constexpr bool
 IsOkPacket(std::span<const std::byte> payload) noexcept
 {
-	return !payload.empty() &&
-		(payload.front() == std::byte{0x00} || payload.front() == std::byte{0xfe});
+	return payload.front() == std::byte{0x00} || payload.front() == std::byte{0xfe};
 }
 
 static constexpr bool
 IsErrPacket(std::span<const std::byte> payload) noexcept
 {
-	return !payload.empty() && payload.front() == std::byte{0xff};
+	return payload.front() == std::byte{0xff};
 }
 
 } // namespace Mysql

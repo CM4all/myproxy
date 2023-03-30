@@ -256,8 +256,8 @@ try {
 
 			return Result::IGNORE;
 		} else if (cmd == Mysql::Command::ERR) {
-			// TODO extract message
-			throw Mysql::MalformedPacket{};
+			throw Mysql::ParseErr(payload,
+					      connection.incoming.capabilities);
 		} else
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
 	}
@@ -272,6 +272,16 @@ try {
 	return Result::OK;
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "Malformed packet from server\n");
+	delete &connection;
+	return Result::CLOSED;
+} catch (const Mysql::ErrPacket &packet) {
+	if (!packet.error_message.empty())
+		fmt::print(stderr, "MySQL error: '{}' ({})\n",
+			   packet.error_message,
+			   static_cast<uint_least16_t>(packet.error_code));
+	else
+		fmt::print(stderr, "MySQL error: {}\n",
+			   static_cast<uint_least16_t>(packet.error_code));
 	delete &connection;
 	return Result::CLOSED;
 } catch (...) {

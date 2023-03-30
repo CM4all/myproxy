@@ -111,4 +111,26 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 	return packet;
 }
 
+ErrPacket
+ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::ERR));
+
+	PacketDeserializer d{payload};
+	ErrPacket packet{};
+
+	d.ReadInt1(); // command
+	packet.error_code = static_cast<ErrorCode>(d.ReadInt2());
+
+	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+		d.ReadVariableLengthString(1); // sql_state_marker
+		d.ReadVariableLengthString(5); // sql_state
+	}
+
+	packet.error_message = d.ReadRestOfPacketString();
+
+	return packet;
+}
+
 } // namespace Mysql

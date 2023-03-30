@@ -11,6 +11,8 @@
 
 namespace Mysql {
 
+enum class ErrorCode : uint_least16_t;
+
 struct HandshakePacket {
 	std::string_view server_version;
 
@@ -44,5 +46,13 @@ struct HandshakeResponsePacket {
 
 HandshakeResponsePacket
 ParseHandshakeResponse(std::span<const std::byte> payload);
+
+struct ErrPacket {
+	std::string_view error_message;
+	ErrorCode error_code;
+};
+
+ErrPacket
+ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities);
 
 } // namespace Mysql

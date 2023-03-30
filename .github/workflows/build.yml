@@ -38,4 +38,5 @@ jobs:
       - name: Meson Build
         uses: BSFishy/meson-build@v1.0.3
         with:
+          action: test
           setup-options: -Dwrap_mode=nofallback -Dpg=enabled

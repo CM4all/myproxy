@@ -36,7 +36,7 @@ try {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameter count");
 
-	auto outgoing_address = Lua::ToSocketAddress(L, 2, 3306);
+	auto handler = std::make_shared<Lua::Value>(L, Lua::StackIndex(2));
 
 	if (lua_isstring(L, 1)) {
 		const char *address_string = lua_tostring(L, 1);
@@ -44,7 +44,7 @@ try {
 		AllocatedSocketAddress address;
 		address.SetLocal(address_string);
 
-		instance.AddListener(address, std::move(outgoing_address));
+		instance.AddListener(address, std::move(handler));
 	} else
 		luaL_argerror(L, 1, "path expected");
 

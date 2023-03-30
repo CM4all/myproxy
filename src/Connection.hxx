@@ -6,8 +6,12 @@
 
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
+#include "lua/Ref.hxx"
+#include "lua/Resume.hxx"
+#include "lua/ValuePtr.hxx"
+#include "lua/CoRunner.hxx"
+#include "event/DeferEvent.hxx"
 #include "event/net/ConnectSocket.hxx"
-#include "net/SocketAddress.hxx"
 #include "util/IntrusiveList.hxx"
 
 #include <optional>
@@ -18,10 +22,21 @@
  */
 class Connection final
 	: public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
+	  Lua::ResumeListener,
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
-	const SocketAddress outgoing_address;
+	const Lua::ValuePtr handler;
+
+	/**
+	 * The Lua thread which runs the handler coroutine.
+	 */
+	Lua::CoRunner thread;
+
+	/**
+	 * Launches the Lua handler.
+	 */
+	DeferEvent defer_start_handler;
 
 	/**
 	 * Used to insert delay in the connection: it gets fired after the
@@ -70,8 +85,10 @@ class Connection final
 
 	std::optional<Outgoing> outgoing;
 
+	uint_least8_t handeshake_response_sequence_id;
+
 public:
-	Connection(EventLoop &event_loop, SocketAddress _outgoing_address,
+	Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
 		   UniqueSocketDescriptor fd,
 		   SocketAddress address);
 	~Connection() noexcept;
@@ -92,6 +109,8 @@ private:
 	MysqlHandler::Result OnHandshakeResponse(uint_least8_t sequence_id,
 						 std::span<const std::byte> payload);
 
+	void OnDeferredStartHandler() noexcept;
+
 	/**
 	 * Called when the artificial delay is over, and restarts the
 	 * transfer from the client to the server->
@@ -111,6 +130,10 @@ private:
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;
 	void OnSocketConnectError(std::exception_ptr e) noexcept override;
+
+	/* virtual methods from class Lua::ResumeListener */
+	void OnLuaFinished(lua_State *L) noexcept override;
+	void OnLuaError(lua_State *L, std::exception_ptr e) noexcept override;
 };
 
 /**

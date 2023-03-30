@@ -24,9 +24,9 @@ Instance::Instance(const Config &_config)
 
 inline void
 Instance::AddListener(UniqueSocketDescriptor &&fd,
-		      AllocatedSocketAddress &&outgoing_address) noexcept
+		      Lua::ValuePtr &&handler) noexcept
 {
-	listeners.emplace_front(event_loop, event_loop, std::move(outgoing_address));
+	listeners.emplace_front(event_loop, event_loop, std::move(handler));
 	listeners.front().Listen(std::move(fd));
 }
 
@@ -48,9 +48,9 @@ MakeListener(SocketAddress address)
 
 void
 Instance::AddListener(SocketAddress address,
-		      AllocatedSocketAddress outgoing_address)
+		      Lua::ValuePtr &&handler) noexcept
 {
-	AddListener(MakeListener(address), std::move(outgoing_address));
+	AddListener(MakeListener(address), std::move(handler));
 }
 
 void

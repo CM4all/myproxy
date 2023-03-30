@@ -11,6 +11,8 @@
 #include "MysqlSerializer.hxx"
 #include "MysqlMakePacket.hxx"
 #include "Policy.hxx"
+#include "lua/net/SocketAddress.hxx"
+#include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/PrintException.hxx"
@@ -22,7 +24,10 @@
 
 using std::string_view_literals::operator""sv;
 
-Connection::~Connection() noexcept = default;
+Connection::~Connection() noexcept
+{
+	thread.Cancel();
+}
 
 bool
 Connection::Outgoing::OnPeerWrite()
@@ -124,16 +129,8 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.handshake_response = true;
 
-	if (!incoming.SendOk(sequence_id + 1))
-		return Result::CLOSED;
-
-	incoming.command_phase = true;
-
-	/* now that the incoming connection has finished the
-	   handshake, we can connect to the outgoing server and
-	   perform the handshake to it */
-	connect.Connect(outgoing_address, std::chrono::seconds{30});
-
+	handeshake_response_sequence_id = sequence_id;
+	defer_start_handler.Schedule();
 	return Result::IGNORE;
 }
 
@@ -290,10 +287,12 @@ Connection::OnDelayTimer() noexcept
 	incoming.socket.Read();
 }
 
-Connection::Connection(EventLoop &event_loop, SocketAddress _outgoing_address,
+Connection::Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
 		       UniqueSocketDescriptor fd,
 		       SocketAddress)
-	:outgoing_address(_outgoing_address),
+	:handler(std::move(_handler)),
+	 thread(handler->GetState()),
+	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
 	 delay_timer(event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
@@ -308,4 +307,46 @@ Connection::Delay(Event::Duration duration) noexcept
 	incoming.socket.UnscheduleRead();
 
 	delay_timer.Schedule(duration);
+}
+
+inline void
+Connection::OnDeferredStartHandler() noexcept
+{
+	/* create a new thread for the handler coroutine */
+	const auto L = thread.CreateThread(*this);
+
+	handler->Push(L);
+
+	lua_newtable(L);
+	// TODO add connection attributes
+
+	lua_newtable(L);
+	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "username", username);
+	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
+
+	Lua::Resume(L, 2);
+}
+
+void
+Connection::OnLuaFinished(lua_State *L) noexcept
+try {
+	if (!incoming.SendOk(handeshake_response_sequence_id + 1))
+		return;
+
+	incoming.command_phase = true;
+
+	/* connect to the outgoing server and perform the handshake to
+	   it */
+	connect.Connect(Lua::ToSocketAddress(L, -1, 3306),
+			std::chrono::seconds{30});
+} catch (...) {
+	OnLuaError(L, std::current_exception());
+}
+
+void
+Connection::OnLuaError(lua_State *L, std::exception_ptr e) noexcept
+{
+	PrintException(e);
+	(void)L;
+	delete this;
 }

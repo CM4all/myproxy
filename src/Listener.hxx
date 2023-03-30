@@ -6,7 +6,7 @@
 
 #include "Connection.hxx"
 #include "event/net/TemplateServerSocket.hxx"
-#include "net/AllocatedSocketAddress.hxx"
+#include "lua/ValuePtr.hxx"
 
 using MyProxyListener =
-	TemplateServerSocket<Connection, EventLoop &, AllocatedSocketAddress>;
+	TemplateServerSocket<Connection, EventLoop &, Lua::ValuePtr>;

@@ -42,10 +42,10 @@ public:
 	}
 
 	void AddListener(UniqueSocketDescriptor &&fd,
-			 AllocatedSocketAddress &&outgoing_address) noexcept;
+			 Lua::ValuePtr &&handler) noexcept;
 
 	void AddListener(SocketAddress address,
-			 AllocatedSocketAddress outgoing_address);
+			 Lua::ValuePtr &&handler) noexcept;
 
 	void Check();
 

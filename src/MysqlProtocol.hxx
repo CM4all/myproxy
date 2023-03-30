@@ -28,6 +28,11 @@ struct Int2 {
 	uint8_t data[2];
 
 public:
+	Int2() noexcept = default;
+
+	constexpr Int2(uint_least16_t value) noexcept
+		:data{static_cast<uint8_t>(value), static_cast<uint8_t>(value >> 8)} {}
+
 	constexpr operator uint_least16_t() const noexcept {
 		return static_cast<uint_least16_t>(data[0]) |
 			(static_cast<uint_least16_t>(data[1]) << 8);
@@ -38,6 +43,12 @@ struct Int3 {
 	uint8_t data[3];
 
 public:
+	Int3() noexcept = default;
+
+	constexpr Int3(uint_least32_t value) noexcept
+		:data{static_cast<uint8_t>(value), static_cast<uint8_t>(value >> 8),
+		static_cast<uint8_t>(value >> 16)} {}
+
 	constexpr operator uint_least32_t() const noexcept {
 		return static_cast<uint_least32_t>(data[0]) |
 			(static_cast<uint_least32_t>(data[1]) << 8) |
@@ -49,6 +60,12 @@ struct Int4 {
 	uint8_t data[4];
 
 public:
+	Int4() noexcept = default;
+
+	constexpr Int4(uint_least32_t value) noexcept
+		:data{static_cast<uint8_t>(value), static_cast<uint8_t>(value >> 8),
+		static_cast<uint8_t>(value >> 16), static_cast<uint8_t>(value >> 24)} {}
+
 	constexpr operator uint_least32_t() const noexcept {
 		return static_cast<uint_least32_t>(data[0]) |
 			(static_cast<uint_least32_t>(data[1]) << 8) |
@@ -61,6 +78,13 @@ struct Int6 {
 	uint8_t data[6];
 
 public:
+	Int6() noexcept = default;
+
+	constexpr Int6(uint_least64_t value) noexcept
+		:data{static_cast<uint8_t>(value), static_cast<uint8_t>(value >> 8),
+		static_cast<uint8_t>(value >> 16), static_cast<uint8_t>(value >> 24),
+		static_cast<uint8_t>(value >> 32), static_cast<uint8_t>(value >> 40)} {}
+
 	constexpr operator uint_least64_t() const noexcept {
 		return static_cast<uint_least64_t>(data[0]) |
 			(static_cast<uint_least64_t>(data[1]) << 8) |
@@ -75,6 +99,14 @@ struct Int8 {
 	uint8_t data[8];
 
 public:
+	Int8() noexcept = default;
+
+	constexpr Int8(uint_least64_t value) noexcept
+		:data{static_cast<uint8_t>(value), static_cast<uint8_t>(value >> 8),
+		static_cast<uint8_t>(value >> 16), static_cast<uint8_t>(value >> 24),
+		static_cast<uint8_t>(value >> 32), static_cast<uint8_t>(value >> 40),
+		static_cast<uint8_t>(value >> 48), static_cast<uint8_t>(value >> 56)} {}
+
 	constexpr operator uint_least64_t() const noexcept {
 		return static_cast<uint_least64_t>(data[0]) |
 			(static_cast<uint_least64_t>(data[1]) << 8) |

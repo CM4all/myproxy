@@ -11,6 +11,8 @@ debug = get_option('b_ndebug') != 'true'
 
 compiler = meson.get_compiler('cpp')
 
+conf = configuration_data()
+
 common_flags = [
   '-D_GNU_SOURCE',
 
@@ -113,6 +115,17 @@ subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
 
+libcommon_require_pg = get_option('pg')
+subdir('libcommon/src/stock')
+subdir('libcommon/src/pg')
+if pg_dep.found()
+  subdir('libcommon/src/lua/pg')
+  pg_dep = lua_pg_dep
+endif
+
+conf.set('HAVE_PG', pg_dep.found())
+configure_file(output: 'config.h', configuration: conf)
+
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
@@ -135,6 +148,7 @@ executable(
     lua_dep,
     lua_net_dep,
     lua_event_dep,
+    pg_dep,
   ],
   install: true,
   install_dir: 'sbin',

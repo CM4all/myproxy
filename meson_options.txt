@@ -1,0 +1,1 @@
+option('pg', type: 'feature', description: 'PostgreSQL client for Lua')

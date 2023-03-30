@@ -7,6 +7,8 @@
 
 #include <array>
 
+using std::string_view_literals::operator""sv;
+
 namespace Mysql {
 
 PacketSerializer
@@ -83,6 +85,27 @@ MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities)
 		// (no) info
 	}
 #endif
+
+	return s;
+}
+
+PacketSerializer
+MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
+	uint_least16_t error_code,
+	std::string_view sql_state, std::string_view msg)
+{
+	assert(sql_state.size() == 5);
+
+	Mysql::PacketSerializer s{sequence_id};
+	s.WriteInt1(0xff); // ERR
+	s.WriteInt2(error_code);
+
+	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+		s.WriteVariableLengthString("#"sv);
+		s.WriteVariableLengthString(sql_state);
+	}
+
+	s.WriteVariableLengthString(msg);
 
 	return s;
 }

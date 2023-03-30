@@ -58,6 +58,10 @@ struct Peer final : BufferedSocketHandler {
 
 	bool SendOk(uint8_t sequence_id) noexcept;
 
+	bool SendErr(uint_least8_t sequence_id,
+		     uint_least16_t error_code,
+		     std::string_view sql_state, std::string_view msg) noexcept;
+
 private:
 	/* virtual methods from BufferedSocketHandler */
 	BufferedResult OnBufferedData() override;

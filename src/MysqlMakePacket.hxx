@@ -26,4 +26,9 @@ MakeHandshakeResponse41(std::string_view username, std::string_view auth_respons
 PacketSerializer
 MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities);
 
+PacketSerializer
+MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
+	uint_least16_t error_code,
+	std::string_view sql_state, std::string_view msg);
+
 } // namespace Mysql

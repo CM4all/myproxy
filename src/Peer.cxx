@@ -50,6 +50,15 @@ Peer::SendOk(uint8_t sequence_id) noexcept
 	return Send(Mysql::MakeOk(sequence_id, capabilities));
 }
 
+bool
+Peer::SendErr(uint_least8_t sequence_id,
+	      uint_least16_t error_code,
+	      std::string_view sql_state, std::string_view msg) noexcept
+{
+	return Send(Mysql::MakeErr(sequence_id, capabilities, error_code,
+				   sql_state, msg));
+}
+
 BufferedResult
 Peer::OnBufferedData()
 {

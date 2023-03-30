@@ -29,10 +29,7 @@ MakeHandshakeV10(std::string_view server_version,
 	s.WriteInt2(0x0002); // status_flags
 	s.WriteInt2(0x818f); // capability_flags_2
 	s.WriteInt1(auth_plugin_data.size());
-
-	static constexpr std::array<std::byte, 10> reserved{};
-	s.WriteN(reserved);
-
+	s.WriteZero(10); // reserved
 	s.WriteN(auth_plugin_data.subspan(8));
 
 	s.WriteNullTerminatedString(auth_plugin_name);
@@ -49,10 +46,7 @@ MakeHandshakeResponse41(std::string_view username, std::string_view auth_respons
 	s.WriteInt4(0x2ffa68d); // client_flag
 	s.WriteInt4(0x1000000); // max_packet_size
 	s.WriteInt1(0x21); // character_set
-
-	static constexpr std::array<std::byte, 23> filler{};
-	s.WriteN(filler);
-
+	s.WriteZero(23); // filler
 	s.WriteNullTerminatedString(username);
 	s.WriteLengthEncodedString(auth_response);
 	s.WriteNullTerminatedString(database);

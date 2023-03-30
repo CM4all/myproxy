@@ -37,6 +37,14 @@ public:
 		return result;
 	}
 
+	/**
+	 * Write a number of zero bytes.
+	 */
+	void WriteZero(std::size_t size) {
+		auto s = WriteN(size);
+		std::fill(s.begin(), s.end(), std::byte{});
+	}
+
 	void WriteN(std::span<const std::byte> src) {
 		auto dest = WriteN(src.size());
 		std::copy(src.begin(), src.end(), dest.begin());

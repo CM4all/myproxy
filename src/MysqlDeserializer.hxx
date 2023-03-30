@@ -7,6 +7,7 @@
 #include "MysqlProtocol.hxx"
 #include "util/SpanCast.hxx"
 
+#include <algorithm> // for std::find()
 #include <span>
 
 namespace Mysql {

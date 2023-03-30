@@ -39,10 +39,15 @@ try {
 }
 
 bool
+Peer::Send(Mysql::PacketSerializer &&s) noexcept
+{
+	return Send(s.Finish());
+}
+
+bool
 Peer::SendOk(uint8_t sequence_id) noexcept
 {
-	auto s = Mysql::MakeOk(sequence_id, capabilities);
-	return Send(s.Finish());
+	return Send(Mysql::MakeOk(sequence_id, capabilities));
 }
 
 BufferedResult

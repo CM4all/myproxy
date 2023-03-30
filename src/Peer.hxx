@@ -8,6 +8,8 @@
 #include "event/net/BufferedSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 
+namespace Mysql { class PacketSerializer; }
+
 class PeerHandler {
 public:
 	enum ForwardResult {
@@ -52,6 +54,7 @@ struct Peer final : BufferedSocketHandler {
 	}
 
 	bool Send(std::span<const std::byte> src) noexcept;
+	bool Send(Mysql::PacketSerializer &&s) noexcept;
 
 	bool SendOk(uint8_t sequence_id) noexcept;
 

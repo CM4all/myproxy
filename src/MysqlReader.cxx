@@ -21,18 +21,24 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 			/* need more data to complete the header */
 			return ProcessResult::MORE;
 
-		const auto payload = src.subspan(sizeof(header));
+		auto payload = src.subspan(sizeof(header));
 
 		const std::size_t total_payload_size = header.GetLength();
-		if (payload.size() < total_payload_size && !socket.IsFull())
+
+		bool complete = true;
+		if (payload.size() < total_payload_size)
+			complete = false;
+		else
+			payload = payload.first(total_payload_size);
+
+		if (!complete && !socket.IsFull())
 			/* incomplete payload, but the buffer would be
 			   able to hold more */
 			return ProcessResult::MORE;
 
 		remaining = sizeof(header) + total_payload_size;
 
-		switch (handler.OnMysqlPacket(header.number, payload,
-					      payload.size() < total_payload_size)) {
+		switch (handler.OnMysqlPacket(header.number, payload, complete)) {
 		case MysqlHandler::Result::OK:
 			ignore = false;
 			break;

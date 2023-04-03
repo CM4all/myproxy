@@ -237,7 +237,6 @@ try {
 	if (!peer.handshake) {
 		peer.handshake = true;
 		OnHandshake(payload);
-		connection.incoming.handshake = true;
 
 		if (!connection.MaybeSendHandshakeResponse())
 			return Result::CLOSED;

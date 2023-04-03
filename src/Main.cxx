@@ -7,7 +7,7 @@
 #include "CommandLine.hxx"
 #include "LResolver.hxx"
 #include "Policy.hxx"
-#include "LConnection.hxx"
+#include "LClient.hxx"
 #include "lua/Error.hxx"
 #include "lua/PushCClosure.hxx"
 #include "lua/RunFile.hxx"
@@ -101,7 +101,7 @@ SetupRuntimeState(lua_State *L)
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
 
 	UnregisterLuaResolver(L);
-	RegisterLuaConnection(L);
+	RegisterLuaClient(L);
 }
 
 int

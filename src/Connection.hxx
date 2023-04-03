@@ -29,7 +29,7 @@ class Connection final
 {
 	const Lua::ValuePtr handler;
 
-	Lua::Value lua_connection;
+	Lua::Value lua_client;
 
 	/**
 	 * The Lua thread which runs the handler coroutine.

@@ -9,7 +9,7 @@ class SocketAddress;
 class SocketDescriptor;
 
 void
-RegisterLuaConnection(lua_State *L);
+RegisterLuaClient(lua_State *L);
 
 void
-NewLuaConnection(lua_State *L, SocketDescriptor socket, SocketAddress address);
+NewLuaClient(lua_State *L, SocketDescriptor socket, SocketAddress address);

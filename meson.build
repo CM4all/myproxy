@@ -138,7 +138,7 @@ executable(
   'src/MysqlMakePacket.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
-  'src/LConnection.cxx',
+  'src/LClient.cxx',
   'src/CgroupProc.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',

@@ -1,5 +1,5 @@
 Source: cm4all-myproxy
-Section: non-free/mail
+Section: database
 Priority: extra
 Maintainer: Max Kellermann <mk@cm4all.com>
 Build-Depends: debhelper (>= 13.3~),

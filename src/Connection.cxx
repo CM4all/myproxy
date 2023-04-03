@@ -211,7 +211,8 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	const auto &action = *connection.connect_action;
 
-	auto s = Mysql::MakeHandshakeResponse41(packet, action.username,
+	auto s = Mysql::MakeHandshakeResponse41(packet, connection.incoming.capabilities,
+						action.username,
 						action.password,
 						action.database);
 	if (!peer.Send(s.Finish()))

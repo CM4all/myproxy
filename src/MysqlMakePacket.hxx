@@ -20,7 +20,8 @@ MakeHandshakeV10(std::string_view server_version,
 		 std::span<const std::byte> auth_plugin_data);
 
 PacketSerializer
-MakeHandshakeResponse41(std::string_view username, std::string_view auth_response,
+MakeHandshakeResponse41(uint_least32_t client_flag,
+			std::string_view username, std::string_view auth_response,
 			std::string_view database,
 			std::string_view client_plugin_name);
 

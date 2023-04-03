@@ -14,7 +14,7 @@ using std::string_view_literals::operator""sv;
 namespace Mysql {
 
 PacketSerializer
-MakeHandshakeResponse41(const HandshakePacket &handshake,
+MakeHandshakeResponse41(const HandshakePacket &handshake, uint_least32_t client_flag,
 			std::string_view username, std::string_view password,
 			std::string_view database)
 {
@@ -40,13 +40,14 @@ MakeHandshakeResponse41(const HandshakePacket &handshake,
 		for (std::size_t i = 0; i < auth_response.size(); ++i)
 			auth_response[i] ^= password_sha1[i];
 
-		return Mysql::MakeHandshakeResponse41(username,
+		return Mysql::MakeHandshakeResponse41(client_flag, username,
 						      ToStringView(auth_response),
 						      database,
 						      "mysql_native_password"sv);
 	}
 
-	return Mysql::MakeHandshakeResponse41(username, password, database,
+	return Mysql::MakeHandshakeResponse41(client_flag,
+					      username, password, database,
 					      "mysql_clear_password"sv);
 }
 

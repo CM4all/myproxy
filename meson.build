@@ -108,6 +108,7 @@ libcommon_enable_boost = false
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
 subdir('libcommon/src/io')
+subdir('libcommon/src/io/linux')
 subdir('libcommon/src/system')
 subdir('libcommon/src/net')
 subdir('libcommon/src/event')
@@ -139,7 +140,6 @@ executable(
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/LClient.cxx',
-  'src/CgroupProc.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
   'src/Main.cxx',
@@ -147,6 +147,7 @@ executable(
   dependencies: [
     libsystemd,
     util_dep,
+    io_linux_dep,
     net_dep,
     event_dep,
     event_net_dep,

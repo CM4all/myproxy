@@ -3,13 +3,13 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "LClient.hxx"
-#include "CgroupProc.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/Value.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
+#include "io/linux/ProcCgroup.hxx"
 #include "util/StringAPI.hxx"
 
 extern "C" {

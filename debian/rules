@@ -2,11 +2,12 @@
 # -*- mode: makefile; coding: utf-8 -*-
 
 MESON_OPTIONS = \
+	-Ddocumentation=enabled \
 	-Dpg=enabled \
 	--werror
 
 %:
-	dh $@ --no-start
+	dh $@ --no-start --with sphinxdoc
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(MESON_OPTIONS)

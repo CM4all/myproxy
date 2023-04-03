@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Max Kellermann <mk@cm4all.com>
 Build-Depends: debhelper (>= 13.3~),
  meson (>= 0.56),
+ python3-sphinx,
  g++ (>= 4:10),
  libfmt-dev (>= 7),
  libpq-dev,
@@ -18,3 +19,13 @@ Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, systemd-sysv
 Description: MySQL proxy
  myproxy is a proxy server for MySQL connections with Lua scripting.
+
+Package: cm4all-myproxy-doc
+Section: doc
+Architecture: all
+Built-Using: ${sphinxdoc:Built-Using}
+Depends: ${misc:Depends}, ${sphinxdoc:Depends}
+Description: MySQL proxy, documentation
+ myproxy is a proxy server for MySQL connections with Lua scripting.
+ .
+ This package contains documentation.

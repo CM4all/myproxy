@@ -1,1 +1,2 @@
 config.lua etc/cm4all/myproxy
+usr/sbin/cm4all-myproxy

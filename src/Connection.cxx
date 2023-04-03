@@ -13,6 +13,7 @@
 #include "MysqlDeserializer.hxx"
 #include "MysqlSerializer.hxx"
 #include "MysqlMakePacket.hxx"
+#include "MysqlAuth.hxx"
 #include "Policy.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/AllocatedSocketAddress.hxx"
@@ -210,11 +211,9 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	const auto &action = *connection.connect_action;
 
-	// TODO implement "mysql_native_password"
-	auto s = Mysql::MakeHandshakeResponse41(action.username,
+	auto s = Mysql::MakeHandshakeResponse41(packet, action.username,
 						action.password,
-						action.database,
-						"mysql_clear_password"sv);
+						action.database);
 	if (!peer.Send(s.Finish()))
 		return Result::CLOSED;
 

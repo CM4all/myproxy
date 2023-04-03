@@ -202,9 +202,8 @@ Connection::MaybeSendHandshakeResponse() noexcept
 {
 	assert(incoming.handshake);
 	assert(incoming.handshake_response);
-
-	if (!outgoing || !outgoing->peer.handshake)
-		return true;
+	assert(outgoing);
+	assert(outgoing->peer.handshake);
 
 	assert(!outgoing->peer.handshake_response);
 

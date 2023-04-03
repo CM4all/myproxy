@@ -157,6 +157,7 @@ executable(
     lua_net_dep,
     lua_event_dep,
     pg_dep,
+    dependency('libmd'), # SHA-1 implementation for "mysql_native_password"
   ],
   install: true,
   install_dir: 'sbin',

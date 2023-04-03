@@ -6,6 +6,8 @@
 #include "MysqlParser.hxx"
 #include "MysqlMakePacket.hxx"
 #include "MysqlSerializer.hxx"
+#include "SHA1.hxx"
+#include "util/SpanCast.hxx"
 
 using std::string_view_literals::operator""sv;
 
@@ -16,8 +18,33 @@ MakeHandshakeResponse41(const HandshakePacket &handshake,
 			std::string_view username, std::string_view password,
 			std::string_view database)
 {
-	// TODO implement "mysql_native_password"
-	(void)handshake;
+	if (handshake.auth_plugin_name == "mysql_native_password"sv &&
+	    handshake.auth_plugin_data1.size() == 8 &&
+	    handshake.auth_plugin_data2.size() == 13 &&
+	    handshake.auth_plugin_data2.back() == '\0') {
+		/* the protocol documentation at
+		   https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_connection_phase_authentication_methods_native_password_authentication.html
+		   writes that auth_plugin_data should be "20 random
+		   bytes", but it really is 21 bytes with a trailing
+		   null byte that must be ignored */
+
+		const auto password_sha1 = SHA1(password);
+		const auto password_sha1_sha1 = SHA1(password_sha1);
+
+		SHA1State s;
+		s.Update(handshake.auth_plugin_data1);
+		s.Update(handshake.auth_plugin_data2.substr(0, 12));
+		s.Update(password_sha1_sha1);
+
+		auto auth_response = s.Final();
+		for (std::size_t i = 0; i < auth_response.size(); ++i)
+			auth_response[i] ^= password_sha1[i];
+
+		return Mysql::MakeHandshakeResponse41(username,
+						      ToStringView(auth_response),
+						      database,
+						      "mysql_native_password"sv);
+	}
 
 	return Mysql::MakeHandshakeResponse41(username, password, database,
 					      "mysql_clear_password"sv);

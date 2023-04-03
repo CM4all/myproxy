@@ -200,6 +200,8 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 MysqlHandler::Result
 Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
+	assert(!connection.incoming.command_phase);
+
 	const auto packet = Mysql::ParseHandshake(payload);
 
 	peer.capabilities = packet.capabilities;
@@ -240,16 +242,18 @@ try {
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	if (!peer.command_phase) {
+		assert(!connection.incoming.command_phase);
+
 		if (cmd == Mysql::Command::OK || cmd == Mysql::Command::EOF_) {
 			peer.command_phase = true;
+			connection.incoming.command_phase = true;
 
 			/* now process postponed packets */
 			connection.incoming.socket.DeferRead();
 
-			return Result::IGNORE;
+			return Result::OK;
 		} else if (cmd == Mysql::Command::ERR) {
-			throw Mysql::ParseErr(payload,
-					      connection.incoming.capabilities);
+			return Result::OK;
 		} else
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
 	}
@@ -366,13 +370,6 @@ try {
 				 err->msg);
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
-
-		/* TODO postpone the "OK" until we have received "OK"
-		   from the real server */
-		if (!incoming.SendOk(handeshake_response_sequence_id + 1))
-			return;
-
-		incoming.command_phase = true;
 
 		/* connect to the outgoing server and perform the
 		   handshake to it */

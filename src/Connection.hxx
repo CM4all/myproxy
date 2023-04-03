@@ -76,7 +76,7 @@ class Connection final
 		Outgoing(Connection &_connection,
 			 UniqueSocketDescriptor fd) noexcept;
 
-		void OnHandshake(std::span<const std::byte> payload);
+		Result OnHandshake(std::span<const std::byte> payload);
 
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
@@ -109,8 +109,6 @@ private:
 	}
 
 	void Delay(Event::Duration duration) noexcept;
-
-	bool MaybeSendHandshakeResponse() noexcept;
 
 	MysqlHandler::Result OnHandshakeResponse(uint_least8_t sequence_id,
 						 std::span<const std::byte> payload);

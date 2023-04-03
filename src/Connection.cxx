@@ -197,29 +197,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
-bool
-Connection::MaybeSendHandshakeResponse() noexcept
-{
-	assert(incoming.handshake);
-	assert(incoming.handshake_response);
-	assert(outgoing);
-	assert(outgoing->peer.handshake);
-
-	assert(!outgoing->peer.handshake_response);
-
-	// TODO implement "mysql_native_password"
-	auto s = Mysql::MakeHandshakeResponse41(connect_action->username,
-						connect_action->password,
-						connect_action->database,
-						"mysql_clear_password"sv);
-	if (!outgoing->peer.Send(s.Finish()))
-		return false;
-
-	outgoing->peer.handshake_response = true;
-	return true;
-}
-
-void
+MysqlHandler::Result
 Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
 	const auto packet = Mysql::ParseHandshake(payload);
@@ -227,6 +205,19 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 	peer.capabilities = packet.capabilities;
 
 	fmt::print("handshake server_version='{}'\n", packet.server_version);
+
+	const auto &action = *connection.connect_action;
+
+	// TODO implement "mysql_native_password"
+	auto s = Mysql::MakeHandshakeResponse41(action.username,
+						action.password,
+						action.database,
+						"mysql_clear_password"sv);
+	if (!peer.Send(s.Finish()))
+		return Result::CLOSED;
+
+	peer.handshake_response = true;
+	return Result::IGNORE;
 }
 
 MysqlHandler::Result
@@ -234,14 +225,13 @@ Connection::Outgoing::OnMysqlPacket([[maybe_unused]] unsigned number,
 				    std::span<const std::byte> payload,
 				    [[maybe_unused]] bool complete) noexcept
 try {
+	assert(connection.incoming.handshake);
+	assert(connection.incoming.handshake_response);
+	assert(connection.connect_action);
+
 	if (!peer.handshake) {
 		peer.handshake = true;
-		OnHandshake(payload);
-
-		if (!connection.MaybeSendHandshakeResponse())
-			return Result::CLOSED;
-
-		return Result::IGNORE;
+		return OnHandshake(payload);
 	}
 
 	if (payload.empty())

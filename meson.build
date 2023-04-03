@@ -140,6 +140,7 @@ executable(
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/LClient.cxx',
+  'src/LAction.cxx',
   'src/Instance.cxx',
   'src/CommandLine.cxx',
   'src/Main.cxx',

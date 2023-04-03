@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Action.hxx"
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
 #include "lua/Ref.hxx"
@@ -59,6 +60,8 @@ class Connection final
 	 * The connection to the client.
 	 */
 	Peer incoming;
+
+	std::optional<ConnectAction> connect_action;
 
 	ConnectSocket connect;
 

@@ -8,6 +8,7 @@
 #include "LResolver.hxx"
 #include "Policy.hxx"
 #include "LClient.hxx"
+#include "LAction.hxx"
 #include "lua/Error.hxx"
 #include "lua/PushCClosure.hxx"
 #include "lua/RunFile.hxx"
@@ -102,6 +103,7 @@ SetupRuntimeState(lua_State *L)
 
 	UnregisterLuaResolver(L);
 	RegisterLuaClient(L);
+	RegisterLuaAction(L);
 }
 
 int

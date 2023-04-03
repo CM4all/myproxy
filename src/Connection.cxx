@@ -3,6 +3,8 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "Connection.hxx"
+#include "Action.hxx"
+#include "LAction.hxx"
 #include "LClient.hxx"
 #include "Config.hxx"
 #include "Instance.hxx"
@@ -22,6 +24,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <stdexcept>
 
 using std::string_view_literals::operator""sv;
 
@@ -206,8 +209,9 @@ Connection::MaybeSendHandshakeResponse() noexcept
 	assert(!outgoing->peer.handshake_response);
 
 	// TODO implement "mysql_native_password"
-	auto s = Mysql::MakeHandshakeResponse41(username, auth_response,
-						database,
+	auto s = Mysql::MakeHandshakeResponse41(connect_action->username,
+						connect_action->password,
+						connect_action->database,
 						"mysql_clear_password"sv);
 	if (!outgoing->peer.Send(s.Finish()))
 		return false;
@@ -359,6 +363,7 @@ Connection::OnDeferredStartHandler() noexcept
 
 	lua_newtable(L);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "username", username);
+	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", auth_response);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 
 	Lua::Resume(L, 2);
@@ -367,15 +372,26 @@ Connection::OnDeferredStartHandler() noexcept
 void
 Connection::OnLuaFinished(lua_State *L) noexcept
 try {
-	if (!incoming.SendOk(handeshake_response_sequence_id + 1))
-		return;
+	if (auto *err = CheckLuaErrAction(L, -1)) {
+		incoming.SendErr(handeshake_response_sequence_id + 1,
+				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+				 err->msg);
+	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
+		connect_action = std::move(*c);
 
-	incoming.command_phase = true;
+		/* TODO postpone the "OK" until we have received "OK"
+		   from the real server */
+		if (!incoming.SendOk(handeshake_response_sequence_id + 1))
+			return;
 
-	/* connect to the outgoing server and perform the handshake to
-	   it */
-	connect.Connect(Lua::ToSocketAddress(L, -1, 3306),
-			std::chrono::seconds{30});
+		incoming.command_phase = true;
+
+		/* connect to the outgoing server and perform the
+		   handshake to it */
+		connect.Connect(connect_action->address,
+				std::chrono::seconds{30});
+	} else
+		throw std::invalid_argument{"Bad return value"};
 } catch (...) {
 	OnLuaError(L, std::current_exception());
 }

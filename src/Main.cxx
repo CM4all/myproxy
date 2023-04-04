@@ -34,6 +34,8 @@ extern "C" {
 
 #include <systemd/sd-daemon.h>
 
+#include <stdexcept>
+
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -50,6 +52,15 @@ IsSystemdMagic(lua_State *L, int idx)
 		lua_touserdata(L, idx) == &systemd_magic;
 }
 
+static auto
+ParameterToLuaHandler(lua_State *L, int idx)
+try {
+	return std::make_shared<LuaHandler >(L, Lua::StackIndex{idx});
+} catch (const std::invalid_argument &e) {
+	luaL_argerror(L, idx, e.what());
+	gcc_unreachable();
+}
+
 static int
 l_mysql_listen(lua_State *L)
 try {
@@ -58,7 +69,7 @@ try {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameter count");
 
-	auto handler = std::make_shared<LuaHandler >(L, Lua::StackIndex{2});
+	auto handler = ParameterToLuaHandler(L, 2);
 
 	if (IsSystemdMagic(L, 1)) {
 		instance.AddSystemdListener(std::move(handler));

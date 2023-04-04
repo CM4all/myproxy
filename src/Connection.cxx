@@ -158,14 +158,9 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 			: Result::CLOSED;
 	}
 
-	/* disallow changing to a different database */
 	// TODO invoke Lua callback for the decision
 
-	return incoming.SendErr(sequence_id + 1,
-				Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
-				"Access to database denied"sv)
-		? Result::IGNORE
-		: Result::CLOSED;
+	return Result::OK;
 }
 
 inline MysqlHandler::Result

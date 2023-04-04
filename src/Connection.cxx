@@ -38,6 +38,20 @@ Connection::~Connection() noexcept
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {
+	switch (connection.incoming.Flush()) {
+	case MysqlReader::FlushResult::DRAINED:
+		break;
+
+	case MysqlReader::FlushResult::BLOCKING:
+		return WriteResult::MORE;
+
+	case MysqlReader::FlushResult::MORE:
+		return WriteResult::DONE;
+
+	case MysqlReader::FlushResult::CLOSED:
+		return WriteResult::CLOSED;
+	}
+
 	if (connection.IsDelayed())
 		/* don't continue reading now */
 		return WriteResult::DONE;
@@ -89,6 +103,20 @@ Connection::OnPeerWrite()
 
 	if (!outgoing)
 		return WriteResult::DONE;
+
+	switch (outgoing->peer.Flush()) {
+	case MysqlReader::FlushResult::DRAINED:
+		break;
+
+	case MysqlReader::FlushResult::BLOCKING:
+		return WriteResult::MORE;
+
+	case MysqlReader::FlushResult::MORE:
+		return WriteResult::DONE;
+
+	case MysqlReader::FlushResult::CLOSED:
+		return WriteResult::CLOSED;
+	}
 
 	got_raw_from_outgoing = false;
 

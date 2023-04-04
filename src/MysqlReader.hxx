@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <span>
 
@@ -15,12 +14,15 @@ class MysqlReader {
 	MysqlHandler &handler;
 
 	/**
-	 * The remaining number of bytes of the current packet that
-	 * should be passed to OnMysqlRaw().
+	 * The remaining number of bytes that should be passed to
+	 * OnMysqlRaw().
 	 */
-	std::size_t remaining = 0;
+	std::size_t forward_remaining = 0;
 
-	bool ignore;
+	/**
+	 * The remaining number of bytes to ignore (after #remaining).
+	 */
+	std::size_t ignore_remaining = 0;
 
 public:
 	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
@@ -28,13 +30,7 @@ public:
 
 	enum class ProcessResult {
 		/**
-		 * The buffer is empty.
-		 */
-		EMPTY,
-
-		/**
-		 * Some data has been consumed.  Call Process() again
-		 * until #EMPTY is returned.
+		 * The Process() method has finished successfully.
 		 */
 		OK,
 
@@ -59,4 +55,41 @@ public:
 	 * #MysqlReader.
 	 */
 	ProcessResult Process(BufferedSocket &socket) noexcept;
+
+	enum class FlushResult {
+		/**
+		 * No more raw data to be processed.
+		 */
+		DRAINED,
+
+		/**
+		 * Currently, no data can be consumed.
+		 */
+		BLOCKING,
+
+		/**
+		 * Need to receive more data from the socket.
+		 */
+		MORE,
+
+		/**
+		 * The #MysqlReader has been closed.
+		 */
+		CLOSED,
+	};
+
+	/**
+	 * Submit raw data to #MysqlHandler::OnMysqlRaw() (for
+	 * #MysqlHandler::Result::OK) or discard raw data (for
+	 * #MysqlHandler::Result::IGNORE).
+	 */
+	FlushResult Flush(BufferedSocket &socket) noexcept;
+
+private:
+	FlushResult FlushForward(BufferedSocket &socket) noexcept;
+
+	/**
+	 * @return true if ignore==0
+	 */
+	bool FlushIgnore(BufferedSocket &socket) noexcept;
 };

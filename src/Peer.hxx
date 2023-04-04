@@ -100,6 +100,10 @@ public:
 	bool SendErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
 		     std::string_view sql_state, std::string_view msg) noexcept;
 
+	auto Flush() noexcept {
+		return reader.Flush(socket);
+	}
+
 private:
 	/* virtual methods from BufferedSocketHandler */
 	BufferedResult OnBufferedData() override;

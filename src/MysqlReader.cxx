@@ -6,17 +6,49 @@
 #include "MysqlHandler.hxx"
 #include "MysqlProtocol.hxx"
 #include "event/net/BufferedSocket.hxx"
+#include "util/Compiler.h"
+
+#include <cassert>
 
 MysqlReader::ProcessResult
 MysqlReader::Process(BufferedSocket &socket) noexcept
 {
-	const auto src = socket.ReadBuffer();
-	if (src.empty())
-		return ProcessResult::EMPTY;
+	while (true) {
+		if (ignore_remaining > 0) {
+			/* we need to flush the "ignore_remaining"
+			   before we can continue processing any input
+			   here */
 
-	if (remaining == 0) {
+			switch (Flush(socket)) {
+			case FlushResult::DRAINED:
+				assert(forward_remaining == 0);
+				assert(ignore_remaining == 0);
+				/* all scheduled data has been flushed
+				   - we can continue processing more
+				   input */
+				break;
+
+			case FlushResult::BLOCKING:
+				return ProcessResult::BLOCKING;
+
+			case FlushResult::MORE:
+				return ProcessResult::MORE;
+
+			case FlushResult::CLOSED:
+				return ProcessResult::CLOSED;
+			}
+		}
+
+		const auto r = socket.ReadBuffer();
+		if (r.empty())
+			return ProcessResult::OK;
+
+		if (r.size() <= forward_remaining)
+			return ProcessResult::MORE;
+
+		const auto src = r.subspan(forward_remaining);
+
 		const auto &header = *(const Mysql::PacketHeader *)src.data();
-
 		if (src.size() < sizeof(header))
 			/* need more data to complete the header */
 			return ProcessResult::MORE;
@@ -31,56 +63,105 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 		else
 			payload = payload.first(total_payload_size);
 
-		if (!complete && !socket.IsFull())
-			/* incomplete payload, but the buffer would be
-			   able to hold more */
+		if (!complete && (!socket.IsFull() || forward_remaining > 0))
+			/* incomplete payload, but the buffer would be able to
+			   hold more */
 			return ProcessResult::MORE;
 
-		remaining = sizeof(header) + total_payload_size;
+		const std::size_t total_packet_size = sizeof(header) + total_payload_size;
 
 		switch (handler.OnMysqlPacket(header.number, payload, complete)) {
 		case MysqlHandler::Result::FORWARD:
-			ignore = false;
+			forward_remaining += total_packet_size;
 			break;
 
 		case MysqlHandler::Result::BLOCKING:
-			remaining = 0;
 			return ProcessResult::BLOCKING;
 
 		case MysqlHandler::Result::IGNORE:
-			ignore = true;
+			ignore_remaining = total_packet_size;
 			break;
 
 		case MysqlHandler::Result::CLOSED:
 			return ProcessResult::CLOSED;
 		}
 	}
+}
 
-	assert(remaining > 0);
+MysqlReader::FlushResult
+MysqlReader::Flush(BufferedSocket &socket) noexcept
+{
+	if (forward_remaining > 0) {
+		switch (auto result = FlushForward(socket)) {
+		case FlushResult::DRAINED:
+			assert(forward_remaining == 0);
+			break;
 
-	const auto raw = src.first(std::min(src.size(), remaining));
+		case FlushResult::MORE:
+			socket.ScheduleRead();
+			return result;
 
-	if (ignore) {
-		const auto consumed = raw.size();
-		remaining -= consumed;
-		socket.DisposeConsumed(consumed);
-		return ProcessResult::OK;
+		case FlushResult::BLOCKING:
+		case FlushResult::CLOSED:
+			return result;
+		}
 	}
+
+	if (FlushIgnore(socket))
+		return FlushResult::DRAINED;
+
+	socket.ScheduleRead();
+	return FlushResult::MORE;
+}
+
+inline MysqlReader::FlushResult
+MysqlReader::FlushForward(BufferedSocket &socket) noexcept
+{
+	assert(forward_remaining > 0);
+
+	const auto src = socket.ReadBuffer();
+	if (src.empty())
+		return FlushResult::MORE;
+
+	const auto raw = src.first(std::min(src.size(), forward_remaining));
 
 	auto [result, consumed] = handler.OnMysqlRaw(raw);
 	switch (result) {
 	case MysqlHandler::RawResult::OK:
 		if (consumed == 0)
-			return ProcessResult::BLOCKING;
+			return FlushResult::BLOCKING;
 
-		remaining -= consumed;
+		forward_remaining -= consumed;
 		socket.DisposeConsumed(consumed);
 		break;
 
 	case MysqlHandler::RawResult::CLOSED:
 		assert(consumed == 0);
-		return ProcessResult::CLOSED;
+		return FlushResult::BLOCKING;
 	}
 
-	return ProcessResult::OK;
+	return forward_remaining == 0 ? FlushResult::DRAINED : FlushResult::MORE;
+}
+
+inline bool
+MysqlReader::FlushIgnore(BufferedSocket &socket) noexcept
+{
+	assert(forward_remaining == 0);
+
+	if (ignore_remaining == 0)
+		return true;
+
+	const auto src = socket.ReadBuffer();
+	if (src.empty())
+		return false;
+
+	if (src.size() >= ignore_remaining) {
+		socket.DisposeConsumed(ignore_remaining);
+		ignore_remaining = 0;
+		return true;
+	} else {
+		socket.DisposeConsumed(src.size());
+		ignore_remaining -= src.size();
+		return false;
+	}
 }

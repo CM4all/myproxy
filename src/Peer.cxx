@@ -62,16 +62,31 @@ BufferedResult
 Peer::OnBufferedData()
 {
 	switch (reader.Process(socket)) {
-	case MysqlReader::ProcessResult::EMPTY:
-		return BufferedResult::OK;
-
 	case MysqlReader::ProcessResult::OK:
-		return BufferedResult::AGAIN;
+		return BufferedResult::OK;
 
 	case MysqlReader::ProcessResult::BLOCKING:
 		return BufferedResult::OK;
 
 	case MysqlReader::ProcessResult::MORE:
+		/* before asking BufferedSocket to receive more data,
+		   we need to flush as much as possible to avoid
+		   returning with a full buffer that cannot receive
+		   more data */
+		switch (reader.Flush(socket)) {
+		case MysqlReader::FlushResult::DRAINED:
+			break;
+
+		case MysqlReader::FlushResult::BLOCKING:
+			return BufferedResult::OK;
+
+		case MysqlReader::FlushResult::MORE:
+			break;
+
+		case MysqlReader::FlushResult::CLOSED:
+			return BufferedResult::CLOSED;
+		}
+
 		return BufferedResult::MORE;
 
 	case MysqlReader::ProcessResult::CLOSED:

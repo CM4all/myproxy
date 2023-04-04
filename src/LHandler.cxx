@@ -3,6 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "LHandler.hxx"
+#include "lua/Assert.hxx"
 #include "lua/ForEach.hxx"
 #include "util/StringAPI.hxx"
 
@@ -11,6 +12,8 @@
 LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 	:on_handshake_response(L)
 {
+	const Lua::ScopeCheckStack check_stack{L};
+
 	if (!lua_istable(L, Lua::GetStackIndex(idx)))
 		throw std::invalid_argument{"Not a table"};
 

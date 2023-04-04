@@ -42,7 +42,7 @@ Connection::Outgoing::OnPeerWrite()
 		/* don't continue reading now */
 		return true;
 
-	return connection.incoming.socket.Read(); // TODO return value?
+	return connection.incoming.Read(); // TODO return value?
 }
 
 void
@@ -83,7 +83,7 @@ Connection::OnPeerWrite()
 	if (!outgoing)
 		return true;
 
-	return outgoing->peer.socket.Read(); // TODO return value?
+	return outgoing->peer.Read(); // TODO return value?
 }
 
 void
@@ -246,7 +246,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	if (!outgoing)
 		return {Result::BLOCKING, 0U};
 
-	const auto result = outgoing->peer.socket.Write(src.data(), src.size());
+	const auto result = outgoing->peer.WriteSome(src);
 	if (result > 0) [[likely]]
 		return {Result::OK, static_cast<std::size_t>(result)};
 
@@ -313,7 +313,7 @@ try {
 			connection.incoming.command_phase = true;
 
 			/* now process postponed packets */
-			connection.incoming.socket.DeferRead();
+			connection.incoming.DeferRead();
 
 			return Result::OK;
 
@@ -368,7 +368,7 @@ try {
 std::pair<MysqlHandler::Result, std::size_t>
 Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
-	const auto result = connection.incoming.socket.Write(src.data(), src.size());
+	const auto result = connection.incoming.WriteSome(src);
 	if (result > 0) [[likely]]
 		return {Result::OK, static_cast<std::size_t>(result)};
 
@@ -392,7 +392,7 @@ Connection::Outgoing::Outgoing(Connection &_connection,
 inline void
 Connection::OnDelayTimer() noexcept
 {
-	incoming.socket.Read();
+	incoming.Read();
 }
 
 Connection::Connection(EventLoop &event_loop,
@@ -407,18 +407,18 @@ Connection::Connection(EventLoop &event_loop,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	NewLuaClient(lua_client.GetState(), incoming.socket.GetSocket(), address);
+	NewLuaClient(lua_client.GetState(), incoming.GetSocket(), address);
 	lua_client.Set(lua_client.GetState(), Lua::RelativeStackIndex{-1});
 	lua_pop(lua_client.GetState(), 1);
 
 	/* write the handshake */
-	incoming.socket.DeferWrite();
+	incoming.DeferWrite();
 }
 
 void
 Connection::Delay(Event::Duration duration) noexcept
 {
-	incoming.socket.UnscheduleRead();
+	incoming.UnscheduleRead();
 
 	delay_timer.Schedule(duration);
 }

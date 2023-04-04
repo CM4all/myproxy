@@ -32,13 +32,14 @@ public:
 /*
  * A connection to one peer.
  */
-struct Peer final : BufferedSocketHandler {
+class Peer final : BufferedSocketHandler {
 	BufferedSocket socket;
 
 	MysqlReader reader;
 
 	PeerHandler &handler;
 
+public:
 	uint_least32_t capabilities;
 
 	bool handshake = false, handshake_response = false, command_phase = false;
@@ -57,6 +58,30 @@ struct Peer final : BufferedSocketHandler {
 
 	~Peer() noexcept {
 		socket.Close();
+	}
+
+	SocketDescriptor GetSocket() const noexcept {
+		return socket.GetSocket();
+	}
+
+	bool Read() noexcept {
+		return socket.Read();
+	}
+
+	void DeferRead() noexcept {
+		socket.DeferRead();
+	}
+
+	void UnscheduleRead() noexcept {
+		socket.UnscheduleRead();
+	}
+
+	void DeferWrite() noexcept {
+		socket.DeferWrite();
+	}
+
+	ssize_t WriteSome(std::span<const std::byte> src) noexcept {
+		return socket.Write(src.data(), src.size());
 	}
 
 	bool Send(std::span<const std::byte> src) noexcept;

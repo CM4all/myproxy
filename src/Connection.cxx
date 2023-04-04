@@ -160,9 +160,17 @@ try {
 
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
-	if (cmd == Mysql::Command::QUERY &&
-	    request_time == Event::TimePoint{})
-		request_time = GetEventLoop().SteadyNow();
+	switch (cmd) {
+	case Mysql::Command::OK:
+	case Mysql::Command::EOF_:
+	case Mysql::Command::ERR:
+		break;
+
+	case Mysql::Command::QUERY:
+		if (request_time == Event::TimePoint{})
+			request_time = GetEventLoop().SteadyNow();
+		break;
+	}
 
 	return Result::OK;
 } catch (Mysql::MalformedPacket) {
@@ -245,7 +253,9 @@ try {
 	if (!peer.command_phase) {
 		assert(!connection.incoming.command_phase);
 
-		if (cmd == Mysql::Command::OK || cmd == Mysql::Command::EOF_) {
+		switch (cmd) {
+		case Mysql::Command::OK:
+		case Mysql::Command::EOF_:
 			peer.command_phase = true;
 			connection.incoming.command_phase = true;
 
@@ -253,17 +263,29 @@ try {
 			connection.incoming.socket.DeferRead();
 
 			return Result::OK;
-		} else if (cmd == Mysql::Command::ERR) {
+
+		case Mysql::Command::ERR:
 			return Result::OK;
-		} else
+
+		default:
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
+		}
 	}
 
-	if (cmd == Mysql::Command::EOF_ &&
-	    connection.request_time != Event::TimePoint{}) {
-		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
-		policy_duration(connection.user.c_str(), duration);
-		connection.request_time = Event::TimePoint{};
+	switch (cmd) {
+	case Mysql::Command::EOF_:
+		if (connection.request_time != Event::TimePoint{}) {
+			const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
+			policy_duration(connection.user.c_str(), duration);
+			connection.request_time = Event::TimePoint{};
+		}
+
+		break;
+
+	case Mysql::Command::OK:
+	case Mysql::Command::ERR:
+	case Mysql::Command::QUERY:
+		break;
 	}
 
 	return Result::OK;

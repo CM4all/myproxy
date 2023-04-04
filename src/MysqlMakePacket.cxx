@@ -19,7 +19,20 @@ MakeHandshakeV10(std::string_view server_version,
 {
 	assert(auth_plugin_data.size() >= 8);
 
-	static constexpr uint_least32_t capabilities = 0x818ff22f;
+	static constexpr uint_least32_t capabilities =
+		CLIENT_MYSQL | CLIENT_FOUND_ROWS |
+		CLIENT_LONG_FLAG | CLIENT_CONNECT_WITH_DB |
+		CLIENT_COMPRESS |
+		CLIENT_PROTOCOL_41 |
+		CLIENT_IGNORE_SIGPIPE | CLIENT_TRANSACTIONS |
+		CLIENT_RESERVED |
+		CLIENT_SECURE_CONNECTION |
+		CLIENT_MULTI_STATEMENTS | CLIENT_MULTI_RESULTS |
+		CLIENT_PS_MULTI_RESULTS |
+		CLIENT_PLUGIN_AUTH |
+		CLIENT_SESSION_TRACK |
+		CLIENT_DEPRECATE_EOF |
+		CLIENT_REMEMBER_OPTIONS;
 
 	Mysql::PacketSerializer s{0};
 	s.WriteInt1(10);

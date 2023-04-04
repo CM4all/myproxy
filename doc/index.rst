@@ -16,30 +16,36 @@ The file :file:`/etc/cm4all/myproxy/config.lua` is a `Lua
 <http://www.lua.org/>`_ script which is executed at startup.  It
 contains at least one :samp:`mysql_listen()` call, for example::
 
-  mysql_listen('/run/cm4all/myproxy/myproxy.sock', function(client, handshake_response)
+ handler = {}
+
+ function handler.on_handshake_response(client, handshake_response)
     return m:connect('192.168.1.99', handshake_response)
-  end)
+ end
+
+ mysql_listen('/run/cm4all/myproxy/myproxy.sock', handler)
 
 The first parameter is the socket path to listen on.  Passing the
 global variable :envvar:`systemd` (not the string literal
 :samp:`"systemd"`) will listen on the sockets passed by systemd::
 
-  mysql_listen(systemd, function(client, handshake_response) ...
+  mysql_listen(systemd, handler)
 
 To use this socket from within a container, move it to a dedicated
 directory and bind-mount this directory into the container.  Mounting
 just the socket doesn't work because a daemon restart must create a
 new socket, but the bind mount cannot be refreshed.
 
-The second parameter is a callback function which shall decide what to
-do with a login attempt by a client.  This function receives a client
-object which can be inspected and the contents of the
-``HandshakeResponse`` packet received from the client.
+The second parameter is a table containing callback functions:
 
-It is important that the function finishes quickly.  It must never
-block, because this would block the whole daemon process.  This means
-it must not do any network I/O, launch child processes, and should
-avoid anything but querying the parameters.
+- ``on_handshake_response(client, handshake_response)`` decides what
+  to do with a login attempt by a client.  This function receives a
+  client object which can be inspected and the contents of the
+  ``HandshakeResponse`` packet received from the client.
+
+It is important that callback functions finish quickly.  They must
+never block, because this would block the whole daemon process.  This
+means they must not do any network I/O, launch child processes, and
+should avoid anything but querying the parameters.
 
 
 Inspecting Client Connections

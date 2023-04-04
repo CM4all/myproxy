@@ -48,6 +48,7 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 {
 	client_flag |= CLIENT_PROTOCOL_41;
 	client_flag &= ~(CLIENT_CONNECT_WITH_DB|
+			 CLIENT_SSL|
 			 CLIENT_SECURE_CONNECTION|
 			 CLIENT_PLUGIN_AUTH|CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA|
 			 CLIENT_CONNECT_ATTRS);

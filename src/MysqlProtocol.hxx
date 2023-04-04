@@ -18,6 +18,7 @@ namespace Mysql {
 
 enum class Command : uint_least8_t {
 	OK = 0x00,
+	INIT_DB = 0x02,
 	QUERY = 0x03,
 	CHANGE_USER = 0x11,
 	RESET_CONNECTION = 0x1f,
@@ -27,6 +28,7 @@ enum class Command : uint_least8_t {
 
 enum class ErrorCode : uint_least16_t {
 	HANDSHAKE_ERROR = 1043,
+	DBACCESS_DENIED_ERROR = 1044,
 };
 
 static constexpr uint_least32_t CLIENT_MYSQL = 1;

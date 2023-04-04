@@ -68,6 +68,13 @@ struct ErrPacket {
 ErrPacket
 ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities);
 
+struct InitDbPacket {
+	std::string_view database;
+};
+
+InitDbPacket
+ParseInitDb(std::span<const std::byte> payload);
+
 struct ChangeUserPacket {
 	std::string_view user;
 	std::string_view auth_plugin_data;

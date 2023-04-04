@@ -179,6 +179,21 @@ ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
 	return packet;
 }
 
+InitDbPacket
+ParseInitDb(std::span<const std::byte> payload)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::INIT_DB));
+
+	PacketDeserializer d{payload};
+	InitDbPacket packet{};
+
+	d.ReadInt1(); // command
+	packet.database = d.ReadRestOfPacketString();
+
+	return packet;
+}
+
 ChangeUserPacket
 ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
 {

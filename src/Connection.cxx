@@ -140,7 +140,35 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	return Result::IGNORE;
 }
 
-MysqlHandler::Result
+inline MysqlHandler::Result
+Connection::OnInitDb(uint_least8_t sequence_id,
+		     std::span<const std::byte> payload)
+{
+	assert(incoming.command_phase);
+	assert(outgoing);
+	assert(outgoing->peer.command_phase);
+
+	const auto packet = Mysql::ParseInitDb(payload);
+
+	if (packet.database == database) {
+		/* no change: translate to RESET_CONNECTION */
+
+		return incoming.SendOk(sequence_id + 1)
+			? Result::IGNORE
+			: Result::CLOSED;
+	}
+
+	/* disallow changing to a different database */
+	// TODO invoke Lua callback for the decision
+
+	return incoming.SendErr(sequence_id + 1,
+				Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+				"Access to database denied"sv)
+		? Result::IGNORE
+		: Result::CLOSED;
+}
+
+inline MysqlHandler::Result
 Connection::OnChangeUser(uint_least8_t sequence_id,
 			 std::span<const std::byte> payload)
 {
@@ -194,6 +222,9 @@ try {
 		if (request_time == Event::TimePoint{})
 			request_time = GetEventLoop().SteadyNow();
 		break;
+
+	case Mysql::Command::INIT_DB:
+		return OnInitDb(number, payload);
 
 	case Mysql::Command::CHANGE_USER:
 		return OnChangeUser(number, payload);
@@ -312,6 +343,7 @@ try {
 	case Mysql::Command::OK:
 	case Mysql::Command::ERR:
 	case Mysql::Command::QUERY:
+	case Mysql::Command::INIT_DB:
 	case Mysql::Command::CHANGE_USER:
 	case Mysql::Command::RESET_CONNECTION:
 		break;

@@ -116,6 +116,9 @@ private:
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
 
+	Result OnInitDb(uint_least8_t sequence_id,
+			std::span<const std::byte> payload);
+
 	Result OnChangeUser(uint_least8_t sequence_id,
 			    std::span<const std::byte> payload);
 

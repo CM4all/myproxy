@@ -76,6 +76,14 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 }
 
 PacketSerializer
+MakeResetConnection(uint_least8_t sequence_id)
+{
+	Mysql::PacketSerializer s{sequence_id};
+	s.WriteCommand(Command::RESET_CONNECTION);
+	return s;
+}
+
+PacketSerializer
 MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities)
 {
 	Mysql::PacketSerializer s{sequence_id};

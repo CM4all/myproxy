@@ -26,6 +26,9 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 			std::string_view client_plugin_name);
 
 PacketSerializer
+MakeResetConnection(uint_least8_t sequence_id);
+
+PacketSerializer
 MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities);
 
 PacketSerializer

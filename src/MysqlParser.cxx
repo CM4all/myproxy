@@ -179,4 +179,36 @@ ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
 	return packet;
 }
 
+ChangeUserPacket
+ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::CHANGE_USER));
+
+	PacketDeserializer d{payload};
+	ChangeUserPacket packet{};
+
+	d.ReadInt1(); // command
+	packet.user = d.ReadNullTerminatedString();
+
+	if (capabilities & Mysql::CLIENT_SECURE_CONNECTION) {
+		std::size_t auth_plugin_data_len = d.ReadInt1();
+		packet.auth_plugin_data = d.ReadVariableLengthString(auth_plugin_data_len);
+	} else {
+		packet.auth_plugin_data = d.ReadNullTerminatedString();
+	}
+
+	packet.database = d.ReadNullTerminatedString();
+
+	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+		packet.character_set = d.ReadInt2();
+	}
+
+	if (capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
+		packet.auth_plugin_name = d.ReadNullTerminatedString();
+	}
+
+	return packet;
+}
+
 } // namespace Mysql

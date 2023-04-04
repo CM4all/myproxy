@@ -68,4 +68,16 @@ struct ErrPacket {
 ErrPacket
 ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities);
 
+struct ChangeUserPacket {
+	std::string_view user;
+	std::string_view auth_plugin_data;
+	std::string_view database;
+	std::string_view auth_plugin_name;
+
+	uint_least16_t character_set;
+};
+
+ChangeUserPacket
+ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities);
+
 } // namespace Mysql

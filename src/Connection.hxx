@@ -113,8 +113,11 @@ private:
 
 	void Delay(Event::Duration duration) noexcept;
 
-	MysqlHandler::Result OnHandshakeResponse(uint_least8_t sequence_id,
-						 std::span<const std::byte> payload);
+	Result OnHandshakeResponse(uint_least8_t sequence_id,
+				   std::span<const std::byte> payload);
+
+	Result OnChangeUser(uint_least8_t sequence_id,
+			    std::span<const std::byte> payload);
 
 	void OnDeferredStartHandler() noexcept;
 

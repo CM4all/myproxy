@@ -141,6 +141,29 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 }
 
 MysqlHandler::Result
+Connection::OnChangeUser(uint_least8_t sequence_id,
+			 std::span<const std::byte> payload)
+{
+	assert(incoming.command_phase);
+	assert(outgoing);
+	assert(outgoing->peer.command_phase);
+
+	const auto packet = Mysql::ParseChangeUser(payload, incoming.capabilities);
+
+	if (packet.user == user && packet.database == database) {
+		/* no change: translate to RESET_CONNECTION */
+
+		auto s = Mysql::MakeResetConnection(sequence_id);
+		if (!incoming.Send(s.Finish()))
+			return Result::CLOSED;
+
+		return Result::IGNORE;
+	}
+
+	return Result::OK;
+}
+
+MysqlHandler::Result
 Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
@@ -164,12 +187,16 @@ try {
 	case Mysql::Command::OK:
 	case Mysql::Command::EOF_:
 	case Mysql::Command::ERR:
+	case Mysql::Command::RESET_CONNECTION:
 		break;
 
 	case Mysql::Command::QUERY:
 		if (request_time == Event::TimePoint{})
 			request_time = GetEventLoop().SteadyNow();
 		break;
+
+	case Mysql::Command::CHANGE_USER:
+		return OnChangeUser(number, payload);
 	}
 
 	return Result::OK;
@@ -285,6 +312,8 @@ try {
 	case Mysql::Command::OK:
 	case Mysql::Command::ERR:
 	case Mysql::Command::QUERY:
+	case Mysql::Command::CHANGE_USER:
+	case Mysql::Command::RESET_CONNECTION:
 		break;
 	}
 

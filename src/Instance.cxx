@@ -27,7 +27,7 @@ Instance::Instance(const Config &_config)
 
 inline void
 Instance::AddListener(UniqueSocketDescriptor &&fd,
-		      Lua::ValuePtr &&handler) noexcept
+		      std::shared_ptr<LuaHandler> &&handler) noexcept
 {
 	listeners.emplace_front(event_loop, event_loop, std::move(handler));
 	listeners.front().Listen(std::move(fd));
@@ -51,13 +51,13 @@ MakeListener(SocketAddress address)
 
 void
 Instance::AddListener(SocketAddress address,
-		      Lua::ValuePtr &&handler) noexcept
+		      std::shared_ptr<LuaHandler> handler) noexcept
 {
 	AddListener(MakeListener(address), std::move(handler));
 }
 
 void
-Instance::AddSystemdListener(Lua::ValuePtr &&handler)
+Instance::AddSystemdListener(std::shared_ptr<LuaHandler> handler)
 {
 	int n = sd_listen_fds(true);
 	if (n < 0)
@@ -68,7 +68,7 @@ Instance::AddSystemdListener(Lua::ValuePtr &&handler)
 
 	for (unsigned i = 0; i < unsigned(n); ++i)
 		AddListener(UniqueSocketDescriptor(SD_LISTEN_FDS_START + i),
-			    Lua::ValuePtr(handler));
+			    std::move(handler));
 }
 
 void

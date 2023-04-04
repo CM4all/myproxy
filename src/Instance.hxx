@@ -42,16 +42,16 @@ public:
 	}
 
 	void AddListener(UniqueSocketDescriptor &&fd,
-			 Lua::ValuePtr &&handler) noexcept;
+			 std::shared_ptr<LuaHandler> &&handler) noexcept;
 
 	void AddListener(SocketAddress address,
-			 Lua::ValuePtr &&handler) noexcept;
+			 std::shared_ptr<LuaHandler> handler) noexcept;
 
 	/**
 	 * Listen for incoming connections on sockets passed by systemd
 	 * (systemd socket activation).
 	 */
-	void AddSystemdListener(Lua::ValuePtr &&handler);
+	void AddSystemdListener(std::shared_ptr<LuaHandler> handler);
 
 	void Check();
 

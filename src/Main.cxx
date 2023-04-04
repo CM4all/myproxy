@@ -5,6 +5,7 @@
 #include "Instance.hxx"
 #include "Config.hxx"
 #include "CommandLine.hxx"
+#include "LHandler.hxx"
 #include "LResolver.hxx"
 #include "Policy.hxx"
 #include "LClient.hxx"
@@ -57,7 +58,7 @@ try {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameter count");
 
-	auto handler = std::make_shared<Lua::Value>(L, Lua::StackIndex(2));
+	auto handler = std::make_shared<LuaHandler >(L, Lua::StackIndex{2});
 
 	if (IsSystemdMagic(L, 1)) {
 		instance.AddSystemdListener(std::move(handler));

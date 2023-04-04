@@ -10,14 +10,16 @@
 #include "lua/Ref.hxx"
 #include "lua/Resume.hxx"
 #include "lua/Value.hxx"
-#include "lua/ValuePtr.hxx"
 #include "lua/CoRunner.hxx"
 #include "event/DeferEvent.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "util/IntrusiveList.hxx"
 
+#include <memory>
 #include <optional>
 #include <string>
+
+class LuaHandler;
 
 /**
  * Manage connections from MySQL clients.
@@ -28,7 +30,7 @@ class Connection final
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
-	const Lua::ValuePtr handler;
+	const std::shared_ptr<LuaHandler> handler;
 
 	Lua::Value lua_client;
 
@@ -94,7 +96,8 @@ class Connection final
 	uint_least8_t handeshake_response_sequence_id;
 
 public:
-	Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
+	Connection(EventLoop &event_loop,
+		   std::shared_ptr<LuaHandler> _handler,
 		   UniqueSocketDescriptor fd,
 		   SocketAddress address);
 	~Connection() noexcept;

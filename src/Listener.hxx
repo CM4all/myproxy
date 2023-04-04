@@ -5,8 +5,10 @@
 #pragma once
 
 #include "Connection.hxx"
+#include "LHandler.hxx"
 #include "event/net/TemplateServerSocket.hxx"
-#include "lua/ValuePtr.hxx"
+
+#include <memory>
 
 using MyProxyListener =
-	TemplateServerSocket<Connection, EventLoop &, Lua::ValuePtr>;
+	TemplateServerSocket<Connection, EventLoop &, std::shared_ptr<LuaHandler>>;

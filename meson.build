@@ -140,6 +140,7 @@ executable(
   'src/MysqlAuth.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
+  'src/LHandler.cxx',
   'src/LClient.cxx',
   'src/LAction.cxx',
   'src/Instance.cxx',

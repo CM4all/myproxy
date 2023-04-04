@@ -6,6 +6,7 @@
 #include "Action.hxx"
 #include "LAction.hxx"
 #include "LClient.hxx"
+#include "LHandler.hxx"
 #include "Config.hxx"
 #include "Instance.hxx"
 #include "MysqlProtocol.hxx"
@@ -316,7 +317,8 @@ Connection::OnDelayTimer() noexcept
 	incoming.socket.Read();
 }
 
-Connection::Connection(EventLoop &event_loop, Lua::ValuePtr _handler,
+Connection::Connection(EventLoop &event_loop,
+		       std::shared_ptr<LuaHandler> _handler,
 		       UniqueSocketDescriptor fd,
 		       SocketAddress address)
 	:handler(std::move(_handler)),
@@ -349,7 +351,7 @@ Connection::OnDeferredStartHandler() noexcept
 	/* create a new thread for the handler coroutine */
 	const auto L = thread.CreateThread(*this);
 
-	handler->Push(L);
+	handler->PushOnHandshakeResponse(L);
 
 	lua_client.Push(L);
 

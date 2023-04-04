@@ -19,6 +19,8 @@ MakeHandshakeV10(std::string_view server_version,
 {
 	assert(auth_plugin_data.size() >= 8);
 
+	static constexpr uint_least32_t capabilities = 0x818ff22f;
+
 	Mysql::PacketSerializer s{0};
 	s.WriteInt1(10);
 	s.WriteNullTerminatedString(server_version);
@@ -27,10 +29,10 @@ MakeHandshakeV10(std::string_view server_version,
 	s.WriteN(auth_plugin_data.first(8));
 
 	s.WriteInt1(0); // filler
-	s.WriteInt2(0xf22f); // capability_flags_1
+	s.WriteInt2(capabilities & 0xffff);
 	s.WriteInt1(0x21); // character_set
 	s.WriteInt2(0x0002); // status_flags
-	s.WriteInt2(0x818f); // capability_flags_2
+	s.WriteInt2((capabilities >> 16) & 0xffff);
 	s.WriteInt1(auth_plugin_data.size());
 	s.WriteZero(10); // reserved
 	s.WriteN(auth_plugin_data.subspan(8));

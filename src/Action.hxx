@@ -15,5 +15,5 @@ struct ErrAction {
 struct ConnectAction {
 	AllocatedSocketAddress address;
 
-	std::string username, password, database;
+	std::string user, password, database;
 };

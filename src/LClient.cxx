@@ -74,8 +74,8 @@ CheckString(lua_State *L, auto _idx, const char *extramsg)
 static void
 Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 {
-	if (StringIsEqual(name, "username"))
-		action.username = CheckString(L, value_idx, "Bad value type");
+	if (StringIsEqual(name, "user"))
+		action.user = CheckString(L, value_idx, "Bad value type");
 	else if (StringIsEqual(name, "password"))
 		action.password = CheckString(L, value_idx, "Bad value type");
 	else if (StringIsEqual(name, "database"))

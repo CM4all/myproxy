@@ -51,7 +51,7 @@ class Connection final
 	 */
 	CoarseTimerEvent delay_timer;
 
-	std::string username, auth_response, database;
+	std::string user, auth_response, database;
 
 	/**
 	 * The time stamp of the last request packet [us].

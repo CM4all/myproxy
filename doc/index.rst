@@ -75,7 +75,7 @@ these actions:
 
   - ``address``: a ``SocketAddress`` object.
 
-  - ``handshake_response``: a table containing the keys ``username``,
+  - ``handshake_response``: a table containing the keys ``user``,
     ``password`` and ``database``.  The ``handshake_response``
     parameter passed to the callback function can be used here (the
     function is allowed to modify it).

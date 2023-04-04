@@ -34,7 +34,7 @@ HandshakePacket
 ParseHandshake(std::span<const std::byte> payload);
 
 struct HandshakeResponsePacket {
-	std::string_view username, auth_response;
+	std::string_view user, auth_response;
 	std::string_view database;
 	std::string_view client_plugin_name;
 

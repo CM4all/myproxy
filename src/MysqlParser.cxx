@@ -63,7 +63,7 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 		packet.max_packet_size = d.ReadInt4();
 		packet.character_set = d.ReadInt1();
 		d.ReadN(23); // filler
-		packet.username = d.ReadNullTerminatedString();
+		packet.user = d.ReadNullTerminatedString();
 
 		if (packet.capabilities & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
 			packet.auth_response = d.ReadLengthEncodedString();
@@ -96,7 +96,7 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 		// HandshakeResponse320
 
 		packet.max_packet_size = d.ReadInt3();
-		packet.username = d.ReadNullTerminatedString();
+		packet.user = d.ReadNullTerminatedString();
 
 		if (packet.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
 			packet.auth_response = d.ReadNullTerminatedString();

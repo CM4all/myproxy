@@ -123,13 +123,13 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.capabilities = packet.capabilities;
 
-	fmt::print("login username='{}' database='{}'\n", packet.username, packet.database);
+	fmt::print("login user='{}' database='{}'\n", packet.user, packet.database);
 
-	username = packet.username;
+	user = packet.user;
 	auth_response = packet.auth_response;
 	database = packet.database;
 
-	const auto delay = policy_login(username.c_str());
+	const auto delay = policy_login(user.c_str());
 	if (delay.count() > 0)
 		Delay(delay);
 
@@ -213,7 +213,7 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 	const auto &action = *connection.connect_action;
 
 	auto s = Mysql::MakeHandshakeResponse41(packet, connection.incoming.capabilities,
-						action.username,
+						action.user,
 						action.password,
 						action.database);
 	if (!peer.Send(s.Finish()))
@@ -262,7 +262,7 @@ try {
 	if (cmd == Mysql::Command::EOF_ &&
 	    connection.request_time != Event::TimePoint{}) {
 		const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
-		policy_duration(connection.username.c_str(), duration);
+		policy_duration(connection.user.c_str(), duration);
 		connection.request_time = Event::TimePoint{};
 	}
 
@@ -356,7 +356,7 @@ Connection::OnDeferredStartHandler() noexcept
 	lua_client.Push(L);
 
 	lua_newtable(L);
-	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "username", username);
+	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "user", user);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", auth_response);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 

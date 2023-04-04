@@ -15,7 +15,7 @@ class PacketSerializer;
 PacketSerializer
 MakeHandshakeResponse41(const HandshakePacket &handshake,
 			uint_least32_t client_flag,
-			std::string_view username, std::string_view password,
+			std::string_view user, std::string_view password,
 			std::string_view database);
 
 } // namespace Mysql

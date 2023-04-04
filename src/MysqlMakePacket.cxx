@@ -42,7 +42,7 @@ MakeHandshakeV10(std::string_view server_version,
 
 PacketSerializer
 MakeHandshakeResponse41(uint_least32_t client_flag,
-			std::string_view username, std::string_view auth_response,
+			std::string_view user, std::string_view auth_response,
 			std::string_view database,
 			std::string_view client_plugin_name)
 {
@@ -63,7 +63,7 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 	s.WriteInt4(0x1000000); // max_packet_size
 	s.WriteInt1(0x21); // character_set
 	s.WriteZero(23); // filler
-	s.WriteNullTerminatedString(username);
+	s.WriteNullTerminatedString(user);
 	s.WriteLengthEncodedString(auth_response);
 
 	if (!database.empty())

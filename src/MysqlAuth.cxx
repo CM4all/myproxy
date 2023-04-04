@@ -15,7 +15,7 @@ namespace Mysql {
 
 PacketSerializer
 MakeHandshakeResponse41(const HandshakePacket &handshake, uint_least32_t client_flag,
-			std::string_view username, std::string_view password,
+			std::string_view user, std::string_view password,
 			std::string_view database)
 {
 	if (handshake.auth_plugin_name == "mysql_native_password"sv &&
@@ -40,14 +40,14 @@ MakeHandshakeResponse41(const HandshakePacket &handshake, uint_least32_t client_
 		for (std::size_t i = 0; i < auth_response.size(); ++i)
 			auth_response[i] ^= password_sha1[i];
 
-		return Mysql::MakeHandshakeResponse41(client_flag, username,
+		return Mysql::MakeHandshakeResponse41(client_flag, user,
 						      ToStringView(auth_response),
 						      database,
 						      "mysql_native_password"sv);
 	}
 
 	return Mysql::MakeHandshakeResponse41(client_flag,
-					      username, password, database,
+					      user, password, database,
 					      "mysql_clear_password"sv);
 }
 

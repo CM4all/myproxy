@@ -154,7 +154,7 @@ Connection::OnChangeUser(uint_least8_t sequence_id,
 		/* no change: translate to RESET_CONNECTION */
 
 		auto s = Mysql::MakeResetConnection(sequence_id);
-		if (!incoming.Send(s.Finish()))
+		if (!outgoing->peer.Send(s.Finish()))
 			return Result::CLOSED;
 
 		return Result::IGNORE;

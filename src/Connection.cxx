@@ -283,7 +283,7 @@ try {
 	return Result::CLOSED;
 } catch (...) {
 	PrintException(std::current_exception());
-	delete this;
+	delete &connection;
 	return Result::CLOSED;
 }
 

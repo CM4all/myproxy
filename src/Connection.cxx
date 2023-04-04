@@ -151,7 +151,7 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 	const auto packet = Mysql::ParseInitDb(payload);
 
 	if (packet.database == database) {
-		/* no change: translate to RESET_CONNECTION */
+		/* no-op */
 
 		return incoming.SendOk(sequence_id + 1)
 			? Result::IGNORE

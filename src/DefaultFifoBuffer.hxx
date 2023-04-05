@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include "util/ForeignFifoBuffer.hxx"
 
 #include <stdint.h>

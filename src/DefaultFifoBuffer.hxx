@@ -14,7 +14,7 @@
  * another project.
  */
 class DefaultFifoBuffer : public ForeignFifoBuffer<std::byte> {
-	static constexpr size_t SIZE = 8192;
+	static constexpr size_t SIZE = 32768;
 
 public:
 	DefaultFifoBuffer():ForeignFifoBuffer(nullptr) {}

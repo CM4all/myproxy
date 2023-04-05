@@ -160,7 +160,7 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 
 	// TODO invoke Lua callback for the decision
 
-	return Result::OK;
+	return Result::FORWARD;
 }
 
 inline MysqlHandler::Result
@@ -183,7 +183,7 @@ Connection::OnChangeUser(uint_least8_t sequence_id,
 		return Result::IGNORE;
 	}
 
-	return Result::OK;
+	return Result::FORWARD;
 }
 
 MysqlHandler::Result
@@ -225,7 +225,7 @@ try {
 		return OnChangeUser(number, payload);
 	}
 
-	return Result::OK;
+	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "Malformed packet from client\n");
 	delete this;
@@ -315,10 +315,10 @@ try {
 			/* now process postponed packets */
 			connection.incoming.DeferRead();
 
-			return Result::OK;
+			return Result::FORWARD;
 
 		case Mysql::Command::ERR:
-			return Result::OK;
+			return Result::FORWARD;
 
 		default:
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
@@ -344,7 +344,7 @@ try {
 		break;
 	}
 
-	return Result::OK;
+	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "Malformed packet from server\n");
 	delete &connection;

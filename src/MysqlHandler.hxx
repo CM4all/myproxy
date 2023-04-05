@@ -15,7 +15,7 @@ public:
 		 * interested in getting raw data (and possibly the
 		 * rest of the payload).
 		 */
-		OK,
+		FORWARD,
 
 		/**
 		 * Currently, the packet cannot be consumed.

@@ -39,7 +39,7 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 		remaining = sizeof(header) + total_payload_size;
 
 		switch (handler.OnMysqlPacket(header.number, payload, complete)) {
-		case MysqlHandler::Result::OK:
+		case MysqlHandler::Result::FORWARD:
 			ignore = false;
 			break;
 

@@ -88,7 +88,7 @@ class Connection final
 		/* virtual methods from MysqlHandler */
 		Result OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 				     bool complete) noexcept override;
-		std::pair<Result, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
+		std::pair<RawResult, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
 	};
 
 	std::optional<Outgoing> outgoing;
@@ -138,7 +138,7 @@ private:
 	/* virtual methods from MysqlHandler */
 	Result OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			     bool complete) noexcept override;
-	std::pair<Result, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
+	std::pair<RawResult, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept override;
 
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;

@@ -46,9 +46,22 @@ public:
 	virtual Result OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 				     bool complete) noexcept = 0;
 
+	enum class RawResult {
+		/**
+		 * The handler was successful.  Data may or may not
+		 * have been consumed.
+		 */
+		OK,
+
+		/**
+		 * The #MysqlReader has been closed.
+		 */
+		CLOSED,
+	};
+
 	/**
 	 * @return a #Result code and the number of bytes that have
 	 * been consumed
 	 */
-	virtual std::pair<Result, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept = 0;
+	virtual std::pair<RawResult, std::size_t> OnMysqlRaw(std::span<const std::byte> src) noexcept = 0;
 };

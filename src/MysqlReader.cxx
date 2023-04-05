@@ -69,24 +69,15 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 
 	auto [result, consumed] = handler.OnMysqlRaw(raw);
 	switch (result) {
-	case MysqlHandler::Result::IGNORE:
-		assert(consumed == 0);
-		ignore = true;
-		consumed = raw.size();
-		[[fallthrough]];
-
-	case MysqlHandler::Result::OK:
-		assert(consumed > 0);
+	case MysqlHandler::RawResult::OK:
+		if (consumed == 0)
+			return ProcessResult::BLOCKING;
 
 		remaining -= consumed;
 		socket.DisposeConsumed(consumed);
 		break;
 
-	case MysqlHandler::Result::BLOCKING:
-		assert(consumed == 0);
-		return ProcessResult::BLOCKING;
-
-	case MysqlHandler::Result::CLOSED:
+	case MysqlHandler::RawResult::CLOSED:
 		assert(consumed == 0);
 		return ProcessResult::CLOSED;
 	}

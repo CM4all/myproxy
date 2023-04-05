@@ -236,27 +236,27 @@ try {
 	return Result::CLOSED;
 }
 
-std::pair<MysqlHandler::Result, std::size_t>
+std::pair<MysqlHandler::RawResult, std::size_t>
 Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
 	if (IsDelayed())
 		/* don't continue reading now */
-		return {Result::BLOCKING, 0U};
+		return {RawResult::OK, 0U};
 
 	if (!outgoing)
-		return {Result::BLOCKING, 0U};
+		return {RawResult::OK, 0U};
 
 	const auto result = outgoing->peer.WriteSome(src);
 	if (result > 0) [[likely]]
-		return {Result::OK, static_cast<std::size_t>(result)};
+		return {RawResult::OK, static_cast<std::size_t>(result)};
 
 	switch (result) {
 	case WRITE_BLOCKING:
-		return {Result::BLOCKING, 0U};
+		return {RawResult::OK, 0U};
 
 	default:
 		// TODO
-		return {Result::CLOSED, 0U};
+		return {RawResult::CLOSED, 0U};
 	}
 }
 
@@ -365,20 +365,20 @@ try {
 	return Result::CLOSED;
 }
 
-std::pair<MysqlHandler::Result, std::size_t>
+std::pair<MysqlHandler::RawResult, std::size_t>
 Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
 	const auto result = connection.incoming.WriteSome(src);
 	if (result > 0) [[likely]]
-		return {Result::OK, static_cast<std::size_t>(result)};
+		return {RawResult::OK, static_cast<std::size_t>(result)};
 
 	switch (result) {
 	case WRITE_BLOCKING:
-		return {Result::BLOCKING, 0U};
+		return {RawResult::OK, 0U};
 
 	default:
 		// TODO
-		return {Result::CLOSED, 0U};
+		return {RawResult::CLOSED, 0U};
 	}
 }
 

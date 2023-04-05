@@ -17,35 +17,35 @@ class DefaultFifoBuffer : public ForeignFifoBuffer<std::byte> {
 	static constexpr size_t SIZE = 32768;
 
 public:
-	DefaultFifoBuffer():ForeignFifoBuffer(nullptr) {}
+	DefaultFifoBuffer() noexcept:ForeignFifoBuffer(nullptr) {}
 
-	bool IsDefinedAndFull() const {
+	bool IsDefinedAndFull() const noexcept {
 		return IsDefined() && IsFull();
 	}
 
-	void Allocate() {
+	void Allocate() noexcept {
 		SetBuffer(new std::byte[SIZE], SIZE);
 	}
 
-	void Free() {
+	void Free() noexcept {
 		delete[] GetBuffer();
 		SetNull();
 	}
 
-	void AllocateIfNull() {
+	void AllocateIfNull() noexcept {
 		if (IsNull())
 			Allocate();
 	}
 
-	void FreeIfDefined() {
+	void FreeIfDefined() noexcept {
 		Free();
 	}
 
-	void FreeIfEmpty() {
+	void FreeIfEmpty() noexcept {
 		if (empty())
 			Free();
 	}
 
-	void CycleIfEmpty() {
+	void CycleIfEmpty() noexcept {
 	}
 };

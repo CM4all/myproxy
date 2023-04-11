@@ -93,7 +93,21 @@ Peer::OnBufferedClosed() noexcept
 bool
 Peer::OnBufferedWrite()
 {
-	return handler.OnPeerWrite();
+	switch (handler.OnPeerWrite()) {
+	case PeerHandler::WriteResult::DONE:
+		socket.UnscheduleWrite();
+		return true;
+
+	case PeerHandler::WriteResult::MORE:
+		socket.ScheduleWrite();
+		return true;
+
+	case PeerHandler::WriteResult::CLOSED:
+		return false;
+	}
+
+	assert(false);
+	gcc_unreachable();
 }
 
 void

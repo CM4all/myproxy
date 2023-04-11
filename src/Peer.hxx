@@ -18,14 +18,22 @@ class PacketSerializer;
 
 class PeerHandler {
 public:
-	enum ForwardResult {
-		OK,
-		ERROR,
+	enum class WriteResult {
+		/**
+		 * Done writing; there is no more data to be written.
+		 */
+		DONE,
+
+		/**
+		 * The handler wants to write more.
+		 */
+		MORE,
+
 		CLOSED,
 	};
 
 	virtual void OnPeerClosed() noexcept = 0;
-	virtual bool OnPeerWrite() = 0;
+	virtual WriteResult OnPeerWrite() = 0;
 	virtual void OnPeerError(std::exception_ptr e) noexcept = 0;
 };
 

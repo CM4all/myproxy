@@ -82,7 +82,7 @@ class Connection final
 
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
-		bool OnPeerWrite() override;
+		WriteResult OnPeerWrite() override;
 		void OnPeerError(std::exception_ptr e) noexcept override;
 
 		/* virtual methods from MysqlHandler */
@@ -94,6 +94,8 @@ class Connection final
 	std::optional<Outgoing> outgoing;
 
 	uint_least8_t handeshake_response_sequence_id;
+
+	bool got_raw_from_incoming, got_raw_from_outgoing;
 
 public:
 	Connection(EventLoop &event_loop,
@@ -132,7 +134,7 @@ private:
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;
-	bool OnPeerWrite() override;
+	WriteResult OnPeerWrite() override;
 	void OnPeerError(std::exception_ptr e) noexcept override;
 
 	/* virtual methods from MysqlHandler */

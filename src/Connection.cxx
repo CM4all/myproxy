@@ -35,14 +35,21 @@ Connection::~Connection() noexcept
 	thread.Cancel();
 }
 
-bool
+PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {
 	if (connection.IsDelayed())
 		/* don't continue reading now */
-		return true;
+		return WriteResult::DONE;
 
-	return connection.incoming.Read(); // TODO return value?
+	connection.got_raw_from_incoming = false;
+
+	if (!connection.incoming.Read())
+		return WriteResult::CLOSED;
+
+	return connection.got_raw_from_incoming
+		? WriteResult::MORE
+		: WriteResult::DONE;
 }
 
 void
@@ -64,7 +71,7 @@ Connection::OnPeerClosed() noexcept
 	delete this;
 }
 
-bool
+PeerHandler::WriteResult
 Connection::OnPeerWrite()
 {
 	if (!incoming.handshake) {
@@ -74,16 +81,21 @@ Connection::OnPeerWrite()
 						 "mysql_clear_password"sv,
 						 auth_plugin_data);
 		if (!incoming.Send(s.Finish()))
-			return false;
+			return WriteResult::CLOSED;
 
 		incoming.handshake = true;
-		return true;
+		return WriteResult::DONE;
 	}
 
 	if (!outgoing)
-		return true;
+		return WriteResult::DONE;
 
-	return outgoing->peer.Read(); // TODO return value?
+	got_raw_from_outgoing = false;
+
+	if (!outgoing->peer.Read())
+		return WriteResult::CLOSED;
+
+	return got_raw_from_outgoing ? WriteResult::MORE : WriteResult::DONE;
 }
 
 void
@@ -246,6 +258,8 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	if (!outgoing)
 		return {RawResult::OK, 0U};
 
+	got_raw_from_incoming = true;
+
 	const auto result = outgoing->peer.WriteSome(src);
 	if (result > 0) [[likely]]
 		return {RawResult::OK, static_cast<std::size_t>(result)};
@@ -368,6 +382,8 @@ try {
 std::pair<MysqlHandler::RawResult, std::size_t>
 Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
+	connection.got_raw_from_outgoing = true;
+
 	const auto result = connection.incoming.WriteSome(src);
 	if (result > 0) [[likely]]
 		return {RawResult::OK, static_cast<std::size_t>(result)};

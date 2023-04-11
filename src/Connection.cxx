@@ -16,7 +16,10 @@
 #include "MysqlMakePacket.hxx"
 #include "MysqlAuth.hxx"
 #include "Policy.hxx"
+#include "lua/CoAwaitable.hxx"
+#include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
+#include "co/SimpleTask.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
@@ -30,10 +33,7 @@
 
 using std::string_view_literals::operator""sv;
 
-Connection::~Connection() noexcept
-{
-	thread.Cancel();
-}
+Connection::~Connection() noexcept = default;
 
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
@@ -176,6 +176,8 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	incoming.handshake_response = true;
 
 	handeshake_response_sequence_id = sequence_id;
+
+	coroutine = InvokeLuaHandshakeResponse();
 	defer_start_handler.Schedule();
 	return Result::IGNORE;
 }
@@ -445,7 +447,6 @@ Connection::Connection(EventLoop &event_loop,
 		       SocketAddress address)
 	:handler(std::move(_handler)),
 	 lua_client(handler->GetState()),
-	 thread(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
 	 delay_timer(event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(event_loop, std::move(fd), *this, *this),
@@ -470,8 +471,24 @@ Connection::Delay(Event::Duration duration) noexcept
 inline void
 Connection::OnDeferredStartHandler() noexcept
 {
-	/* create a new thread for the handler coroutine */
-	const auto L = thread.CreateThread(*this);
+	assert(coroutine);
+	assert(!coroutine->done());
+
+	coroutine->resume();
+}
+
+inline Co::SimpleTask
+Connection::InvokeLuaHandshakeResponse() noexcept
+try {
+	const auto main_L = GetLuaState();
+	const Lua::ScopeCheckStack check_main_stack{main_L};
+
+	Lua::Thread thread{main_L};
+
+	/* create a new thread for the coroutine */
+	const auto L = thread.Create(main_L);
+	/* pop the new thread from the main stack */
+	lua_pop(main_L, 1);
 
 	handler->PushOnHandshakeResponse(L);
 
@@ -482,12 +499,8 @@ Connection::OnDeferredStartHandler() noexcept
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", auth_response);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 
-	Lua::Resume(L, 2);
-}
+	co_await Lua::CoAwaitable{thread, L, 2};
 
-void
-Connection::OnLuaFinished(lua_State *L) noexcept
-try {
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		incoming.SendErr(handeshake_response_sequence_id + 1,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
@@ -502,15 +515,7 @@ try {
 	} else
 		throw std::invalid_argument{"Bad return value"};
 } catch (...) {
-	OnLuaError(L, std::current_exception());
-}
-
-void
-Connection::OnLuaError(lua_State *L, std::exception_ptr e) noexcept
-{
-	(void)L;
-
-	PrintException(e);
+	PrintException(std::current_exception());
 
 	if (incoming.SendErr(handeshake_response_sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,

@@ -113,7 +113,7 @@ subdir('libcommon/src/system')
 subdir('libcommon/src/net')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
-
+subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')

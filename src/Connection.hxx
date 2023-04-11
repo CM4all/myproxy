@@ -8,9 +8,8 @@
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
 #include "lua/Ref.hxx"
-#include "lua/Resume.hxx"
 #include "lua/Value.hxx"
-#include "lua/CoRunner.hxx"
+#include "co/UniqueHandle.hxx"
 #include "event/DeferEvent.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "util/IntrusiveList.hxx"
@@ -19,6 +18,8 @@
 #include <optional>
 #include <string>
 
+namespace Co { class SimpleTask; }
+
 class LuaHandler;
 
 /**
@@ -26,7 +27,6 @@ class LuaHandler;
  */
 class Connection final
 	: public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
-	  Lua::ResumeListener,
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
@@ -35,9 +35,9 @@ class Connection final
 	Lua::Value lua_client;
 
 	/**
-	 * The Lua thread which runs the handler coroutine.
+	 * The C++20 coroutine that currently executes the handler.
 	 */
-	Lua::CoRunner thread;
+	Co::UniqueHandle<> coroutine;
 
 	/**
 	 * Launches the Lua handler.
@@ -119,6 +119,8 @@ private:
 		return delay_timer.IsPending();
 	}
 
+	Co::SimpleTask InvokeLuaHandshakeResponse() noexcept;
+
 	void Delay(Event::Duration duration) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
@@ -151,10 +153,6 @@ private:
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override;
 	void OnSocketConnectError(std::exception_ptr e) noexcept override;
-
-	/* virtual methods from class Lua::ResumeListener */
-	void OnLuaFinished(lua_State *L) noexcept override;
-	void OnLuaError(lua_State *L, std::exception_ptr e) noexcept override;
 };
 
 /**

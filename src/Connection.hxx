@@ -104,8 +104,14 @@ public:
 		   SocketAddress address);
 	~Connection() noexcept;
 
+	[[gnu::const]]
 	auto &GetEventLoop() const noexcept {
 		return delay_timer.GetEventLoop();
+	}
+
+	[[gnu::const]]
+	auto *GetLuaState() const noexcept {
+		return lua_client.GetState();
 	}
 
 private:

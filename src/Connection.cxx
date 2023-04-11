@@ -451,9 +451,9 @@ Connection::Connection(EventLoop &event_loop,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	NewLuaClient(lua_client.GetState(), incoming.GetSocket(), address);
-	lua_client.Set(lua_client.GetState(), Lua::RelativeStackIndex{-1});
-	lua_pop(lua_client.GetState(), 1);
+	NewLuaClient(GetLuaState(), incoming.GetSocket(), address);
+	lua_client.Set(GetLuaState(), Lua::RelativeStackIndex{-1});
+	lua_pop(GetLuaState(), 1);
 
 	/* write the handshake */
 	incoming.DeferWrite();

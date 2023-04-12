@@ -7,7 +7,6 @@
 #include "Action.hxx"
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
-#include "lua/Ref.hxx"
 #include "lua/Value.hxx"
 #include "co/UniqueHandle.hxx"
 #include "event/DeferEvent.hxx"

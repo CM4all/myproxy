@@ -24,12 +24,17 @@ extern "C" {
 class LClient {
 	Lua::Value address;
 
+	/**
+	 * A table containing notes created by Lua code.
+	 */
+	Lua::Value notes;
+
 	const struct ucred peer_cred;
 
 public:
 	LClient(lua_State *L, SocketDescriptor socket,
 		SocketAddress _address)
-		:address(L),
+		:address(L), notes(L),
 		 peer_cred(socket.GetPeerCredentials())
 	{
 		Lua::NewSocketAddress(L, _address);
@@ -37,7 +42,7 @@ public:
 		lua_pop(L, 1);
 	}
 
-	int Index(lua_State *L, const char *name) const;
+	int Index(lua_State *L, const char *name);
 
 	bool HavePeerCred() const noexcept {
 		return peer_cred.pid >= 0;
@@ -116,7 +121,7 @@ static constexpr struct luaL_Reg client_methods [] = {
 };
 
 inline int
-LClient::Index(lua_State *L, const char *name) const
+LClient::Index(lua_State *L, const char *name)
 {
 	for (const auto *i = client_methods; i->name != nullptr; ++i) {
 		if (StringIsEqual(i->name, name)) {
@@ -127,6 +132,16 @@ LClient::Index(lua_State *L, const char *name) const
 
 	if (StringIsEqual(name, "address")) {
 		address.Push(L);
+		return 1;
+	} else if (StringIsEqual(name, "notes")) {
+		notes.Push(L);
+
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);
+			lua_newtable(L);
+			notes.Set(L, Lua::RelativeStackIndex{-1});
+		}
+
 		return 1;
 	} else if (StringIsEqual(name, "pid")) {
 		if (!HavePeerCred())

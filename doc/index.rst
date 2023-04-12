@@ -63,6 +63,9 @@ The following attributes of the ``client`` parameter can be queried:
   noted in :file:`/proc/self/cgroup`,
   e.g. :file:`/user.slice/user-1000.slice/session-42.scope`
 
+* :samp:`notes`: a table where the Lua script can add arbitrary
+  entries
+
 
 Login Callback Actions
 ^^^^^^^^^^^^^^^^^^^^^^

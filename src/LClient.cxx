@@ -28,12 +28,12 @@ class LClient {
 
 public:
 	LClient(lua_State *L, SocketDescriptor socket,
-		    SocketAddress _address)
+		SocketAddress _address)
 		:address(L),
 		 peer_cred(socket.GetPeerCredentials())
 	{
 		Lua::NewSocketAddress(L, _address);
-		address.Set(Lua::RelativeStackIndex{-1});
+		address.Set(L, Lua::RelativeStackIndex{-1});
 		lua_pop(L, 1);
 	}
 

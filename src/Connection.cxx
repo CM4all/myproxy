@@ -446,8 +446,7 @@ Connection::Connection(EventLoop &event_loop,
 	lua_client.Set(GetLuaState(), Lua::RelativeStackIndex{-1});
 	lua_pop(GetLuaState(), 1);
 
-	/* write the handshake */
-	incoming.DeferWrite();
+	StartCoroutine(InvokeLuaConnect());
 }
 
 inline void
@@ -475,6 +474,37 @@ Connection::OnDeferredStartHandler() noexcept
 	assert(coroutine);
 
 	coroutine.Start(BIND_THIS_METHOD(OnCoroutineComplete));
+}
+
+inline Co::InvokeTask
+Connection::InvokeLuaConnect()
+{
+	const auto main_L = GetLuaState();
+	const Lua::ScopeCheckStack check_main_stack{main_L};
+
+	Lua::Thread thread{main_L};
+
+	/* create a new thread for the coroutine */
+	const auto L = thread.Create(main_L);
+	/* pop the new thread from the main stack */
+	lua_pop(main_L, 1);
+
+	handler->PushOnConnect(L);
+
+	if (!lua_isnil(L, -1)) {
+		lua_client.Push(L);
+
+		co_await Lua::CoAwaitable{thread, L, 1};
+
+		if (lua_isnil(L, -1)) {
+			// OK
+			// TODO implement more actions
+		} else
+			throw std::invalid_argument{"Bad return value"};
+	}
+
+	/* write the handshake */
+	incoming.DeferWrite();
 }
 
 inline Co::InvokeTask

@@ -127,6 +127,7 @@ private:
 		return coroutine;
 	}
 
+	Co::InvokeTask InvokeLuaConnect();
 	Co::InvokeTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,

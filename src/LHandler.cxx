@@ -10,7 +10,8 @@
 #include <stdexcept>
 
 LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
-	:on_handshake_response(L)
+	:on_connect(L),
+	 on_handshake_response(L)
 {
 	const Lua::ScopeCheckStack check_stack{L};
 
@@ -24,7 +25,12 @@ LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 			throw std::invalid_argument{"Key is not a string"};
 
 		const char *key = lua_tostring(L, Lua::GetStackIndex(key_idx));
-		if (StringIsEqual(key, "on_handshake_response")) {
+		if (StringIsEqual(key, "on_connect")) {
+			if (!lua_isfunction(L, Lua::GetStackIndex(value_idx)))
+				throw std::invalid_argument{"Value is not a function"};
+
+			on_connect.Set(L, value_idx);
+		} else if (StringIsEqual(key, "on_handshake_response")) {
 			if (!lua_isfunction(L, Lua::GetStackIndex(value_idx)))
 				throw std::invalid_argument{"Value is not a function"};
 

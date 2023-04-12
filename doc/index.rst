@@ -18,6 +18,9 @@ contains at least one :samp:`mysql_listen()` call, for example::
 
  handler = {}
 
+ function handler.on_connect(client)
+ end
+
  function handler.on_handshake_response(client, handshake_response)
     return m:connect('192.168.1.99', handshake_response)
  end
@@ -36,6 +39,8 @@ just the socket doesn't work because a daemon restart must create a
 new socket, but the bind mount cannot be refreshed.
 
 The second parameter is a table containing callback functions:
+
+- ``on_connect(client)`` is invoked as soon as a client connects.
 
 - ``on_handshake_response(client, handshake_response)`` decides what
   to do with a login attempt by a client.  This function receives a

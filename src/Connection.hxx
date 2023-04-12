@@ -136,7 +136,7 @@ private:
 	}
 
 	bool IsDelayed() const noexcept {
-		return delay_timer.IsPending();
+		return delay_timer.IsPending() || coroutine;
 	}
 
 	Co::SimpleTask InvokeLuaHandshakeResponse() noexcept;

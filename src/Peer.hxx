@@ -68,6 +68,10 @@ public:
 		socket.Close();
 	}
 
+	void Close() noexcept {
+		socket.Close();
+	}
+
 	SocketDescriptor GetSocket() const noexcept {
 		return socket.GetSocket();
 	}

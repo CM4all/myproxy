@@ -38,6 +38,8 @@ Connection::~Connection() noexcept = default;
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {
+	assert(!connection.IsStale());
+
 	switch (connection.incoming.Flush()) {
 	case MysqlReader::FlushResult::DRAINED:
 		break;
@@ -69,25 +71,27 @@ Connection::Outgoing::OnPeerWrite()
 void
 Connection::Outgoing::OnPeerClosed() noexcept
 {
-	delete &connection;
+	connection.SafeDelete();
 }
 
 void
 Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 {
 	PrintException(e);
-	delete &connection;
+	connection.SafeDelete();
 }
 
 void
 Connection::OnPeerClosed() noexcept
 {
-	delete this;
+	SafeDelete();
 }
 
 PeerHandler::WriteResult
 Connection::OnPeerWrite()
 {
+	assert(!IsStale());
+
 	if (!incoming.handshake) {
 		static constexpr std::array<std::byte, 0x15> auth_plugin_data{};
 
@@ -130,7 +134,7 @@ void
 Connection::OnPeerError(std::exception_ptr e) noexcept
 {
 	PrintException(e);
-	delete this;
+	SafeDelete();
 }
 
 void
@@ -147,7 +151,7 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	assert(!outgoing);
 
 	PrintException(e);
-	delete this;
+	SafeDelete();
 }
 
 inline MysqlHandler::Result
@@ -270,11 +274,11 @@ try {
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "Malformed packet from client\n");
-	delete this;
+	SafeDelete();
 	return Result::CLOSED;
 } catch (...) {
 	PrintException(std::current_exception());
-	delete this;
+	SafeDelete();
 	return Result::CLOSED;
 }
 
@@ -391,7 +395,7 @@ try {
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "Malformed packet from server\n");
-	delete &connection;
+	connection.SafeDelete();
 	return Result::CLOSED;
 } catch (const Mysql::ErrPacket &packet) {
 	if (!packet.error_message.empty())
@@ -401,11 +405,11 @@ try {
 	else
 		fmt::print(stderr, "MySQL error: {}\n",
 			   static_cast<uint_least16_t>(packet.error_code));
-	delete &connection;
+	connection.SafeDelete();
 	return Result::CLOSED;
 } catch (...) {
 	PrintException(std::current_exception());
-	delete &connection;
+	connection.SafeDelete();
 	return Result::CLOSED;
 }
 
@@ -448,6 +452,7 @@ Connection::Connection(EventLoop &event_loop,
 	:handler(std::move(_handler)),
 	 lua_client(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
+	 defer_delete(event_loop, BIND_THIS_METHOD(OnDeferredDelete)),
 	 delay_timer(event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
@@ -520,5 +525,5 @@ try {
 	if (incoming.SendErr(handeshake_response_sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			     "Lua error"sv))
-	    delete this;
+		SafeDelete();
 }

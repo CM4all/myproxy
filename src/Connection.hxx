@@ -44,6 +44,11 @@ class Connection final
 	DeferEvent defer_start_handler;
 
 	/**
+	 * Move the destruction into a safe stack frame.
+	 */
+	DeferEvent defer_delete;
+
+	/**
 	 * Used to insert delay in the connection: it gets fired after the
 	 * delay is over.  It re-enables parsing and forwarding client
 	 * input.
@@ -114,6 +119,22 @@ public:
 	}
 
 private:
+	bool IsStale() const noexcept {
+		return defer_delete.IsPending();
+	}
+
+	void SafeDelete() noexcept {
+		defer_start_handler.Cancel();
+		delay_timer.Cancel();
+		incoming.Close();
+
+		if (connect.IsPending())
+			connect.Cancel();
+
+		defer_delete.Schedule();
+		outgoing.reset();
+	}
+
 	bool IsDelayed() const noexcept {
 		return delay_timer.IsPending();
 	}
@@ -130,6 +151,10 @@ private:
 
 	Result OnChangeUser(uint_least8_t sequence_id,
 			    std::span<const std::byte> payload);
+
+	void OnDeferredDelete() noexcept {
+		delete this;
+	}
 
 	void OnDeferredStartHandler() noexcept;
 

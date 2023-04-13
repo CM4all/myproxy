@@ -1,7 +1,6 @@
 project('CM4all MyProxy', 'cpp', version: '0.1',
   meson_version: '>= 0.56',
   default_options: [
-    'c_std=c11',
     'cpp_std=c++2a',
     'warning_level=3',
   ],
@@ -89,9 +88,7 @@ test_cxxflags = test_common_flags + [
   '-Winconsistent-missing-destructor-override',
 ]
 
-add_global_arguments(common_flags, language: 'c')
 add_global_arguments(common_flags, language: 'cpp')
-
 add_global_arguments(compiler.get_supported_arguments(test_global_cxxflags), language: 'cpp')
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 

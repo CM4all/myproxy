@@ -31,6 +31,7 @@ test_common_flags = [
   '-Wshadow',
   '-Wundef',
   '-Wunused',
+  '-Wvla',
   '-Wwrite-strings',
 
   # clang specific warning options:
@@ -75,12 +76,16 @@ test_cxxflags = test_common_flags + [
   '-fno-threadsafe-statics',
   '-fmerge-all-constants',
 
+  '-Wcomma-subscript',
+  '-Wextra-semi',
+  '-Wmismatched-tags',
+  '-Woverloaded-virtual',
+  '-Wsign-promo',
+  '-Wvolatile',
+  '-Wvirtual-inheritance',
+
   # a vtable without a dtor is just fine
   '-Wno-non-virtual-dtor',
-
-  # the only warnings we got from this are from formatted error
-  # messages, and their truncation is harmless
-  '-Wno-format-truncation',
 
   # clang specific warning options:
   '-Wcomma',

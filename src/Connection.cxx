@@ -177,8 +177,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	handeshake_response_sequence_id = sequence_id;
 
-	coroutine = InvokeLuaHandshakeResponse();
-	defer_start_handler.Schedule();
+	StartCoroutine(InvokeLuaHandshakeResponse());
 	return Result::IGNORE;
 }
 
@@ -452,6 +451,16 @@ Connection::Connection(EventLoop &event_loop,
 
 	/* write the handshake */
 	incoming.DeferWrite();
+}
+
+inline void
+Connection::StartCoroutine(Co::UniqueHandle<> &&_coroutine) noexcept
+{
+	assert(!coroutine);
+	assert(!defer_start_handler.IsPending());
+
+	coroutine = std::move(_coroutine);
+	defer_start_handler.Schedule();
 }
 
 inline void

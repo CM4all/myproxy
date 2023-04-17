@@ -17,7 +17,10 @@
 #include <optional>
 #include <string>
 
-namespace Co { class SimpleTask; }
+namespace Co {
+template<typename Promise> class UniqueHandle;
+class SimpleTask;
+}
 
 class LuaHandler;
 
@@ -147,6 +150,8 @@ private:
 	}
 
 	void OnDeferredStartHandler() noexcept;
+
+	void StartCoroutine(Co::UniqueHandle<void> &&_coroutine) noexcept;
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;

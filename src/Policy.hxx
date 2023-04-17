@@ -28,14 +28,6 @@ Event::Duration
 policy_login(const char *user);
 
 /**
- * A user sends a SQL statement.
- *
- * @return the number of milliseconds this operation should be delayed
- */
-Event::Duration
-policy_execute(const char *user);
-
-/**
  * Submit the time it took the MySQL server to execute a SQL
  * statement.
  *

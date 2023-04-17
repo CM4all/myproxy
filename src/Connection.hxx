@@ -8,7 +8,7 @@
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
 #include "lua/Value.hxx"
-#include "co/UniqueHandle.hxx"
+#include "co/InvokeTask.hxx"
 #include "event/DeferEvent.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "util/IntrusiveList.hxx"
@@ -16,11 +16,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-
-namespace Co {
-template<typename Promise> class UniqueHandle;
-class SimpleTask;
-}
 
 class LuaHandler;
 
@@ -39,7 +34,7 @@ class Connection final
 	/**
 	 * The C++20 coroutine that currently executes the handler.
 	 */
-	Co::UniqueHandle<> coroutine;
+	Co::InvokeTask coroutine;
 
 	/**
 	 * Launches the Lua handler.
@@ -132,7 +127,7 @@ private:
 		return coroutine;
 	}
 
-	Co::SimpleTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
+	Co::InvokeTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
@@ -149,7 +144,8 @@ private:
 
 	void OnDeferredStartHandler() noexcept;
 
-	void StartCoroutine(Co::UniqueHandle<void> &&_coroutine) noexcept;
+	void OnCoroutineComplete(std::exception_ptr error) noexcept;
+	void StartCoroutine(Co::InvokeTask &&_coroutine) noexcept;
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;

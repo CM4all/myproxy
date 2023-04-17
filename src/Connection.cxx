@@ -19,7 +19,6 @@
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
-#include "co/SimpleTask.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
@@ -452,7 +451,7 @@ Connection::Connection(EventLoop &event_loop,
 }
 
 inline void
-Connection::StartCoroutine(Co::UniqueHandle<> &&_coroutine) noexcept
+Connection::StartCoroutine(Co::InvokeTask &&_coroutine) noexcept
 {
 	assert(!coroutine);
 	assert(!defer_start_handler.IsPending());
@@ -462,15 +461,23 @@ Connection::StartCoroutine(Co::UniqueHandle<> &&_coroutine) noexcept
 }
 
 inline void
+Connection::OnCoroutineComplete(std::exception_ptr error) noexcept
+{
+	if (error) {
+		PrintException(error);
+		SafeDelete();
+	}
+}
+
+inline void
 Connection::OnDeferredStartHandler() noexcept
 {
 	assert(coroutine);
-	assert(!coroutine->done());
 
-	coroutine->resume();
+	coroutine.Start(BIND_THIS_METHOD(OnCoroutineComplete));
 }
 
-inline Co::SimpleTask
+inline Co::InvokeTask
 Connection::InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept
 try {
 	const auto main_L = GetLuaState();

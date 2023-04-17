@@ -93,8 +93,6 @@ class Connection final
 
 	std::optional<Outgoing> outgoing;
 
-	uint_least8_t handeshake_response_sequence_id;
-
 	bool got_raw_from_incoming, got_raw_from_outgoing;
 
 public:
@@ -134,7 +132,7 @@ private:
 		return coroutine;
 	}
 
-	Co::SimpleTask InvokeLuaHandshakeResponse() noexcept;
+	Co::SimpleTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);

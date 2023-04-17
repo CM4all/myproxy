@@ -175,9 +175,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.handshake_response = true;
 
-	handeshake_response_sequence_id = sequence_id;
-
-	StartCoroutine(InvokeLuaHandshakeResponse());
+	StartCoroutine(InvokeLuaHandshakeResponse(sequence_id));
 	return Result::IGNORE;
 }
 
@@ -473,7 +471,7 @@ Connection::OnDeferredStartHandler() noexcept
 }
 
 inline Co::SimpleTask
-Connection::InvokeLuaHandshakeResponse() noexcept
+Connection::InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept
 try {
 	const auto main_L = GetLuaState();
 	const Lua::ScopeCheckStack check_main_stack{main_L};
@@ -497,7 +495,7 @@ try {
 	co_await Lua::CoAwaitable{thread, L, 2};
 
 	if (auto *err = CheckLuaErrAction(L, -1)) {
-		incoming.SendErr(handeshake_response_sequence_id + 1,
+		incoming.SendErr(sequence_id + 1,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 				 err->msg);
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
@@ -512,7 +510,7 @@ try {
 } catch (...) {
 	PrintException(std::current_exception());
 
-	if (incoming.SendErr(handeshake_response_sequence_id + 1,
+	if (incoming.SendErr(sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			     "Lua error"sv))
 		SafeDelete();

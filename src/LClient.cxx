@@ -8,7 +8,6 @@
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
-#include "lua/Value.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
@@ -19,35 +18,16 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <sys/socket.h> // for struct ucred
-
-class LClient {
-	Lua::Value address;
-
-	/**
-	 * A table containing notes created by Lua code.
-	 */
-	Lua::Value notes;
-
-	const struct ucred peer_cred;
-
-public:
-	LClient(lua_State *L, SocketDescriptor socket,
-		SocketAddress _address)
-		:address(L), notes(L),
-		 peer_cred(socket.GetPeerCredentials())
-	{
-		Lua::NewSocketAddress(L, _address);
-		address.Set(L, Lua::RelativeStackIndex{-1});
-		lua_pop(L, 1);
-	}
-
-	int Index(lua_State *L, const char *name);
-
-	bool HavePeerCred() const noexcept {
-		return peer_cred.pid >= 0;
-	}
-};
+inline
+LClient::LClient(lua_State *L, SocketDescriptor socket,
+		 SocketAddress _address)
+	:address(L), notes(L),
+	 peer_cred(socket.GetPeerCredentials())
+{
+	Lua::NewSocketAddress(L, _address);
+	address.Set(L, Lua::RelativeStackIndex{-1});
+	lua_pop(L, 1);
+}
 
 static constexpr char lua_client_class[] = "myproxy.client";
 typedef Lua::Class<LClient, lua_client_class> LuaClient;

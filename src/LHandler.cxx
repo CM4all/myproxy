@@ -11,7 +11,8 @@
 
 LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 	:on_connect(L),
-	 on_handshake_response(L)
+	 on_handshake_response(L),
+	 on_command_phase(L)
 {
 	const Lua::ScopeCheckStack check_stack{L};
 
@@ -36,6 +37,11 @@ LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 
 			on_handshake_response.Set(L, value_idx);
 			have_on_handshake_response = true;
+		} else if (StringIsEqual(key, "on_command_phase")) {
+			if (!lua_isfunction(L, Lua::GetStackIndex(value_idx)))
+				throw std::invalid_argument{"Value is not a function"};
+
+			on_command_phase.Set(L, value_idx);
 		} else
 			throw std::invalid_argument{"Unrecognized key"};
 	});

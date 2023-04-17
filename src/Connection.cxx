@@ -361,8 +361,7 @@ try {
 			peer.command_phase = true;
 			connection.incoming.command_phase = true;
 
-			/* now process postponed packets */
-			connection.incoming.DeferRead();
+			connection.StartCoroutine(connection.InvokeLuaCommandPhase());
 
 			return Result::FORWARD;
 
@@ -522,6 +521,37 @@ try {
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			     "Lua error"sv))
 		SafeDelete();
+}
+
+inline Co::InvokeTask
+Connection::InvokeLuaCommandPhase()
+{
+	const auto main_L = GetLuaState();
+	const Lua::ScopeCheckStack check_main_stack{main_L};
+
+	Lua::Thread thread{main_L};
+
+	/* create a new thread for the coroutine */
+	const auto L = thread.Create(main_L);
+	/* pop the new thread from the main stack */
+	lua_pop(main_L, 1);
+
+	handler->PushOnCommandPhase(L);
+
+	if (!lua_isnil(L, -1)) {
+		lua_client.Push(L);
+
+		co_await Lua::CoAwaitable{thread, L, 1};
+
+		if (lua_isnil(L, -1)) {
+			// OK
+			// TODO implement more actions
+		} else
+			throw std::invalid_argument{"Bad return value"};
+	}
+
+	/* now process postponed packets */
+	incoming.DeferRead();
 }
 
 inline Co::InvokeTask

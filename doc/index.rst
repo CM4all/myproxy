@@ -49,6 +49,8 @@ The second parameter is a table containing callback functions:
   client object which can be inspected and the contents of the
   ``HandshakeResponse`` packet received from the client.
 
+- ``on_command_phase(client)`` is invoked after successful login.
+
 It is important that callback functions finish quickly.  They must
 never block, because this would block the whole daemon process.  This
 means they must not do any network I/O, launch child processes, and

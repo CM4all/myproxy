@@ -132,6 +132,7 @@ private:
 
 	Co::InvokeTask InvokeLuaConnect();
 	Co::InvokeTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
+	Co::InvokeTask InvokeLuaCommandPhase();
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);

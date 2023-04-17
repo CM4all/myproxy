@@ -9,6 +9,7 @@
 class LuaHandler {
 	Lua::Value on_connect;
 	Lua::Value on_handshake_response;
+	Lua::Value on_command_phase;
 
 public:
 	LuaHandler(lua_State *L, Lua::StackIndex idx);
@@ -23,5 +24,9 @@ public:
 
 	void PushOnHandshakeResponse(lua_State *L) {
 		on_handshake_response.Push(L);
+	}
+
+	void PushOnCommandPhase(lua_State *L) {
+		on_command_phase.Push(L);
 	}
 };

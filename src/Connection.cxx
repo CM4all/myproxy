@@ -148,9 +148,16 @@ void
 Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 {
 	assert(!outgoing);
+	assert(incoming.handshake);
+	assert(incoming.handshake_response);
+	assert(!incoming.command_phase);
 
 	PrintException(e);
-	SafeDelete();
+
+	if (incoming.SendErr(2,
+			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			     "Connection error"sv))
+		SafeDelete();
 }
 
 inline MysqlHandler::Result

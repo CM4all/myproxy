@@ -104,7 +104,6 @@ inc = include_directories(
   'libcommon/src',
 )
 
-libcommon_enable_c = false
 libcommon_enable_boost = false
 
 subdir('libcommon/src/util')

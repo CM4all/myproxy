@@ -20,14 +20,6 @@ void
 policy_deinit();
 
 /**
- * A user attempts to log in.
- *
- * @return the number of milliseconds this operation should be delayed
- */
-Event::Duration
-policy_login(const char *user);
-
-/**
  * Submit the time it took the MySQL server to execute a SQL
  * statement.
  *

@@ -173,10 +173,6 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	auth_response = packet.auth_response;
 	database = packet.database;
 
-	const auto delay = policy_login(user.c_str());
-	if (delay.count() > 0)
-		Delay(delay);
-
 	incoming.handshake_response = true;
 
 	handeshake_response_sequence_id = sequence_id;
@@ -439,12 +435,6 @@ Connection::Outgoing::Outgoing(Connection &_connection,
 {
 }
 
-inline void
-Connection::OnDelayTimer() noexcept
-{
-	incoming.Read();
-}
-
 Connection::Connection(EventLoop &event_loop,
 		       std::shared_ptr<LuaHandler> _handler,
 		       UniqueSocketDescriptor fd,
@@ -453,7 +443,6 @@ Connection::Connection(EventLoop &event_loop,
 	 lua_client(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
 	 defer_delete(event_loop, BIND_THIS_METHOD(OnDeferredDelete)),
-	 delay_timer(event_loop, BIND_THIS_METHOD(OnDelayTimer)),
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
@@ -463,14 +452,6 @@ Connection::Connection(EventLoop &event_loop,
 
 	/* write the handshake */
 	incoming.DeferWrite();
-}
-
-void
-Connection::Delay(Event::Duration duration) noexcept
-{
-	incoming.UnscheduleRead();
-
-	delay_timer.Schedule(duration);
 }
 
 inline void

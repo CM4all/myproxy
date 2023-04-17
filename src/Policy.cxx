@@ -14,13 +14,6 @@ policy_deinit()
 {
 }
 
-Event::Duration
-policy_login(const char *user)
-{
-	(void)user;
-	return {};
-}
-
 void
 policy_duration(const char *user, Event::Duration duration)
 {

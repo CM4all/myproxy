@@ -48,13 +48,6 @@ class Connection final
 	 */
 	DeferEvent defer_delete;
 
-	/**
-	 * Used to insert delay in the connection: it gets fired after the
-	 * delay is over.  It re-enables parsing and forwarding client
-	 * input.
-	 */
-	CoarseTimerEvent delay_timer;
-
 	std::string user, auth_response, database;
 
 	/**
@@ -110,7 +103,7 @@ public:
 
 	[[gnu::const]]
 	auto &GetEventLoop() const noexcept {
-		return delay_timer.GetEventLoop();
+		return defer_start_handler.GetEventLoop();
 	}
 
 	[[gnu::const]]
@@ -125,7 +118,6 @@ private:
 
 	void SafeDelete() noexcept {
 		defer_start_handler.Cancel();
-		delay_timer.Cancel();
 		incoming.Close();
 
 		if (connect.IsPending())
@@ -136,12 +128,10 @@ private:
 	}
 
 	bool IsDelayed() const noexcept {
-		return delay_timer.IsPending() || coroutine;
+		return coroutine;
 	}
 
 	Co::SimpleTask InvokeLuaHandshakeResponse() noexcept;
-
-	void Delay(Event::Duration duration) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
@@ -157,12 +147,6 @@ private:
 	}
 
 	void OnDeferredStartHandler() noexcept;
-
-	/**
-	 * Called when the artificial delay is over, and restarts the
-	 * transfer from the client to the server->
-	 */
-	void OnDelayTimer() noexcept;
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;

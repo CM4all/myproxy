@@ -27,7 +27,7 @@ public:
 		SocketAddress _address);
 
 	static void Register(lua_State *L);
-	static void New(lua_State *L, SocketDescriptor socket, SocketAddress address);
+	static LClient *New(lua_State *L, SocketDescriptor socket, SocketAddress address);
 
 private:
 	int Index(lua_State *L, const char *name);

@@ -449,7 +449,7 @@ Connection::Connection(EventLoop &event_loop,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	LClient::New(GetLuaState(), incoming.GetSocket(), address);
+	lua_client_ptr = LClient::New(GetLuaState(), incoming.GetSocket(), address);
 	lua_client.Set(GetLuaState(), Lua::RelativeStackIndex{-1});
 	lua_pop(GetLuaState(), 1);
 

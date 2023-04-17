@@ -18,6 +18,7 @@
 #include <string>
 
 class LuaHandler;
+class LClient;
 
 /**
  * Manage connections from MySQL clients.
@@ -30,6 +31,8 @@ class Connection final
 	const std::shared_ptr<LuaHandler> handler;
 
 	Lua::Value lua_client;
+
+	LClient *lua_client_ptr;
 
 	/**
 	 * The C++20 coroutine that currently executes the handler.

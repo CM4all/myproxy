@@ -174,8 +174,8 @@ LClient::Register(lua_State *L)
 	lua_pop(L, 1);
 }
 
-void
+LClient *
 LClient::New(lua_State *L, SocketDescriptor socket, SocketAddress address)
 {
-	LuaClient::New(L, L, socket, address);
+	return LuaClient::New(L, L, socket, address);
 }

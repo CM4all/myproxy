@@ -94,7 +94,7 @@ Connection::OnPeerWrite()
 	if (!incoming.handshake) {
 		static constexpr std::array<std::byte, 0x15> auth_plugin_data{};
 
-		auto s = Mysql::MakeHandshakeV10("5.7.30"sv,
+		auto s = Mysql::MakeHandshakeV10(lua_client_ptr->GetServerVersion(),
 						 "mysql_clear_password"sv,
 						 auth_plugin_data);
 		if (!incoming.Send(s.Finish()))
@@ -314,6 +314,8 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	const auto packet = Mysql::ParseHandshake(payload);
 
+	connection.lua_client_ptr->SetServerVersion(packet.server_version);
+
 	peer.capabilities = packet.capabilities;
 
 	fmt::print("handshake server_version='{}'\n", packet.server_version);
@@ -449,7 +451,8 @@ Connection::Connection(EventLoop &event_loop,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	lua_client_ptr = LClient::New(GetLuaState(), incoming.GetSocket(), address);
+	lua_client_ptr = LClient::New(GetLuaState(), incoming.GetSocket(), address,
+				      "5.7.30"sv);
 	lua_client.Set(GetLuaState(), Lua::RelativeStackIndex{-1});
 	lua_pop(GetLuaState(), 1);
 

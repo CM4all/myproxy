@@ -20,8 +20,11 @@ extern "C" {
 
 inline
 LClient::LClient(lua_State *L, SocketDescriptor socket,
-		 SocketAddress _address)
-	:address(L), notes(L),
+		 SocketAddress _address,
+		 std::string_view _server_version)
+	:address(L),
+	 server_version(_server_version),
+	 notes(L),
 	 peer_cred(socket.GetPeerCredentials())
 {
 	Lua::NewSocketAddress(L, _address);
@@ -151,6 +154,9 @@ LClient::Index(lua_State *L, const char *name)
 
 		Lua::Push(L, path);
 		return 1;
+	} else if (StringIsEqual(name, "server_version")) {
+		Lua::Push(L, server_version);
+		return 1;
 	} else
 		return luaL_error(L, "Unknown attribute");
 }
@@ -164,6 +170,28 @@ LClient::_Index(lua_State *L)
 	return LuaClient::Cast(L, 1).Index(L, luaL_checkstring(L, 2));
 }
 
+inline int
+LClient::NewIndex(lua_State *L, const char *name, int value_idx)
+{
+	if (StringIsEqual(name, "server_version")) {
+		const char *new_value = luaL_checkstring(L, value_idx);
+		luaL_argcheck(L, *new_value != 0, value_idx, "Empty string not allowed");
+
+		server_version = new_value;
+		return 0;
+	} else
+		return luaL_error(L, "Unknown attribute");
+}
+
+int
+LClient::_NewIndex(lua_State *L)
+{
+	if (lua_gettop(L) != 3)
+		return luaL_error(L, "Invalid parameters");
+
+	return LuaClient::Cast(L, 1).NewIndex(L, luaL_checkstring(L, 2), 3);
+}
+
 void
 LClient::Register(lua_State *L)
 {
@@ -171,11 +199,13 @@ LClient::Register(lua_State *L)
 
 	LuaClient::Register(L);
 	SetTable(L, RelativeStackIndex{-1}, "__index", _Index);
+	SetTable(L, RelativeStackIndex{-1}, "__newindex", _NewIndex);
 	lua_pop(L, 1);
 }
 
 LClient *
-LClient::New(lua_State *L, SocketDescriptor socket, SocketAddress address)
+LClient::New(lua_State *L, SocketDescriptor socket, SocketAddress address,
+	     std::string_view server_version)
 {
-	return LuaClient::New(L, L, socket, address);
+	return LuaClient::New(L, L, socket, address, server_version);
 }

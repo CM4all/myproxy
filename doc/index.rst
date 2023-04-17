@@ -41,6 +41,8 @@ new socket, but the bind mount cannot be refreshed.
 The second parameter is a table containing callback functions:
 
 - ``on_connect(client)`` is invoked as soon as a client connects.
+  This method may collect information about this client in the
+  ``notes`` table or change the ``server_version`` attribute.
 
 - ``on_handshake_response(client, handshake_response)`` decides what
   to do with a login attempt by a client.  This function receives a
@@ -67,6 +69,12 @@ The following attributes of the ``client`` parameter can be queried:
 * :samp:`cgroup`: The control group path of the client process as
   noted in :file:`/proc/self/cgroup`,
   e.g. :file:`/user.slice/user-1000.slice/session-42.scope`
+
+* :samp:`server_version`: The server version string.  In
+  ``on_connect``, this attribute may be modified to announce a
+  different version to the client.  After a connection to the real
+  server has been established, this attribute contains the version
+  announced by that server.
 
 * :samp:`notes`: a table where the Lua script can add arbitrary
   entries

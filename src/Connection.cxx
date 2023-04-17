@@ -485,7 +485,7 @@ Connection::OnDeferredStartHandler() noexcept
 
 inline Co::InvokeTask
 Connection::InvokeLuaConnect()
-{
+try {
 	const auto main_L = GetLuaState();
 	const Lua::ScopeCheckStack check_main_stack{main_L};
 
@@ -512,6 +512,13 @@ Connection::InvokeLuaConnect()
 
 	/* write the handshake */
 	incoming.DeferWrite();
+} catch (...) {
+	PrintException(std::current_exception());
+
+	if (incoming.SendErr(0,
+			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			     "Lua error"sv))
+		SafeDelete();
 }
 
 inline Co::InvokeTask

@@ -114,7 +114,7 @@ SetupRuntimeState(lua_State *L)
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
 
 	UnregisterLuaResolver(L);
-	RegisterLuaClient(L);
+	LClient::Register(L);
 	RegisterLuaAction(L);
 }
 

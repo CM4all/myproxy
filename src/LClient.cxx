@@ -155,8 +155,8 @@ LClient::Index(lua_State *L, const char *name)
 		return luaL_error(L, "Unknown attribute");
 }
 
-static int
-LuaClientIndex(lua_State *L)
+int
+LClient::_Index(lua_State *L)
 {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameters");
@@ -165,17 +165,17 @@ LuaClientIndex(lua_State *L)
 }
 
 void
-RegisterLuaClient(lua_State *L)
+LClient::Register(lua_State *L)
 {
 	using namespace Lua;
 
 	LuaClient::Register(L);
-	SetTable(L, RelativeStackIndex{-1}, "__index", LuaClientIndex);
+	SetTable(L, RelativeStackIndex{-1}, "__index", _Index);
 	lua_pop(L, 1);
 }
 
 void
-NewLuaClient(lua_State *L, SocketDescriptor socket, SocketAddress address)
+LClient::New(lua_State *L, SocketDescriptor socket, SocketAddress address)
 {
 	LuaClient::New(L, L, socket, address);
 }

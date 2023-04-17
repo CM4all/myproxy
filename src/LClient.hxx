@@ -26,15 +26,14 @@ public:
 	LClient(lua_State *L, SocketDescriptor socket,
 		SocketAddress _address);
 
+	static void Register(lua_State *L);
+	static void New(lua_State *L, SocketDescriptor socket, SocketAddress address);
+
+private:
 	int Index(lua_State *L, const char *name);
+	static int _Index(lua_State *L);
 
 	bool HavePeerCred() const noexcept {
 		return peer_cred.pid >= 0;
 	}
 };
-
-void
-RegisterLuaClient(lua_State *L);
-
-void
-NewLuaClient(lua_State *L, SocketDescriptor socket, SocketAddress address);

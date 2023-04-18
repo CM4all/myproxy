@@ -39,6 +39,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <unistd.h> // for chdir()
 
 /**
  * A "magic" pointer used to identify our artificial "systemd" Lua

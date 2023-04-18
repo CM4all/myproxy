@@ -197,7 +197,7 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 
 		server_version = new_value;
 		return 0;
-	} else if (StringIsEqual(name, "name")) {
+	} else if (StringIsEqual(name, "account")) {
 		const char *new_value = luaL_checkstring(L, value_idx);
 
 		address.Push(L);

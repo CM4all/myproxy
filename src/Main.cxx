@@ -109,6 +109,12 @@ SetupConfigState(lua_State *L, Instance &instance)
 }
 
 static void
+LoadConfigFile(lua_State *L, const char *path)
+{
+	Lua::RunFile(L, path);
+}
+
+static void
 SetupRuntimeState(lua_State *L)
 {
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
@@ -134,7 +140,7 @@ try {
 	Instance instance;
 	SetupConfigState(instance.GetLuaState(), instance);
 
-	Lua::RunFile(instance.GetLuaState(), config.config_path);
+	LoadConfigFile(instance.GetLuaState(), config.config_path);
 
 	instance.Check();
 

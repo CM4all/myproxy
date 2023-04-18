@@ -131,7 +131,7 @@ try {
 	setvbuf(stdout, nullptr, _IOLBF, 0);
 	setvbuf(stderr, nullptr, _IOLBF, 0);
 
-	Instance instance{config};
+	Instance instance;
 	SetupConfigState(instance.GetLuaState(), instance);
 
 	Lua::RunFile(instance.GetLuaState(), config.config_path);

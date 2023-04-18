@@ -18,9 +18,8 @@ extern "C" {
 
 #include <sys/socket.h>
 
-Instance::Instance(const Config &_config)
-	:config(_config),
-	 lua_state(luaL_newstate())
+Instance::Instance()
+	:lua_state(luaL_newstate())
 {
 	shutdown_listener.Enable();
 }

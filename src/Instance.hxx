@@ -13,11 +13,7 @@
 
 #include <forward_list>
 
-struct Config;
-
 class Instance {
-	const Config &config;
-
 	EventLoop event_loop;
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
@@ -27,11 +23,7 @@ class Instance {
 	std::forward_list<MyProxyListener> listeners;
 
 public:
-	explicit Instance(const Config &config);
-
-	const auto &GetConfig() const noexcept {
-		return config;
-	}
+	explicit Instance();
 
 	auto &GetEventLoop() noexcept {
 		return event_loop;

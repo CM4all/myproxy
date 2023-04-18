@@ -27,7 +27,7 @@ class LClient {
 
 	const struct ucred peer_cred;
 
-	const std::string name_;
+	std::string name_;
 
 public:
 	LClient(lua_State *L, SocketDescriptor socket, SocketAddress _address,

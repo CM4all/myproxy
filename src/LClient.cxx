@@ -197,6 +197,16 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 
 		server_version = new_value;
 		return 0;
+	} else if (StringIsEqual(name, "name")) {
+		const char *new_value = luaL_checkstring(L, value_idx);
+
+		address.Push(L);
+		name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
+		lua_pop(L, 1);
+
+		if (*new_value != 0)
+			name_ += fmt::format(" \"{}\"", new_value);
+		return 0;
 	} else
 		return luaL_error(L, "Unknown attribute");
 }

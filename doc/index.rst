@@ -68,6 +68,10 @@ The following attributes of the ``client`` parameter can be queried:
 
 * :samp:`gid`: The client's group id.
 
+* :samp:`name`: Set this to set the name of this client to be used as
+  log prefix.  For example, you can set a symbolic identifier for the
+  user account.
+
 * :samp:`cgroup`: The control group path of the client process as
   noted in :file:`/proc/self/cgroup`,
   e.g. :file:`/user.slice/user-1000.slice/session-42.scope`

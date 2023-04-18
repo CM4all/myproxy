@@ -29,6 +29,8 @@ class LClient {
 
 	std::string name_;
 
+	std::string account;
+
 public:
 	LClient(lua_State *L, SocketDescriptor socket, SocketAddress _address,
 		std::string_view server_version);

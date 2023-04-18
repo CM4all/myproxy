@@ -134,6 +134,12 @@ LClient::Index(lua_State *L, const char *name)
 	if (StringIsEqual(name, "address")) {
 		address.Push(L);
 		return 1;
+	} else if (StringIsEqual(name, "account")) {
+		if (!account.empty())
+			Lua::Push(L, account);
+		else
+			lua_pushnil(L);
+		return 1;
 	} else if (StringIsEqual(name, "notes")) {
 		notes.Push(L);
 
@@ -199,13 +205,14 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 		return 0;
 	} else if (StringIsEqual(name, "account")) {
 		const char *new_value = luaL_checkstring(L, value_idx);
+		account = new_value;
 
 		address.Push(L);
 		name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
 		lua_pop(L, 1);
 
-		if (*new_value != 0)
-			name_ += fmt::format(" \"{}\"", new_value);
+		if (!account.empty())
+			name_ += fmt::format(" \"{}\"", account);
 		return 0;
 	} else
 		return luaL_error(L, "Unknown attribute");

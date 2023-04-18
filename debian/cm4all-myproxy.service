@@ -13,9 +13,6 @@ CPUSchedulingPolicy=batch
 # too fine.
 TimerSlackNSec=10ms
 
-# enable crash dumps
-LimitCORE=infinity
-
 # Resource limits
 MemoryMax=1G
 TasksMax=16

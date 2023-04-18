@@ -516,6 +516,12 @@ try {
 		if (lua_isnil(L, -1)) {
 			// OK
 			// TODO implement more actions
+		} else if (auto *err = CheckLuaErrAction(L, -1)) {
+			if (incoming.SendErr(0,
+					     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+					     err->msg))
+				SafeDelete();
+			co_return;
 		} else
 			throw std::invalid_argument{"Bad return value"};
 	}

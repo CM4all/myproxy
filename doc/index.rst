@@ -44,6 +44,8 @@ The second parameter is a table containing callback functions:
   This method may collect information about this client in the
   ``notes`` table or change the ``server_version`` attribute.
 
+  To reject the client, return ``client:err("error message")``.
+
 - ``on_handshake_response(client, handshake_response)`` decides what
   to do with a login attempt by a client.  This function receives a
   client object which can be inspected and the contents of the

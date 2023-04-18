@@ -127,7 +127,9 @@ LoadConfigFile(lua_State *L, const char *path)
 {
 	ChdirContainingDirectory(path);
 	Lua::RunFile(L, path);
-	chdir("/");
+
+	if (chdir("/") < 0)
+		throw FmtErrno("Failed to change to {}", "/");
 }
 
 static void

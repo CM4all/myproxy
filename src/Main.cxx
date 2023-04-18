@@ -17,6 +17,7 @@
 #include "lua/net/SocketAddress.hxx"
 #include "lua/event/Init.hxx"
 #include "lib/fmt/RuntimeError.hxx"
+#include "lib/fmt/SystemError.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
@@ -109,9 +110,23 @@ SetupConfigState(lua_State *L, Instance &instance)
 }
 
 static void
+ChdirContainingDirectory(const char *path)
+{
+	const char *slash = strrchr(path, '/');
+	if (slash == nullptr || slash == path)
+		return;
+
+	const std::string parent{path, slash};
+	if (chdir(parent.c_str()) < 0)
+		throw FmtErrno("Failed to change to {}", parent);
+}
+
+static void
 LoadConfigFile(lua_State *L, const char *path)
 {
+	ChdirContainingDirectory(path);
 	Lua::RunFile(L, path);
+	chdir("/");
 }
 
 static void

@@ -31,10 +31,7 @@ l_mysql_resolve(lua_State *L)
 		return 1;
 	}
 
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
+	static constexpr auto hints = MakeAddrInfo(0, AF_UNSPEC, SOCK_STREAM);
 
 	AddressInfoList ai;
 

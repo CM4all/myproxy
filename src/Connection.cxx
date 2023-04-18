@@ -16,15 +16,13 @@
 #include "MysqlMakePacket.hxx"
 #include "MysqlAuth.hxx"
 #include "Policy.hxx"
+#include "lib/fmt/ExceptionFormatter.hxx"
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
-#include "util/PrintException.hxx"
-
-#include <fmt/core.h>
 
 #include <cassert>
 #include <cstring>
@@ -76,7 +74,7 @@ Connection::Outgoing::OnPeerClosed() noexcept
 void
 Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 {
-	PrintException(e);
+	fmt::print(stderr, "[{}] {}\n", connection.GetName(), e);
 	connection.SafeDelete();
 }
 
@@ -132,7 +130,7 @@ Connection::OnPeerWrite()
 void
 Connection::OnPeerError(std::exception_ptr e) noexcept
 {
-	PrintException(e);
+	fmt::print(stderr, "[{}] {}\n", GetName(), e);
 	SafeDelete();
 }
 
@@ -152,7 +150,7 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	assert(incoming.handshake_response);
 	assert(!incoming.command_phase);
 
-	PrintException(e);
+	fmt::print(stderr, "[{}] {}\n", GetName(), e);
 
 	if (incoming.SendErr(2,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
@@ -173,7 +171,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.capabilities = packet.capabilities;
 
-	fmt::print("login user='{}' database='{}'\n", packet.user, packet.database);
+	fmt::print("[{}] login user='{}' database='{}'\n", GetName(), packet.user, packet.database);
 
 	user = packet.user;
 	auth_response = packet.auth_response;
@@ -272,11 +270,11 @@ try {
 
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
-	fmt::print(stderr, "Malformed packet from client\n");
+	fmt::print(stderr, "[{}] Malformed packet from client\n", GetName());
 	SafeDelete();
 	return Result::CLOSED;
 } catch (...) {
-	PrintException(std::current_exception());
+	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 	SafeDelete();
 	return Result::CLOSED;
 }
@@ -318,7 +316,8 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	peer.capabilities = packet.capabilities;
 
-	fmt::print("handshake server_version='{}'\n", packet.server_version);
+	fmt::print("[{}] handshake server_version='{}'\n",
+		   connection.GetName(), packet.server_version);
 
 	const auto &action = *connection.connect_action;
 
@@ -394,21 +393,24 @@ try {
 
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
-	fmt::print(stderr, "Malformed packet from server\n");
+	fmt::print(stderr, "[{}] Malformed packet from server\n",
+		   connection.GetName());
 	connection.SafeDelete();
 	return Result::CLOSED;
 } catch (const Mysql::ErrPacket &packet) {
 	if (!packet.error_message.empty())
-		fmt::print(stderr, "MySQL error: '{}' ({})\n",
+		fmt::print(stderr, "[{}] MySQL error: '{}' ({})\n",
+			   connection.GetName(),
 			   packet.error_message,
 			   static_cast<uint_least16_t>(packet.error_code));
 	else
-		fmt::print(stderr, "MySQL error: {}\n",
+		fmt::print(stderr, "[{}] MySQL error: {}\n",
+			   connection.GetName(),
 			   static_cast<uint_least16_t>(packet.error_code));
 	connection.SafeDelete();
 	return Result::CLOSED;
 } catch (...) {
-	PrintException(std::current_exception());
+	fmt::print(stderr, "[{}] {}\n", connection.GetName(), std::current_exception());
 	connection.SafeDelete();
 	return Result::CLOSED;
 }
@@ -458,6 +460,12 @@ Connection::Connection(EventLoop &event_loop,
 	StartCoroutine(InvokeLuaConnect());
 }
 
+std::string_view
+Connection::GetName() const noexcept
+{
+	return lua_client_ptr->GetName();
+}
+
 inline void
 Connection::StartCoroutine(Co::InvokeTask &&_coroutine) noexcept
 {
@@ -472,7 +480,7 @@ inline void
 Connection::OnCoroutineComplete(std::exception_ptr error) noexcept
 {
 	if (error) {
-		PrintException(error);
+		fmt::print(stderr, "[{}] {}\n", GetName(), error);
 		SafeDelete();
 	}
 }
@@ -515,7 +523,7 @@ try {
 	/* write the handshake */
 	incoming.DeferWrite();
 } catch (...) {
-	PrintException(std::current_exception());
+	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
 	if (incoming.SendErr(0,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
@@ -592,7 +600,7 @@ try {
 	} else
 		throw std::invalid_argument{"Bad return value"};
 } catch (...) {
-	PrintException(std::current_exception());
+	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
 	if (incoming.SendErr(sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,

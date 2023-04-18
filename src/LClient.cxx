@@ -11,11 +11,28 @@
 #include "lua/net/SocketAddress.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
+#include "net/ToString.hxx"
 #include "io/linux/ProcCgroup.hxx"
 #include "util/StringAPI.hxx"
 
 extern "C" {
 #include <lauxlib.h>
+}
+
+#include <fmt/core.h>
+
+[[gnu::pure]]
+static std::string
+MakeClientName(SocketAddress address, const struct ucred &cred) noexcept
+{
+	if (cred.pid >= 0)
+		return fmt::format("pid={} uid={}", cred.pid, cred.uid);
+
+	char buffer[256];
+	if (ToString(buffer, sizeof(buffer), address))
+		return buffer;
+
+	return "?";
 }
 
 inline
@@ -25,7 +42,8 @@ LClient::LClient(lua_State *L, SocketDescriptor socket,
 	:address(L),
 	 server_version(_server_version),
 	 notes(L),
-	 peer_cred(socket.GetPeerCredentials())
+	 peer_cred(socket.GetPeerCredentials()),
+	 name_(MakeClientName(_address, peer_cred))
 {
 	Lua::NewSocketAddress(L, _address);
 	address.Set(L, Lua::RelativeStackIndex{-1});

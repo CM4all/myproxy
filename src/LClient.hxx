@@ -27,6 +27,8 @@ class LClient {
 
 	const struct ucred peer_cred;
 
+	const std::string name_;
+
 public:
 	LClient(lua_State *L, SocketDescriptor socket, SocketAddress _address,
 		std::string_view server_version);
@@ -34,6 +36,10 @@ public:
 	static void Register(lua_State *L);
 	static LClient *New(lua_State *L, SocketDescriptor socket, SocketAddress address,
 			    std::string_view server_version);
+
+	std::string_view GetName() const noexcept {
+		return name_;
+	}
 
 	std::string_view GetServerVersion() const noexcept {
 		return server_version;

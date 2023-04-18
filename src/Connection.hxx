@@ -110,6 +110,9 @@ public:
 		return lua_client.GetState();
 	}
 
+	[[gnu::pure]]
+	std::string_view GetName() const noexcept;
+
 private:
 	bool IsStale() const noexcept {
 		return defer_delete.IsPending();

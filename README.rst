@@ -14,6 +14,7 @@ You need:
 - a C++20 compliant compiler (e.g. GCC or clang)
 - `Meson 0.56 <http://mesonbuild.com/>`__ and `Ninja <https://ninja-build.org/>`__
 - `libfmt <https://fmt.dev/>`__
+- `libsodium <https://www.libsodium.org/>`__
 - `LuaJIT <http://luajit.org/>`__
 - `libpq <https://www.postgresql.org/>`__ for PostgreSQL support in
   Lua code (optional)

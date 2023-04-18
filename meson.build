@@ -108,6 +108,7 @@ libcommon_enable_boost = false
 
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
+subdir('libcommon/src/lib/sodium')
 subdir('libcommon/src/io')
 subdir('libcommon/src/io/linux')
 subdir('libcommon/src/system')
@@ -133,6 +134,7 @@ configure_file(output: 'config.h', configuration: conf)
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
+  'src/Cluster.cxx',
   'src/LResolver.cxx',
   'src/Policy.cxx',
   'src/MysqlReader.cxx',
@@ -159,6 +161,7 @@ executable(
     lua_net_dep,
     lua_event_dep,
     pg_dep,
+    sodium_dep,
     dependency('libmd'), # SHA-1 implementation for "mysql_native_password"
   ],
   install: true,

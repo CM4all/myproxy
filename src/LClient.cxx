@@ -3,6 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "LClient.hxx"
+#include "Cluster.hxx"
 #include "Action.hxx"
 #include "LAction.hxx"
 #include "lua/Class.hxx"
@@ -96,9 +97,14 @@ try {
 	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
 
+	auto &client = LuaClient::Cast(L, 1);
+
 	ConnectAction action;
 
-	action.address = Lua::ToSocketAddress(L, 2, 3306);
+	if (auto *cluster = Cluster::Check(L, 2))
+		action.address = cluster->Pick(client.GetAccount());
+	else
+		action.address = Lua::ToSocketAddress(L, 2, 3306);
 
 	try {
 		Lua::ForEach(L, 3, [L, &action](auto key_idx, auto value_idx){

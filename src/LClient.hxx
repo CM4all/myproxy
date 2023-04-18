@@ -43,6 +43,10 @@ public:
 		return name_;
 	}
 
+	std::string_view GetAccount() const noexcept {
+		return account;
+	}
+
 	std::string_view GetServerVersion() const noexcept {
 		return server_version;
 	}

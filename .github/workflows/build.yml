@@ -34,7 +34,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.type }}
       - name: Install dependencies
-        run: sudo apt install -y meson g++-10 libfmt-dev libsystemd-dev libpq-dev libmd-dev libluajit-5.1-dev
+        run: sudo apt install -y meson g++-10 libfmt-dev libsystemd-dev libpq-dev libmd-dev libsodium-dev libluajit-5.1-dev
       - name: Meson Build
         uses: BSFishy/meson-build@v1.0.3
         with:

@@ -71,7 +71,7 @@ The following attributes of the ``client`` parameter can be queried:
 * :samp:`gid`: The client's group id.
 
 * :samp:`account`: Set this to an identifier of the user account.
-  This will be used in the log prefix.
+  This will be used in the log prefix and for choosing a cluster node.
 
 * :samp:`cgroup`: The control group path of the client process as
   noted in :file:`/proc/self/cgroup`,
@@ -96,7 +96,7 @@ these actions:
 * ``client:connect(address, handshake_response)`` connects to the
   specified address and proxies all queries to it.  Parameters:
 
-  - ``address``: a ``SocketAddress`` object.
+  - ``address``: a ``SocketAddress`` or a ``mysql_cluster`` object.
 
   - ``handshake_response``: a table containing the keys ``user``,
     ``password`` and ``database``.  The ``handshake_response``
@@ -133,6 +133,18 @@ These examples do the following:
 - convert a path string to a "local" socket address
 - convert a name to an abstract "local" socket address (prefix ``@``
   is converted to a null byte, making the address "abstract")
+
+If you have a cluster of replicated MySQL servers, you can construct
+it with ``mysql_cluster()``, passing an array of addresses to it::
+
+  cluster = mysql_cluster({
+    '192.168.0.2',
+    '192.168.0.3',
+  })
+
+When using such a cluster with ``client:connect()``, myproxy will
+automatically choose a node using consistent hashing with the
+``client.account`` attribute.
 
 
 PostgreSQL Client

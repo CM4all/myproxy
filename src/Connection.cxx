@@ -305,6 +305,17 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
+static auto
+MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
+			uint_least32_t client_flag,
+			const ConnectAction &action)
+{
+	return Mysql::MakeHandshakeResponse41(handshake, client_flag,
+					      action.user,
+					      action.password,
+					      action.database);
+}
+
 MysqlHandler::Result
 Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
@@ -321,10 +332,8 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	const auto &action = *connection.connect_action;
 
-	auto s = Mysql::MakeHandshakeResponse41(packet, connection.incoming.capabilities,
-						action.user,
-						action.password,
-						action.database);
+	auto s = MakeHandshakeResponse41(packet, connection.incoming.capabilities,
+					 action);
 	if (!peer.Send(s.Finish()))
 		return Result::CLOSED;
 

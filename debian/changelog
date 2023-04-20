@@ -1,6 +1,7 @@
 cm4all-myproxy (0.2) unstable; urgency=low
 
   * allow passing SocketAddress to mysql_cluster()
+  * lua: support PostgreSQL arrays
 
  --   
 

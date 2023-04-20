@@ -9,6 +9,7 @@
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
+#include "lua/StringView.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
@@ -19,6 +20,8 @@
 extern "C" {
 #include <lauxlib.h>
 }
+
+#include <sha1.h> // for SHA1_DIGEST_LENGTH
 
 #include <fmt/core.h>
 
@@ -78,6 +81,16 @@ CheckString(lua_State *L, auto _idx, const char *extramsg)
 	return lua_tostring(L, idx);
 }
 
+static std::string_view
+CheckStringView(lua_State *L, auto _idx, const char *extramsg)
+{
+	const int idx = Lua::GetStackIndex(_idx);
+	if (!lua_isstring(L, idx))
+		throw ArgError{extramsg};
+
+	return Lua::ToStringView(L, idx);
+}
+
 static void
 Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 {
@@ -85,7 +98,13 @@ Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 		action.user = CheckString(L, value_idx, "Bad value type");
 	else if (StringIsEqual(name, "password"))
 		action.password = CheckString(L, value_idx, "Bad value type");
-	else if (StringIsEqual(name, "database"))
+	else if (StringIsEqual(name, "password_sha1")) {
+		const auto password_sha1 = CheckStringView(L, value_idx, "Bad value type");
+		if (password_sha1.length() != SHA1_DIGEST_LENGTH)
+			luaL_error(L, "Bad SHA1 length");
+
+		action.password_sha1 = password_sha1;
+	} else if (StringIsEqual(name, "database"))
 		action.database = CheckString(L, value_idx, "Bad value type");
 	else
 		throw ArgError{"Unknown attribute"};

@@ -23,6 +23,7 @@
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
+#include "util/SpanCast.hxx"
 
 #include <cassert>
 #include <cstring>
@@ -310,6 +311,15 @@ MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
 			uint_least32_t client_flag,
 			const ConnectAction &action)
 {
+	if (!action.password_sha1.empty()) {
+		assert(action.password_sha1.size() == SHA1_DIGEST_LENGTH);
+
+		const std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1{AsBytes(action.password_sha1)};
+		return Mysql::MakeHandshakeResponse41SHA1(handshake, client_flag,
+							  action.user, password_sha1,
+							  action.database);
+	}
+
 	return Mysql::MakeHandshakeResponse41(handshake, client_flag,
 					      action.user,
 					      action.password,

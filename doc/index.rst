@@ -103,6 +103,12 @@ these actions:
     parameter passed to the callback function can be used here (the
     function is allowed to modify it).
 
+    Instead of ``password``, ``password_sha1`` can be set to a string
+    containing the SHA1 digest (20 bytes, raw, not hex).  This
+    requires a server which supports ``mysql_native_password``, and
+    works because that authentication method does not require knowing
+    the cleartext password, only its SHA1 digest.
+
 * ``client:err("Error message")`` fails the handshake with the
   specified message.
 

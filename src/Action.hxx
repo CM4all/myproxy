@@ -16,4 +16,11 @@ struct ConnectAction {
 	AllocatedSocketAddress address;
 
 	std::string user, password, database;
+
+	/**
+	 * If this is non-empty, then this is used instead of
+	 * #password; it contains the the SHA1 of the password
+	 * (binary, not hex).
+	 */
+	std::string password_sha1;
 };

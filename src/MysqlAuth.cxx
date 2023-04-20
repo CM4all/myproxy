@@ -13,7 +13,7 @@ using std::string_view_literals::operator""sv;
 
 namespace Mysql {
 
-static PacketSerializer
+PacketSerializer
 MakeHandshakeResponse41SHA1(const HandshakePacket &handshake, uint_least32_t client_flag,
 			    std::string_view user,
 			    std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1,

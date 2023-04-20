@@ -119,6 +119,7 @@ subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
+subdir('libcommon/src/lua/sodium')
 
 libcommon_require_pg = get_option('pg')
 subdir('libcommon/src/stock')
@@ -160,6 +161,7 @@ executable(
     lua_dep,
     lua_net_dep,
     lua_event_dep,
+    lua_sodium_dep,
     pg_dep,
     sodium_dep,
     dependency('libmd'), # SHA-1 implementation for "mysql_native_password"

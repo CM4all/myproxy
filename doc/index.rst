@@ -148,6 +148,19 @@ automatically choose a node using consistent hashing with the
 ``client.account`` attribute.
 
 
+libsodium
+^^^^^^^^^
+
+There are some `libsodium <https://www.libsodium.org/>`__ bindings.
+
+`Sealed boxes
+<https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes>`__::
+
+  pk, sk = sodium.crypto_box_keypair()
+  ciphertext = sodium.crypto_box_seal('hello world', pk)
+  message = sodium.crypto_box_seal_open(ciphertext, pk, sk)
+
+
 PostgreSQL Client
 ^^^^^^^^^^^^^^^^^
 

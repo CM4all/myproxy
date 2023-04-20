@@ -15,6 +15,7 @@
 #include "lua/RunFile.hxx"
 #include "lua/Util.hxx"
 #include "lua/net/SocketAddress.hxx"
+#include "lua/sodium/Init.hxx"
 #include "lua/event/Init.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
@@ -94,6 +95,8 @@ static void
 SetupConfigState(lua_State *L, Instance &instance)
 {
 	luaL_openlibs(L);
+
+	Lua::InitSodium(L);
 
 	Lua::InitEvent(L, instance.GetEventLoop());
 

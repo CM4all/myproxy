@@ -1,6 +1,6 @@
 cm4all-myproxy (0.3) unstable; urgency=low
 
-  * 
+  * lua: fix crash after Lua error
 
  --   
 

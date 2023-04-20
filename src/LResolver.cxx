@@ -61,9 +61,6 @@ try {
 		if (!lua_isnumber(L, Lua::GetStackIndex(key_idx)))
 			throw std::invalid_argument{"Key is not a number"};
 
-		if (!lua_isstring(L, Lua::GetStackIndex(value_idx)))
-			throw std::invalid_argument{"Value is not a string"};
-
 		nodes.emplace_front(Lua::ToSocketAddress(L, Lua::GetStackIndex(value_idx), 3306));
 	});
 

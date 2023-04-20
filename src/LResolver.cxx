@@ -87,5 +87,4 @@ void
 UnregisterLuaResolver(lua_State *L)
 {
 	Lua::SetGlobal(L, "mysql_resolve", nullptr);
-	Lua::SetGlobal(L, "mysql_cluster", nullptr);
 }

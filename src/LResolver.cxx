@@ -64,10 +64,7 @@ try {
 		if (!lua_isstring(L, Lua::GetStackIndex(value_idx)))
 			throw std::invalid_argument{"Value is not a string"};
 
-		const char *s = lua_tostring(L, Lua::GetStackIndex(value_idx));
-
-		for (SocketAddress address : Resolve(s, 3306, &hints))
-			nodes.emplace_front(address);
+		nodes.emplace_front(Lua::ToSocketAddress(L, Lua::GetStackIndex(value_idx), 3306));
 	});
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");

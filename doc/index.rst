@@ -140,6 +140,7 @@ it with ``mysql_cluster()``, passing an array of addresses to it::
   cluster = mysql_cluster({
     '192.168.0.2',
     '192.168.0.3',
+    mysql_resolve('server1.local:1234'),
   })
 
 When using such a cluster with ``client:connect()``, myproxy will

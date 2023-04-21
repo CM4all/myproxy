@@ -607,7 +607,9 @@ try {
 	lua_newtable(L);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "user", user);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", auth_response);
-	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
+
+	if (!database.empty())
+		Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 
 	co_await Lua::CoAwaitable{thread, L, 2};
 

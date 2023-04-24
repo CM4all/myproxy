@@ -7,8 +7,6 @@ After=network-online.target
 User=cm4all-myproxy
 ExecStart=/usr/sbin/cm4all-myproxy
 
-CPUSchedulingPolicy=batch
-
 # This allows the kernel to merge CPU wakeups, the default of 50ns is
 # too fine.
 TimerSlackNSec=10ms

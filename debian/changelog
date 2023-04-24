@@ -3,7 +3,7 @@ cm4all-myproxy (0.3) unstable; urgency=low
   * lua: fix crash after Lua error
   * omit "handshake_response.database" if it was not specified
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 24 Apr 2023 11:13:37 +0200
 
 cm4all-myproxy (0.2) unstable; urgency=low
 

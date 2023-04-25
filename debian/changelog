@@ -4,7 +4,7 @@ cm4all-myproxy (0.4) unstable; urgency=low
   * disable Nagle's algorithm to reduce latency
   * systemd: remove "CPUSchedulingPolicy=batch"
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 25 Apr 2023 11:25:05 +0200
 
 cm4all-myproxy (0.3) unstable; urgency=low
 

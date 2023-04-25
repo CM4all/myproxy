@@ -140,6 +140,9 @@ Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 {
 	assert(!outgoing);
 
+	/* disable Nagle's algorithm to reduce latency */
+	fd.SetNoDelay();
+
 	outgoing.emplace(*this, std::move(fd));
 }
 

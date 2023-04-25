@@ -1,6 +1,7 @@
 cm4all-myproxy (0.4) unstable; urgency=low
 
   * fix crash with multiple systemd sockets
+  * disable Nagle's algorithm to reduce latency
   * systemd: remove "CPUSchedulingPolicy=batch"
 
  --   

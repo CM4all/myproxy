@@ -1,5 +1,6 @@
 cm4all-myproxy (0.5) unstable; urgency=low
 
+  * do not strip CLIENT_SECURE_CONNECTION (fixes MariaDB login)
   * fix use-after-free crash bug after PostgreSQL disconnect
 
  --   

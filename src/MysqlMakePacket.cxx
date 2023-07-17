@@ -60,11 +60,13 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 			std::string_view database,
 			std::string_view client_plugin_name)
 {
-	client_flag |= CLIENT_PROTOCOL_41;
+	client_flag |= CLIENT_PROTOCOL_41|
+		/* deprecated according to MySQL but necessary for
+		   MariaDB */
+		CLIENT_SECURE_CONNECTION;
 	client_flag &= ~(CLIENT_CONNECT_WITH_DB|
 			 CLIENT_COMPRESS|
 			 CLIENT_SSL|
-			 CLIENT_SECURE_CONNECTION|
 			 CLIENT_PLUGIN_AUTH|CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA|
 			 CLIENT_CONNECT_ATTRS);
 

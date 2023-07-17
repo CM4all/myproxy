@@ -34,6 +34,8 @@ test_common_flags = [
   '-Wvla',
   '-Wwrite-strings',
 
+  '-Wno-missing-field-initializers',
+
   # clang specific warning options:
   '-Wunreachable-code-aggressive',
   '-Wused-but-marked-unused',

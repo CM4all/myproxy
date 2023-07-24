@@ -1,4 +1,3 @@
-option('sodium', type: 'feature', description: 'libsodium bindings for Lua')
 option('pg', type: 'feature', description: 'PostgreSQL client for Lua')
 
 option('documentation', type: 'feature', description: 'Build documentation')

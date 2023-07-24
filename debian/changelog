@@ -1,6 +1,6 @@
 cm4all-myproxy (0.6) unstable; urgency=low
 
-  * 
+  * debian: restart after upgrade
 
  --   
 

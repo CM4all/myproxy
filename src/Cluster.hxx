@@ -28,7 +28,7 @@ class Cluster {
 	std::vector<Node> nodes;
 
 public:
-	Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;
+	explicit Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;
 
 	static void Register(lua_State *L);
 	static Cluster *New(lua_State *L,

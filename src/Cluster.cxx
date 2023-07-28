@@ -8,8 +8,10 @@
 #include "util/djb_hash.hxx"
 #include "util/SpanCast.hxx"
 
+#include <algorithm> // for std::sort()
+
 static std::size_t
-AddressHash(SocketAddress address, std::size_t replica) noexcept
+AddressHash(SocketAddress address) noexcept
 {
 	/* use libsodium's "generichash" (BLAKE2b) which is secure
 	   enough for class HashRing */
@@ -22,22 +24,40 @@ AddressHash(SocketAddress address, std::size_t replica) noexcept
 
 	GenericHashState state{sizeof(u.hash)};
 	state.Update(address.GetSteadyPart());
-	state.UpdateT(replica);
 	state.Final(u.hash);
 
 	return u.result;
 }
 
-Cluster::Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept
-	:nodes(std::move(_nodes))
+inline
+Cluster::Node::Node(SocketAddress _address) noexcept
+	:address(_address),
+	 hash(AddressHash(address))
 {
-	ring.Build(nodes, AddressHash);
+}
+
+Cluster::Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept
+	:node_list(std::move(_nodes))
+{
+	for (const auto &i : node_list)
+		nodes.emplace_back(i);
 }
 
 SocketAddress
-Cluster::Pick(std::string_view account) const noexcept
+Cluster::Pick(std::string_view account) noexcept
 {
-	return ring.Pick(djb_hash(AsBytes(account)));
+	const std::size_t account_hash = djb_hash(AsBytes(account));
+
+	/* sort the list for Rendezvous Hashing */
+	std::sort(nodes.begin(), nodes.end(),
+		  [account_hash](const auto &a, const auto &b) noexcept
+		  {
+			  // TODO is XOR good enough to mix the two hashes?
+			  return (a.hash ^ account_hash) <
+				  (b.hash ^ account_hash);
+		  });
+
+	return nodes.front().address;
 }
 
 static constexpr char lua_cluster_class[] = "myproxy.cluster";

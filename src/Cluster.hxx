@@ -5,16 +5,27 @@
 #pragma once
 
 #include "net/AllocatedSocketAddress.hxx"
-#include "util/HashRing.hxx"
 
 #include <forward_list>
+#include <vector>
 
 struct lua_State;
 
 class Cluster {
-	std::forward_list<AllocatedSocketAddress> nodes;
+	std::forward_list<AllocatedSocketAddress> node_list;
 
-	HashRing<AllocatedSocketAddress, std::size_t, 8192, 64> ring;
+	struct Node {
+		SocketAddress address;
+		std::size_t hash;
+
+		explicit Node(SocketAddress _address) noexcept;
+	};
+
+	/**
+	 * This is a copy of #node_list with precalculated hash for
+	 * Rendezvous Hashing.  It will be sorted in each Pick() call.
+	 */
+	std::vector<Node> nodes;
 
 public:
 	Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;
@@ -27,5 +38,5 @@ public:
 	static Cluster *Check(lua_State *L, int idx) noexcept;
 
 	[[nodiscard]] [[gnu::pure]]
-	SocketAddress Pick(std::string_view account) const noexcept;
+	SocketAddress Pick(std::string_view account) noexcept;
 };

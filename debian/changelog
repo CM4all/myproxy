@@ -1,5 +1,6 @@
 cm4all-myproxy (0.6) unstable; urgency=low
 
+  * use Rendezvous Hashing instead of Consistent Hashing
   * debian: restart after upgrade
 
  --   

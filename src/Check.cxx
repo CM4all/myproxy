@@ -60,28 +60,28 @@ private:
 	void DestroyOk() noexcept {
 		fmt::print(stderr, "[check/{}] ok\n", address);
 
-		handler.OnCheckServer(true);
+		handler.OnCheckServer(CheckServerResult::OK);
 		delete this;
 	}
 
 	void DestroyError(std::string_view msg) noexcept {
 		fmt::print(stderr, "[check/{}] {}\n", address, msg);
 
-		handler.OnCheckServer(false);
+		handler.OnCheckServer(CheckServerResult::ERROR);
 		delete this;
 	}
 
 	void DestroyError(const std::exception_ptr &error) noexcept {
 		fmt::print(stderr, "[check/{}] {}\n", address, error);
 
-		handler.OnCheckServer(false);
+		handler.OnCheckServer(CheckServerResult::ERROR);
 		delete this;
 	}
 
 	void DestroyError(std::string_view msg, const std::exception_ptr &e) noexcept {
 		fmt::print(stderr, "[check/{}] {}: e\n", address, msg, e);
 
-		handler.OnCheckServer(false);
+		handler.OnCheckServer(CheckServerResult::ERROR);
 		delete this;
 	}
 

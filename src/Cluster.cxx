@@ -75,11 +75,20 @@ private:
 	}
 
 	// virtual methods from CheckServerHandler
-	void OnCheckServer(bool ok) noexcept override {
+	void OnCheckServer(CheckServerResult result) noexcept override {
 		assert(check_cancel);
 		check_cancel = nullptr;
 
-		state = ok ? State::ALIVE : State::DEAD;
+		switch (result) {
+		case CheckServerResult::OK:
+			state = State::ALIVE;
+			break;
+
+		case CheckServerResult::ERROR:
+			state = State::DEAD;
+			break;
+		}
+
 		check_timer.Schedule(std::chrono::seconds{20});
 	}
 };

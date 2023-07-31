@@ -4,14 +4,21 @@
 
 #pragma once
 
+#include <cstdint>
+
 struct CheckOptions;
 class EventLoop;
 class SocketAddress;
 class CancellablePointer;
 
+enum class CheckServerResult : uint_least8_t {
+	OK,
+	ERROR,
+};
+
 class CheckServerHandler {
 public:
-	virtual void OnCheckServer(bool ok) noexcept = 0;
+	virtual void OnCheckServer(CheckServerResult result) noexcept = 0;
 };
 
 /**

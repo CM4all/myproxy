@@ -4,21 +4,23 @@
 
 #pragma once
 
-#include "net/AllocatedSocketAddress.hxx"
-
 #include <forward_list>
+#include <string_view>
 #include <vector>
 
 struct lua_State;
+class SocketAddress;
+class AllocatedSocketAddress;
 
 class Cluster {
-	std::forward_list<AllocatedSocketAddress> node_list;
+	struct Node;
+	std::forward_list<Node> node_list;
 
 	struct RendezvousNode {
-		SocketAddress address;
+		const Node *node;
 		std::size_t hash;
 
-		explicit RendezvousNode(SocketAddress _address) noexcept;
+		explicit RendezvousNode(const Node &_node) noexcept;
 	};
 
 	/**
@@ -29,6 +31,7 @@ class Cluster {
 
 public:
 	explicit Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;
+	~Cluster() noexcept;
 
 	static void Register(lua_State *L);
 	static Cluster *New(lua_State *L,

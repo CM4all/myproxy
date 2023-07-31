@@ -5,6 +5,7 @@
 #include "Cluster.hxx"
 #include "lib/sodium/GenericHash.hxx"
 #include "lua/Class.hxx"
+#include "net/AllocatedSocketAddress.hxx"
 #include "util/djb_hash.hxx"
 #include "util/SpanCast.hxx"
 
@@ -29,19 +30,30 @@ AddressHash(SocketAddress address) noexcept
 	return u.result;
 }
 
+struct Cluster::Node {
+	AllocatedSocketAddress address;
+
+	explicit Node(AllocatedSocketAddress &&_address) noexcept
+		:address(std::move(_address)) {}
+};
+
 inline
-Cluster::RendezvousNode::RendezvousNode(SocketAddress _address) noexcept
-	:address(_address),
-	 hash(AddressHash(address))
+Cluster::RendezvousNode::RendezvousNode(const Node &_node) noexcept
+	:node(&_node),
+	 hash(AddressHash(node->address))
 {
 }
 
 Cluster::Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept
-	:node_list(std::move(_nodes))
 {
+	for (auto &&i : _nodes)
+		node_list.emplace_front(std::move(i));
+
 	for (const auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
 }
+
+Cluster::~Cluster() noexcept = default;
 
 SocketAddress
 Cluster::Pick(std::string_view account) noexcept
@@ -57,7 +69,7 @@ Cluster::Pick(std::string_view account) noexcept
 				  (b.hash ^ account_hash);
 		  });
 
-	return rendezvous_nodes.front().address;
+	return rendezvous_nodes.front().node->address;
 }
 
 static constexpr char lua_cluster_class[] = "myproxy.cluster";

@@ -11,6 +11,7 @@
 #include "MysqlParser.hxx"
 #include "MysqlProtocol.hxx"
 #include "MysqlSerializer.hxx"
+#include "MysqlTextResultsetParser.hxx"
 #include "MysqlDeserializer.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
@@ -35,6 +36,7 @@ constexpr uint_least32_t client_flag =
 class MysqlCheck final
 	: Cancellable,
 	  PeerHandler, MysqlHandler,
+	  Mysql::TextResultsetHandler,
 	  ConnectSocketHandler {
 	CheckServerHandler &handler;
 
@@ -46,12 +48,9 @@ class MysqlCheck final
 
 	std::optional<Peer> peer;
 
-	enum class QueryState : uint_least8_t {
-		COLUMN_COUNT,
-		COLUMN_DEFINITON,
-		ROW,
-		AFTER_ROW,
-	} query_state;
+	std::optional<Mysql::TextResultsetParser> text_resultset_parser;
+
+	bool have_read_only;
 
 	/**
 	 * The value of `@@global.read_only`.  Only set on
@@ -111,10 +110,6 @@ private:
 
 	Result OnHandshake(std::span<const std::byte> payload);
 	Result OnCommandPhase();
-	Result OnQueryResponse(std::span<const std::byte> payload);
-	Result OnQueryResponseRow(std::span<const std::byte> payload);
-	Result OnQueryResponseEof();
-	Result OnQueryResponseFinalEof();
 
 	/* virtual methods from Cancellable */
 	void Cancel() noexcept override {
@@ -143,6 +138,15 @@ private:
 		// should be unreachable
 		return {RawResult::OK, src.size()};
 	}
+
+	/* virtual methods from Mysql:TextResultsetHandler */
+	void OnTextResultsetColumnCount(unsigned column_count) override {
+		if (column_count != 1)
+			throw std::runtime_error{"Wrong column count"};
+	}
+
+	void OnTextResultsetRow(std::span<const std::byte> payload) override;
+	void OnTextResultsetEnd() override;
 
 	/* virtual methods from ConnectSocketHandler */
 	void OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept override {
@@ -190,7 +194,10 @@ MysqlCheck::OnCommandPhase()
 		return Result::CLOSED;
 	}
 
-	query_state = QueryState::COLUMN_COUNT;
+	Mysql::TextResultsetHandler &_handler = *this;
+	text_resultset_parser.emplace(client_flag, _handler);
+
+	have_read_only = false;
 	auto s = Mysql::MakeQuery(0x00, "SELECT @@global.read_only");
 	if (!peer->Send(s.Finish()))
 		return Result::CLOSED;
@@ -198,42 +205,13 @@ MysqlCheck::OnCommandPhase()
 	return Result::IGNORE;
 }
 
-inline MysqlHandler::Result
-MysqlCheck::OnQueryResponse(std::span<const std::byte> payload)
+void
+MysqlCheck::OnTextResultsetRow(std::span<const std::byte> payload)
 {
 	assert(options.no_read_only);
 
-	switch (query_state) {
-	case QueryState::COLUMN_COUNT:
-		if (const auto packet = Mysql::ParseQueryMetadata(payload);
-		    packet.column_count != 1) {
-			DestroyError("Wrong column count");
-			return Result::CLOSED;
-		}
-
-		query_state = QueryState::COLUMN_DEFINITON;
-		return Result::IGNORE;
-
-	case QueryState::COLUMN_DEFINITON:
-		return Result::IGNORE;
-
-	case QueryState::ROW:
-		return OnQueryResponseRow(payload);
-
-	case QueryState::AFTER_ROW:
-		// ignore the other rows (there should not be any)
-		return Result::IGNORE;
-	}
-
-	// TODO
-	DestroyError("unreachable");
-	return Result::CLOSED;
-}
-
-inline MysqlHandler::Result
-MysqlCheck::OnQueryResponseRow(std::span<const std::byte> payload)
-{
-	assert(options.no_read_only);
+	if (have_read_only)
+		return;
 
 	Mysql::PacketDeserializer d{payload};
 	const auto value = d.ReadLengthEncodedString();
@@ -243,48 +221,24 @@ MysqlCheck::OnQueryResponseRow(std::span<const std::byte> payload)
 		read_only = false;
 	else if (value == "1"sv)
 		read_only = true;
-	else {
-		DestroyError("Malformed boolean");
-		return Result::CLOSED;
-	}
+	else
+		throw std::runtime_error{"Malformed boolean"};
 
-	query_state = QueryState::AFTER_ROW;
-	return Result::IGNORE;
+	have_read_only = true;
 }
 
-inline MysqlHandler::Result
-MysqlCheck::OnQueryResponseEof()
+void
+MysqlCheck::OnTextResultsetEnd()
 {
-	switch (query_state) {
-	case QueryState::COLUMN_COUNT:
-		DestroyError("COLUMN_COUNT expected");
-		return Result::CLOSED;
+	assert(options.no_read_only);
 
-	case QueryState::COLUMN_DEFINITON:
-		query_state = QueryState::ROW;
-		return Result::IGNORE;
+	if (!have_read_only)
+		throw std::runtime_error{"No row"};
 
-	case QueryState::ROW:
-		DestroyError("ROW expected");
-		return Result::CLOSED;
-
-	case QueryState::AFTER_ROW:
-		return OnQueryResponseFinalEof();
-	}
-
-	// TODO
-	DestroyError("unreachable");
-	return Result::CLOSED;
-}
-
-inline MysqlHandler::Result
-MysqlCheck::OnQueryResponseFinalEof()
-{
 	if (read_only)
 		DestroyReadOnly();
 	else
 		DestroyOk();
-	return Result::CLOSED;
 }
 
 MysqlHandler::Result
@@ -322,22 +276,22 @@ try {
 		}
 	}
 
-	assert(options.no_read_only);
+	if (text_resultset_parser) {
+		switch (text_resultset_parser->OnMysqlPacket(number, payload,
+							     complete)) {
+		case Mysql::TextResultsetParser::Result::MORE:
+			return Result::IGNORE;
 
-	switch (cmd) {
-	case Mysql::Command::OK:
-		return OnQueryResponseFinalEof();
-
-	case Mysql::Command::EOF_:
-		return OnQueryResponseEof();
-
-	case Mysql::Command::ERR:
-		throw FmtRuntimeError("Query error: {}",
-				      Mysql::ParseErr(payload, client_flag).error_message);
-
-	default:
-		return OnQueryResponse(payload);
+		case Mysql::TextResultsetParser::Result::DONE:
+			return Result::CLOSED;
+		}
 	}
+
+	// TODO unreachable
+	return Result::IGNORE;
+} catch (const Mysql::ErrPacket &err) {
+	DestroyError(err.error_message);
+	return Result::CLOSED;
 } catch (...) {
 	DestroyError(std::current_exception());
 	return Result::CLOSED;

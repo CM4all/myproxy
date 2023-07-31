@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright CM4all GmbH
+// author: Max Kellermann <mk@cm4all.com>
+
+#include "MysqlTextResultsetParser.hxx"
+#include "MysqlParser.hxx"
+#include "MysqlProtocol.hxx"
+#include "util/Compiler.h"
+
+#include <stdexcept>
+
+namespace Mysql {
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wsuggest-attribute=noreturn"
+#endif
+
+void
+TextResultsetHandler::OnTextResultsetErr(const ErrPacket &err)
+{
+	throw err;
+}
+
+inline TextResultsetParser::Result
+TextResultsetParser::OnResponse(std::span<const std::byte> payload)
+{
+	switch (state) {
+	case State::COLUMN_COUNT:
+		handler.OnTextResultsetColumnCount(Mysql::ParseQueryMetadata(payload).column_count);
+		state = State::COLUMN_DEFINITON;
+		return Result::MORE;
+
+	case State::COLUMN_DEFINITON:
+		return Result::MORE;
+
+	case State::ROW:
+		return OnRow(payload);
+	}
+
+	gcc_unreachable();
+}
+
+inline TextResultsetParser::Result
+TextResultsetParser::OnRow(std::span<const std::byte> payload)
+{
+	handler.OnTextResultsetRow(payload);
+	return Result::MORE;
+}
+
+inline TextResultsetParser::Result
+TextResultsetParser::OnEof()
+{
+	switch (state) {
+	case State::COLUMN_COUNT:
+		throw std::runtime_error{"COLUMN_COUNT expected"};
+
+	case State::COLUMN_DEFINITON:
+		state = State::ROW;
+		return Result::MORE;
+
+	case State::ROW:
+		return OnFinalEof();
+	}
+
+	gcc_unreachable();
+}
+
+inline TextResultsetParser::Result
+TextResultsetParser::OnFinalEof()
+{
+	handler.OnTextResultsetEnd();
+	return Result::DONE;
+}
+
+TextResultsetParser::Result
+TextResultsetParser::OnMysqlPacket([[maybe_unused]] unsigned number,
+				   std::span<const std::byte> payload,
+				   [[maybe_unused]] bool complete)
+{
+	const auto cmd = static_cast<Mysql::Command>(payload.front());
+
+	switch (cmd) {
+	case Mysql::Command::OK:
+		return OnFinalEof();
+
+	case Mysql::Command::EOF_:
+		return OnEof();
+
+	case Mysql::Command::ERR:
+		handler.OnTextResultsetErr(Mysql::ParseErr(payload, capabilities));
+		return Result::DONE;
+
+	default:
+		return OnResponse(payload);
+	}
+}
+
+} // namespace Mysql

@@ -153,6 +153,7 @@ executable(
   'src/MysqlParser.cxx',
   'src/MysqlMakePacket.cxx',
   'src/MysqlAuth.cxx',
+  'src/MysqlTextResultsetParser.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/LHandler.cxx',

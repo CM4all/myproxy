@@ -14,18 +14,18 @@ struct lua_State;
 class Cluster {
 	std::forward_list<AllocatedSocketAddress> node_list;
 
-	struct Node {
+	struct RendezvousNode {
 		SocketAddress address;
 		std::size_t hash;
 
-		explicit Node(SocketAddress _address) noexcept;
+		explicit RendezvousNode(SocketAddress _address) noexcept;
 	};
 
 	/**
 	 * This is a copy of #node_list with precalculated hash for
 	 * Rendezvous Hashing.  It will be sorted in each Pick() call.
 	 */
-	std::vector<Node> nodes;
+	std::vector<RendezvousNode> rendezvous_nodes;
 
 public:
 	explicit Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;

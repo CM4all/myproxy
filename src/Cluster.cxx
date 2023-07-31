@@ -30,7 +30,7 @@ AddressHash(SocketAddress address) noexcept
 }
 
 inline
-Cluster::Node::Node(SocketAddress _address) noexcept
+Cluster::RendezvousNode::RendezvousNode(SocketAddress _address) noexcept
 	:address(_address),
 	 hash(AddressHash(address))
 {
@@ -40,7 +40,7 @@ Cluster::Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept
 	:node_list(std::move(_nodes))
 {
 	for (const auto &i : node_list)
-		nodes.emplace_back(i);
+		rendezvous_nodes.emplace_back(i);
 }
 
 SocketAddress
@@ -49,7 +49,7 @@ Cluster::Pick(std::string_view account) noexcept
 	const std::size_t account_hash = djb_hash(AsBytes(account));
 
 	/* sort the list for Rendezvous Hashing */
-	std::sort(nodes.begin(), nodes.end(),
+	std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
 		  [account_hash](const auto &a, const auto &b) noexcept
 		  {
 			  // TODO is XOR good enough to mix the two hashes?
@@ -57,7 +57,7 @@ Cluster::Pick(std::string_view account) noexcept
 				  (b.hash ^ account_hash);
 		  });
 
-	return nodes.front().address;
+	return rendezvous_nodes.front().address;
 }
 
 static constexpr char lua_cluster_class[] = "myproxy.cluster";

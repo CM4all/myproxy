@@ -10,6 +10,7 @@
 #include "util/SpanCast.hxx"
 
 #include <algorithm> // for std::sort()
+#include <cstdint>
 
 static std::size_t
 AddressHash(SocketAddress address) noexcept
@@ -32,6 +33,12 @@ AddressHash(SocketAddress address) noexcept
 
 struct Cluster::Node {
 	AllocatedSocketAddress address;
+
+	enum class State : uint_least8_t {
+		DEAD,
+		UNKNOWN,
+		ALIVE,
+	} state = State::UNKNOWN;
 
 	explicit Node(AllocatedSocketAddress &&_address) noexcept
 		:address(std::move(_address)) {}
@@ -64,6 +71,10 @@ Cluster::Pick(std::string_view account) noexcept
 	std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
 		  [account_hash](const auto &a, const auto &b) noexcept
 		  {
+			  /* prefer nodes that are alive */
+			  if (a.node->state != b.node->state)
+				  return a.node->state > b.node->state;
+
 			  // TODO is XOR good enough to mix the two hashes?
 			  return (a.hash ^ account_hash) <
 				  (b.hash ^ account_hash);

@@ -4,6 +4,7 @@
 
 #include "LResolver.hxx"
 #include "Cluster.hxx"
+#include "OptionsTable.hxx"
 #include "lua/Util.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
@@ -50,8 +51,11 @@ l_mysql_resolve(lua_State *L)
 static int
 l_mysql_cluster(lua_State *L)
 try {
-	if (lua_gettop(L) != 1)
-		return luaL_error(L, "Invalid parameter count");
+	if (lua_gettop(L) < 1)
+		return luaL_error(L, "Not enough parameters");
+
+	if (lua_gettop(L) > 2)
+		return luaL_error(L, "Too many parameters");
 
 	luaL_argcheck(L, lua_istable(L, 1), 1, "Table expected");
 
@@ -63,6 +67,14 @@ try {
 
 		nodes.emplace_front(Lua::ToSocketAddress(L, Lua::GetStackIndex(value_idx), 3306));
 	});
+
+	if (lua_gettop(L) >= 2) {
+		Lua::ApplyOptionsTable(L, 2, [](const char *key, auto value_idx){
+			(void)key;
+			(void)value_idx;
+			throw Lua::ArgError{"Unknown option"};
+		});
+	}
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 

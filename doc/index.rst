@@ -149,6 +149,10 @@ it with ``mysql_cluster()``, passing an array of addresses to it::
     mysql_resolve('server1.local:1234'),
   })
 
+An optional second parameter is a table of options:
+
+- TODO currently, no options are implemented
+
 When using such a cluster with ``client:connect()``, myproxy will
 automatically choose a node using consistent hashing with the
 ``client.account`` attribute.

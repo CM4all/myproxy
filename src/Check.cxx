@@ -57,6 +57,34 @@ public:
 	}
 
 private:
+	void DestroyOk() noexcept {
+		fmt::print(stderr, "[check/{}] ok\n", address);
+
+		handler.OnCheckServer(true);
+		delete this;
+	}
+
+	void DestroyError(std::string_view msg) noexcept {
+		fmt::print(stderr, "[check/{}] {}\n", address, msg);
+
+		handler.OnCheckServer(false);
+		delete this;
+	}
+
+	void DestroyError(const std::exception_ptr &error) noexcept {
+		fmt::print(stderr, "[check/{}] {}\n", address, error);
+
+		handler.OnCheckServer(false);
+		delete this;
+	}
+
+	void DestroyError(std::string_view msg, const std::exception_ptr &e) noexcept {
+		fmt::print(stderr, "[check/{}] {}: e\n", address, msg, e);
+
+		handler.OnCheckServer(false);
+		delete this;
+	}
+
 	Result OnHandshake(std::span<const std::byte> payload);
 
 	/* virtual methods from Cancellable */
@@ -66,12 +94,7 @@ private:
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override {
-		// TODO log?
-		fmt::print(stderr, "[check/{}] peer closed connection prematurely\n",
-			   address);
-
-		handler.OnCheckServer(false);
-		delete this;
+		DestroyError("peer closed connection prematurely");
 	}
 
 	WriteResult OnPeerWrite() override {
@@ -80,12 +103,7 @@ private:
 	}
 
 	void OnPeerError(std::exception_ptr e) noexcept override {
-		// TODO log exception?
-		fmt::print(stderr, "[check/{}] peer closed connection prematurely: {}\n",
-			   address, e);
-
-		handler.OnCheckServer(false);
-		delete this;
+		DestroyError(e);
 	}
 
 	/* virtual methods from MysqlHandler */
@@ -109,12 +127,7 @@ private:
 	}
 
 	void OnSocketConnectError(std::exception_ptr e) noexcept override {
-		// TODO log exception?
-		fmt::print(stderr, "[check/{}] connect failed: {}\n",
-			   address, e);
-
-		handler.OnCheckServer(false);
-		delete this;
+		DestroyError(e);
 	}
 };
 
@@ -126,11 +139,7 @@ MysqlCheck::OnHandshake(std::span<const std::byte> payload)
 	const auto handshake = ParseHandshake(payload);
 
 	if (options.user.empty()) {
-		fmt::print(stderr, "[check/{}] ok\n", address);
-
-		handler.OnCheckServer(true);
-		delete this;
-
+		DestroyOk();
 		return Result::CLOSED;
 	}
 
@@ -155,13 +164,8 @@ try {
 		try {
 			return OnHandshake(payload);
 		} catch (...) {
-			// TODO log exception?
-			fmt::print(stderr, "[check/{}] failed to handle server handshake: {}\n",
-				   address, std::current_exception());
-
-			handler.OnCheckServer(false);
-			delete this;
-
+			DestroyError("failed to handle server handshake",
+				     std::current_exception());
 			return Result::CLOSED;
 		}
 	}
@@ -174,11 +178,7 @@ try {
 		case Mysql::Command::EOF_:
 			peer->command_phase = true;
 
-			fmt::print(stderr, "[check/{}] ok\n", address);
-
-			handler.OnCheckServer(true);
-			delete this;
-
+			DestroyOk();
 			return Result::CLOSED;
 
 		case Mysql::Command::ERR:
@@ -191,20 +191,10 @@ try {
 	}
 
 	// should be unreachable
-	fmt::print(stderr, "[check/{}] command phase\n", address);
-
-	handler.OnCheckServer(false);
-	delete this;
-
+	DestroyError("command phase");
 	return Result::CLOSED;
 } catch (...) {
-	// TODO log exception?
-	fmt::print(stderr, "[check/{}] error: {}\n",
-		   address, std::current_exception());
-
-	handler.OnCheckServer(false);
-	delete this;
-
+	DestroyError(std::current_exception());
 	return Result::CLOSED;
 }
 

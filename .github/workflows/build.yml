@@ -39,4 +39,4 @@ jobs:
         uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
-          setup-options: -Dwrap_mode=nofallback -Dpg=enabled
+          setup-options: -Dwrap_mode=nofallback -Dsystemd=enabled -Dpg=enabled

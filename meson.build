@@ -117,6 +117,12 @@ subdir('libcommon/src/system')
 subdir('libcommon/src/net')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
+
+if libsystemd.found()
+  subdir('libcommon/src/event/systemd')
+  libsystemd = event_systemd_dep
+endif
+
 subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')

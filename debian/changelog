@@ -4,6 +4,7 @@ cm4all-myproxy (0.6) unstable; urgency=low
   * implement (optional) monitoring
   * fix memory leak
   * make libsystemd optional
+  * systemd watchdog support
   * debian: restart after upgrade
 
  --   

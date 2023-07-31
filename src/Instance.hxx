@@ -12,12 +12,20 @@
 #include "net/UniqueSocketDescriptor.hxx"
 #include "config.h"
 
+#ifdef HAVE_LIBSYSTEMD
+#include "event/systemd/Watchdog.hxx"
+#endif // HAVE_LIBSYSTEMD
+
 #include <forward_list>
 
 class Instance {
 	EventLoop event_loop;
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
+
+#ifdef HAVE_LIBSYSTEMD
+	Systemd::Watchdog systemd_watchdog{event_loop};
+#endif // HAVE_LIBSYSTEMD
 
 	Lua::State lua_state;
 

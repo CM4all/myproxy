@@ -89,6 +89,10 @@ Instance::OnShutdown() noexcept
 	shutdown_listener.Disable();
 	listeners.clear();
 
+#ifdef HAVE_LIBSYSTEMD
+	systemd_watchdog.Disable();
+#endif // HAVE_LIBSYSTEMD
+
 	/* TODO this is currently necessary because the Pg::Stock
 	   instances created by Lua code don't call Shutdown() */
 	event_loop.Break();

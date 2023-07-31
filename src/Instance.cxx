@@ -12,7 +12,9 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#ifdef HAVE_LIBSYSTEMD
 #include <systemd/sd-daemon.h>
+#endif
 
 #include <cstddef>
 
@@ -55,6 +57,8 @@ Instance::AddListener(SocketAddress address,
 	AddListener(MakeListener(address), std::move(handler));
 }
 
+#ifdef HAVE_LIBSYSTEMD
+
 void
 Instance::AddSystemdListener(std::shared_ptr<LuaHandler> handler)
 {
@@ -69,6 +73,8 @@ Instance::AddSystemdListener(std::shared_ptr<LuaHandler> handler)
 		AddListener(UniqueSocketDescriptor(SD_LISTEN_FDS_START + i),
 			    std::shared_ptr<LuaHandler>{handler});
 }
+
+#endif // HAVE_LIBSYSTEMD
 
 void
 Instance::Check()

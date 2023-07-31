@@ -99,7 +99,15 @@ add_global_arguments(common_flags, language: 'cpp')
 add_global_arguments(compiler.get_supported_arguments(test_global_cxxflags), language: 'cpp')
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 
-libsystemd = dependency('libsystemd')
+libsystemd = dependency('libsystemd', required: get_option('systemd'))
+if libsystemd.found()
+  libsystemd = declare_dependency(
+    compile_args: ['-DHAVE_LIBSYSTEMD'],
+    dependencies: [
+      libsystemd,
+    ],
+  )
+endif
 
 inc = include_directories(
   'src',

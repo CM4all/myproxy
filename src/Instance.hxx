@@ -43,7 +43,9 @@ public:
 	 * Listen for incoming connections on sockets passed by systemd
 	 * (systemd socket activation).
 	 */
+#ifdef HAVE_LIBSYSTEMD
 	void AddSystemdListener(std::shared_ptr<LuaHandler> handler);
+#endif
 
 	void Check();
 

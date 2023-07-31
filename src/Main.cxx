@@ -34,13 +34,17 @@ extern "C" {
 #include <lualib.h>
 }
 
+#ifdef HAVE_LIBSYSTEMD
 #include <systemd/sd-daemon.h>
+#endif
 
 #include <stdexcept>
 
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h> // for chdir()
+
+#ifdef HAVE_LIBSYSTEMD
 
 /**
  * A "magic" pointer used to identify our artificial "systemd" Lua
@@ -54,6 +58,8 @@ IsSystemdMagic(lua_State *L, int idx)
 	return lua_islightuserdata(L, idx) &&
 		lua_touserdata(L, idx) == &systemd_magic;
 }
+
+#endif // HAVE_LIBSYSTEMD
 
 static auto
 ParameterToLuaHandler(lua_State *L, int idx)
@@ -74,15 +80,17 @@ try {
 
 	auto handler = ParameterToLuaHandler(L, 2);
 
-	if (IsSystemdMagic(L, 1)) {
-		instance.AddSystemdListener(std::move(handler));
-	} else if (lua_isstring(L, 1)) {
+	if (lua_isstring(L, 1)) {
 		const char *address_string = lua_tostring(L, 1);
 
 		AllocatedSocketAddress address;
 		address.SetLocal(address_string);
 
 		instance.AddListener(address, std::move(handler));
+#ifdef HAVE_LIBSYSTEMD
+	} else if (IsSystemdMagic(L, 1)) {
+		instance.AddSystemdListener(std::move(handler));
+#endif // HAVE_LIBSYSTEMD
 	} else
 		luaL_argerror(L, 1, "path expected");
 
@@ -107,7 +115,10 @@ SetupConfigState(lua_State *L, Instance &instance)
 	Lua::InitSocketAddress(L);
 	RegisterLuaResolver(L, instance.GetEventLoop());
 
+#ifdef HAVE_LIBSYSTEMD
 	Lua::SetGlobal(L, "systemd", Lua::LightUserData(&systemd_magic));
+#endif // HAVE_LIBSYSTEMD
+
 	Lua::SetGlobal(L, "mysql_listen",
 		       Lua::MakeCClosure(l_mysql_listen,
 					 Lua::LightUserData(&instance)));
@@ -169,8 +180,10 @@ try {
 
 	policy_init();
 
+#ifdef HAVE_LIBSYSTEMD
 	/* tell systemd we're ready */
 	sd_notify(0, "READY=1");
+#endif
 
 	instance.GetEventLoop().Run();
 

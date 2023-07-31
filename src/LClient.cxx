@@ -6,6 +6,7 @@
 #include "Cluster.hxx"
 #include "Action.hxx"
 #include "LAction.hxx"
+#include "OptionsTable.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
@@ -69,28 +70,6 @@ NewErrAction(lua_State *L)
 	return 1;
 }
 
-struct ArgError { const char *extramsg; };
-
-static const char *
-CheckString(lua_State *L, auto _idx, const char *extramsg)
-{
-	const int idx = Lua::GetStackIndex(_idx);
-	if (!lua_isstring(L, idx))
-		throw ArgError{extramsg};
-
-	return lua_tostring(L, idx);
-}
-
-static std::string_view
-CheckStringView(lua_State *L, auto _idx, const char *extramsg)
-{
-	const int idx = Lua::GetStackIndex(_idx);
-	if (!lua_isstring(L, idx))
-		throw ArgError{extramsg};
-
-	return Lua::ToStringView(L, idx);
-}
-
 static void
 Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 {
@@ -107,7 +86,7 @@ Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 	} else if (StringIsEqual(name, "database"))
 		action.database = CheckString(L, value_idx, "Bad value type");
 	else
-		throw ArgError{"Unknown attribute"};
+		throw Lua::ArgError{"Unknown attribute"};
 }
 
 static int
@@ -125,14 +104,9 @@ try {
 	else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
 
-	try {
-		Lua::ForEach(L, 3, [L, &action](auto key_idx, auto value_idx){
-			const char *key = CheckString(L, key_idx, "Bad key type");
-			Apply(L, action, key, value_idx);
-		});
-	} catch (ArgError e) {
-		luaL_argerror(L, 3, e.extramsg);
-	}
+	Lua::ApplyOptionsTable(L, 3, [L, &action](const char *key, auto value_idx){
+		Apply(L, action, key, value_idx);
+	});
 
 	NewLuaConnectAction(L, std::move(action));
 	return 1;

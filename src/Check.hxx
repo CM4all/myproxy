@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct CheckOptions;
 class EventLoop;
 class SocketAddress;
 class CancellablePointer;
@@ -18,4 +19,5 @@ public:
  */
 void
 CheckServer(EventLoop &event_loop, SocketAddress address,
+	    const CheckOptions &options,
 	    CheckServerHandler &handler, CancellablePointer &cancel_ptr) noexcept;

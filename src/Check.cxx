@@ -3,16 +3,30 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "Check.hxx"
+#include "Options.hxx"
 #include "Peer.hxx"
+#include "MysqlAuth.hxx"
 #include "MysqlHandler.hxx"
 #include "MysqlParser.hxx"
+#include "MysqlProtocol.hxx"
+#include "MysqlSerializer.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
+#include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SocketAddressFormatter.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "net/SocketAddress.hxx"
 #include "util/Cancellable.hxx"
 
 #include <optional>
+
+constexpr uint_least32_t client_flag =
+	Mysql::CLIENT_MYSQL |
+	Mysql::CLIENT_PROTOCOL_41 |
+	Mysql::CLIENT_IGNORE_SIGPIPE |
+	Mysql::CLIENT_RESERVED |
+	Mysql::CLIENT_SECURE_CONNECTION |
+	Mysql::CLIENT_PLUGIN_AUTH |
+	Mysql::CLIENT_PROGRESS;
 
 class MysqlCheck final
 	: Cancellable,
@@ -22,13 +36,19 @@ class MysqlCheck final
 
 	SocketAddress address;
 
+	const CheckOptions &options;
+
 	ConnectSocket connect;
 
 	std::optional<Peer> peer;
 
 public:
-	MysqlCheck(EventLoop &event_loop, CheckServerHandler &_handler) noexcept
-		:handler(_handler), connect(event_loop, *this) {}
+	MysqlCheck(EventLoop &event_loop,
+		   const CheckOptions &_options,
+		   CheckServerHandler &_handler) noexcept
+		:handler(_handler),
+		 options(_options),
+		 connect(event_loop, *this) {}
 
 	void Start(SocketAddress _address, CancellablePointer &cancel_ptr) noexcept {
 		address = _address;
@@ -37,6 +57,8 @@ public:
 	}
 
 private:
+	Result OnHandshake(std::span<const std::byte> payload);
+
 	/* virtual methods from Cancellable */
 	void Cancel() noexcept override {
 		delete this;
@@ -96,22 +118,88 @@ private:
 	}
 };
 
+inline MysqlHandler::Result
+MysqlCheck::OnHandshake(std::span<const std::byte> payload)
+{
+	using namespace Mysql;
+
+	const auto handshake = ParseHandshake(payload);
+
+	if (options.user.empty()) {
+		fmt::print(stderr, "[check/{}] ok\n", address);
+
+		handler.OnCheckServer(true);
+		delete this;
+
+		return Result::CLOSED;
+	}
+
+	auto s = MakeHandshakeResponse41(handshake, client_flag,
+					 options.user, options.password,
+					 {});
+	if (!peer->Send(s.Finish()))
+		return Result::CLOSED;
+
+	peer->handshake_response = true;
+	return Result::IGNORE;
+}
+
 MysqlHandler::Result
 MysqlCheck::OnMysqlPacket([[maybe_unused]] unsigned number,
 			  std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
-	Mysql::ParseHandshake(payload);
+	if (!peer->handshake) {
+		peer->handshake = true;
 
-	fmt::print(stderr, "[check/{}] ok\n", address);
+		try {
+			return OnHandshake(payload);
+		} catch (...) {
+			// TODO log exception?
+			fmt::print(stderr, "[check/{}] failed to handle server handshake: {}\n",
+				   address, std::current_exception());
 
-	handler.OnCheckServer(true);
+			handler.OnCheckServer(false);
+			delete this;
+
+			return Result::CLOSED;
+		}
+	}
+
+	const auto cmd = static_cast<Mysql::Command>(payload.front());
+
+	if (!peer->command_phase) {
+		switch (cmd) {
+		case Mysql::Command::OK:
+		case Mysql::Command::EOF_:
+			peer->command_phase = true;
+
+			fmt::print(stderr, "[check/{}] ok\n", address);
+
+			handler.OnCheckServer(true);
+			delete this;
+
+			return Result::CLOSED;
+
+		case Mysql::Command::ERR:
+			throw FmtRuntimeError("Authentication error: {}",
+					      Mysql::ParseErr(payload, client_flag).error_message);
+
+		default:
+			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
+		}
+	}
+
+	// should be unreachable
+	fmt::print(stderr, "[check/{}] command phase\n", address);
+
+	handler.OnCheckServer(false);
 	delete this;
 
 	return Result::CLOSED;
 } catch (...) {
 	// TODO log exception?
-	fmt::print(stderr, "[check/{}] failed to parse server handshake: {}\n",
+	fmt::print(stderr, "[check/{}] error: {}\n",
 		   address, std::current_exception());
 
 	handler.OnCheckServer(false);
@@ -122,8 +210,9 @@ try {
 
 void
 CheckServer(EventLoop &event_loop, SocketAddress address,
+	    const CheckOptions &options,
 	    CheckServerHandler &handler, CancellablePointer &cancel_ptr) noexcept
 {
-	auto *check = new MysqlCheck(event_loop, handler);
+	auto *check = new MysqlCheck(event_loop, options, handler);
 	check->Start(address, cancel_ptr);
 }

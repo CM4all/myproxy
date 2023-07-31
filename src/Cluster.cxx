@@ -37,6 +37,8 @@ AddressHash(SocketAddress address) noexcept
 struct Cluster::Node final : CheckServerHandler {
 	AllocatedSocketAddress address;
 
+	const CheckOptions &check_options;
+
 	CoarseTimerEvent check_timer;
 
 	CancellablePointer check_cancel;
@@ -50,6 +52,7 @@ struct Cluster::Node final : CheckServerHandler {
 	Node(EventLoop &event_loop, AllocatedSocketAddress &&_address,
 	     const ClusterOptions &options) noexcept
 		:address(std::move(_address)),
+		 check_options(options.check),
 		 check_timer(event_loop, BIND_THIS_METHOD(OnCheckTimer))
 	{
 		if (options.monitoring)
@@ -67,7 +70,8 @@ struct Cluster::Node final : CheckServerHandler {
 
 private:
 	void OnCheckTimer() noexcept {
-		CheckServer(GetEventLoop(), address, *this, check_cancel);
+		CheckServer(GetEventLoop(), address, check_options,
+			    *this, check_cancel);
 	}
 
 	// virtual methods from CheckServerHandler

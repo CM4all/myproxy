@@ -155,6 +155,9 @@ An optional second parameter is a table of options:
   to all servers to see whether they are available; failing servers
   will be excluded
 
+- ``user`` and ``password``: if monitoring is enabled, try to log in
+  with these credentials
+
 When using such a cluster with ``client:connect()``, myproxy will
 automatically choose a node using consistent hashing with the
 ``client.account`` attribute.

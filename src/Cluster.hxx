@@ -11,7 +11,6 @@
 #include <vector>
 
 struct lua_State;
-struct ClusterOptions;
 class SocketAddress;
 class AllocatedSocketAddress;
 class EventLoop;

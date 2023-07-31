@@ -10,6 +10,11 @@ struct lua_State;
 
 struct CheckOptions {
 	std::string user, password;
+
+	/**
+	 * Prefer servers without the #read_only attribute?
+	 */
+	bool no_read_only = false;
 };
 
 struct ClusterOptions {

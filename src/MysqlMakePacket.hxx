@@ -36,4 +36,7 @@ MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
 	ErrorCode error_code,
 	std::string_view sql_state, std::string_view msg);
 
+PacketSerializer
+MakeQuery(uint_least8_t sequence_id, std::string_view query);
+
 } // namespace Mysql

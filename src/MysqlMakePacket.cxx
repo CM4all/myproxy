@@ -154,4 +154,13 @@ MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
 	return s;
 }
 
+PacketSerializer
+MakeQuery(uint_least8_t sequence_id, std::string_view query)
+{
+	Mysql::PacketSerializer s{sequence_id};
+	s.WriteCommand(Command::QUERY);
+	s.WriteVariableLengthString(query);
+	return s;
+}
+
 } // namespace Mysql

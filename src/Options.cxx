@@ -19,6 +19,9 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 		else if (StringIsEqual(key, "password"))
 			check.password = Lua::CheckStringView(L, value_idx,
 							      "Bad 'password' value");
+		else if (StringIsEqual(key, "no_read_only"))
+			check.no_read_only = Lua::CheckBool(L, value_idx,
+							    "Bad 'no_read_only' value");
 		else
 			throw Lua::ArgError{"Unknown option"};
 	});
@@ -26,11 +29,17 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 	if (monitoring) {
 		if (check.user.empty() && !check.password.empty())
 			throw Lua::ArgError{"'password' without 'user'"};
+
+		if (check.user.empty() && check.no_read_only)
+			throw Lua::ArgError{"'no_read_only' without 'user'"};
 	} else {
 		if (!check.user.empty())
 			throw Lua::ArgError{"'user' without 'monitoring'"};
 
 		if (!check.password.empty())
 			throw Lua::ArgError{"'password' without 'monitoring'"};
+
+		if (check.no_read_only)
+			throw Lua::ArgError{"'no_read_only' without 'monitoring'"};
 	}
 }

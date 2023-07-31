@@ -87,4 +87,11 @@ struct ChangeUserPacket {
 ChangeUserPacket
 ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities);
 
+struct QueryMetadataPacket {
+	unsigned column_count;
+};
+
+QueryMetadataPacket
+ParseQueryMetadata(std::span<const std::byte> payload);
+
 } // namespace Mysql

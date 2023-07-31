@@ -158,6 +158,11 @@ An optional second parameter is a table of options:
 - ``user`` and ``password``: if monitoring is enabled, try to log in
   with these credentials
 
+- ``no_read_only``: if ``true``, then servers which are not read-only
+  will be preferred; set this option if you want myproxy to select the
+  active master instance automatically (depends on ``monitoring`` and
+  ``user`` / ``password``)
+
 When using such a cluster with ``client:connect()``, myproxy will
 automatically choose a node using consistent hashing with the
 ``client.account`` attribute.

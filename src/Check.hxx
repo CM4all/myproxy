@@ -13,6 +13,7 @@ class CancellablePointer;
 
 enum class CheckServerResult : uint_least8_t {
 	OK,
+	READ_ONLY,
 	ERROR,
 };
 

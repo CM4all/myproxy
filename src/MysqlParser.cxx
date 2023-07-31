@@ -226,4 +226,19 @@ ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
 	return packet;
 }
 
+QueryMetadataPacket
+ParseQueryMetadata(std::span<const std::byte> payload)
+{
+	assert(!payload.empty());
+
+	PacketDeserializer d{payload};
+	QueryMetadataPacket packet{};
+
+	// TODO support "metadata_follows"
+
+	packet.column_count = d.ReadLengthEncodedInteger();
+
+	return packet;
+}
+
 } // namespace Mysql

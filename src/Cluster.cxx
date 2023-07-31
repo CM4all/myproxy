@@ -48,11 +48,11 @@ struct Cluster::Node final : CheckServerHandler {
 	} state = State::UNKNOWN;
 
 	Node(EventLoop &event_loop, AllocatedSocketAddress &&_address,
-	     bool monitorig) noexcept
+	     const ClusterOptions &options) noexcept
 		:address(std::move(_address)),
 		 check_timer(event_loop, BIND_THIS_METHOD(OnCheckTimer))
 	{
-		if (monitorig)
+		if (options.monitoring)
 			check_timer.Schedule(Event::Duration{});
 	}
 
@@ -89,10 +89,11 @@ Cluster::RendezvousNode::RendezvousNode(const Node &_node) noexcept
 
 Cluster::Cluster(EventLoop &event_loop,
 		 std::forward_list<AllocatedSocketAddress> &&_nodes,
-		 bool monitoring) noexcept
+		 ClusterOptions &&_options) noexcept
+	:options(std::move(_options))
 {
 	for (auto &&i : _nodes)
-		node_list.emplace_front(event_loop, std::move(i), monitoring);
+		node_list.emplace_front(event_loop, std::move(i), options);
 
 	for (const auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
@@ -135,9 +136,9 @@ Cluster *
 Cluster::New(lua_State *L,
 	     EventLoop &event_loop,
 	     std::forward_list<AllocatedSocketAddress> &&nodes,
-	     bool monitoring)
+	     ClusterOptions &&options)
 {
-	return LuaCluster::New(L, event_loop, std::move(nodes), monitoring);
+	return LuaCluster::New(L, event_loop, std::move(nodes), std::move(options));
 }
 
 Cluster *

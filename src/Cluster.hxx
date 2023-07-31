@@ -4,16 +4,21 @@
 
 #pragma once
 
+#include "Options.hxx"
+
 #include <forward_list>
 #include <string_view>
 #include <vector>
 
 struct lua_State;
+struct ClusterOptions;
 class SocketAddress;
 class AllocatedSocketAddress;
 class EventLoop;
 
 class Cluster {
+	const ClusterOptions options;
+
 	struct Node;
 	std::forward_list<Node> node_list;
 
@@ -33,14 +38,14 @@ class Cluster {
 public:
 	Cluster(EventLoop &event_loop,
 		std::forward_list<AllocatedSocketAddress> &&_nodes,
-		bool monitoring) noexcept;
+		ClusterOptions &&_options) noexcept;
 	~Cluster() noexcept;
 
 	static void Register(lua_State *L);
 	static Cluster *New(lua_State *L,
 			    EventLoop &event_loop,
 			    std::forward_list<AllocatedSocketAddress> &&nodes,
-			    bool monitoring);
+			    ClusterOptions &&options);
 
 	[[gnu::pure]]
 	static Cluster *Check(lua_State *L, int idx) noexcept;

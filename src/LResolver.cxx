@@ -78,8 +78,7 @@ try {
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 
-	Cluster::New(L, event_loop, std::move(nodes),
-		     options.monitoring);
+	Cluster::New(L, event_loop, std::move(nodes), std::move(options));
 	return 1;
 } catch (...) {
 	Lua::RaiseCurrent(L);

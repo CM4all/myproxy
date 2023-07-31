@@ -4,7 +4,7 @@
 
 #include "LResolver.hxx"
 #include "Cluster.hxx"
-#include "OptionsTable.hxx"
+#include "Options.hxx"
 #include "lua/Util.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
@@ -13,7 +13,6 @@
 #include "net/Resolver.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/AllocatedSocketAddress.hxx"
-#include "util/StringAPI.hxx"
 
 extern "C" {
 #include <lauxlib.h>
@@ -72,19 +71,10 @@ try {
 		nodes.emplace_front(Lua::ToSocketAddress(L, Lua::GetStackIndex(value_idx), 3306));
 	});
 
-	struct {
-		bool monitoring = false;
-	} options;
+	ClusterOptions options;
 
-	if (lua_gettop(L) >= 2) {
-		Lua::ApplyOptionsTable(L, 2, [L, &options](const char *key, auto value_idx){
-			if (StringIsEqual(key, "monitoring"))
-				options.monitoring = Lua::CheckBool(L, value_idx,
-								    "Bad `monitoring` option");
-			else
-				throw Lua::ArgError{"Unknown option"};
-		});
-	}
+	if (lua_gettop(L) >= 2)
+		options.ApplyLuaTable(L, 2);
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 

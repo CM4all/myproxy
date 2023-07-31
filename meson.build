@@ -144,6 +144,7 @@ configure_file(output: 'config.h', configuration: conf)
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
+  'src/Options.cxx',
   'src/Cluster.cxx',
   'src/Check.cxx',
   'src/LResolver.cxx',

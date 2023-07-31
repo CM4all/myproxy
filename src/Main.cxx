@@ -105,7 +105,7 @@ SetupConfigState(lua_State *L, Instance &instance)
 #endif
 
 	Lua::InitSocketAddress(L);
-	RegisterLuaResolver(L);
+	RegisterLuaResolver(L, instance.GetEventLoop());
 
 	Lua::SetGlobal(L, "systemd", Lua::LightUserData(&systemd_magic));
 	Lua::SetGlobal(L, "mysql_listen",

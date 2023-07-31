@@ -151,7 +151,9 @@ it with ``mysql_cluster()``, passing an array of addresses to it::
 
 An optional second parameter is a table of options:
 
-- TODO currently, no options are implemented
+- ``monitoring``: if ``true``, then myproxy will peridiocally connect
+  to all servers to see whether they are available; failing servers
+  will be excluded
 
 When using such a cluster with ``client:connect()``, myproxy will
 automatically choose a node using consistent hashing with the

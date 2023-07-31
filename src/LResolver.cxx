@@ -8,10 +8,12 @@
 #include "lua/Util.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"
+#include "lua/PushCClosure.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "net/Resolver.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/AllocatedSocketAddress.hxx"
+#include "util/StringAPI.hxx"
 
 extern "C" {
 #include <lauxlib.h>
@@ -51,6 +53,8 @@ l_mysql_resolve(lua_State *L)
 static int
 l_mysql_cluster(lua_State *L)
 try {
+	auto &event_loop = *(EventLoop *)lua_touserdata(L, lua_upvalueindex(1));
+
 	if (lua_gettop(L) < 1)
 		return luaL_error(L, "Not enough parameters");
 
@@ -68,28 +72,37 @@ try {
 		nodes.emplace_front(Lua::ToSocketAddress(L, Lua::GetStackIndex(value_idx), 3306));
 	});
 
+	struct {
+		bool monitoring = false;
+	} options;
+
 	if (lua_gettop(L) >= 2) {
-		Lua::ApplyOptionsTable(L, 2, [](const char *key, auto value_idx){
-			(void)key;
-			(void)value_idx;
-			throw Lua::ArgError{"Unknown option"};
+		Lua::ApplyOptionsTable(L, 2, [L, &options](const char *key, auto value_idx){
+			if (StringIsEqual(key, "monitoring"))
+				options.monitoring = Lua::CheckBool(L, value_idx,
+								    "Bad `monitoring` option");
+			else
+				throw Lua::ArgError{"Unknown option"};
 		});
 	}
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 
-	Cluster::New(L, std::move(nodes));
+	Cluster::New(L, event_loop, std::move(nodes),
+		     options.monitoring);
 	return 1;
 } catch (...) {
 	Lua::RaiseCurrent(L);
 }
 
 void
-RegisterLuaResolver(lua_State *L)
+RegisterLuaResolver(lua_State *L, EventLoop &event_loop)
 {
 	Cluster::Register(L);
 	Lua::SetGlobal(L, "mysql_resolve", l_mysql_resolve);
-	Lua::SetGlobal(L, "mysql_cluster", l_mysql_cluster);
+	Lua::SetGlobal(L, "mysql_cluster",
+		       Lua::MakeCClosure(l_mysql_cluster,
+					 Lua::LightUserData{&event_loop}));
 }
 
 void

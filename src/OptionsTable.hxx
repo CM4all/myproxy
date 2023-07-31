@@ -17,6 +17,16 @@ namespace Lua {
 
 struct ArgError { const char *extramsg; };
 
+inline bool
+CheckBool(lua_State *L, auto _idx, const char *extramsg)
+{
+	const int idx = GetStackIndex(_idx);
+	if (!lua_isboolean(L, idx))
+		throw ArgError{extramsg};
+
+	return lua_toboolean(L, idx);
+}
+
 inline const char *
 CheckString(lua_State *L, auto _idx, const char *extramsg)
 {

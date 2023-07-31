@@ -3,11 +3,14 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "Cluster.hxx"
+#include "Check.hxx"
 #include "lib/sodium/GenericHash.hxx"
 #include "lua/Class.hxx"
+#include "event/CoarseTimerEvent.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "util/djb_hash.hxx"
 #include "util/SpanCast.hxx"
+#include "util/Cancellable.hxx"
 
 #include <algorithm> // for std::sort()
 #include <cstdint>
@@ -31,8 +34,12 @@ AddressHash(SocketAddress address) noexcept
 	return u.result;
 }
 
-struct Cluster::Node {
+struct Cluster::Node final : CheckServerHandler {
 	AllocatedSocketAddress address;
+
+	CoarseTimerEvent check_timer;
+
+	CancellablePointer check_cancel;
 
 	enum class State : uint_least8_t {
 		DEAD,
@@ -40,8 +47,37 @@ struct Cluster::Node {
 		ALIVE,
 	} state = State::UNKNOWN;
 
-	explicit Node(AllocatedSocketAddress &&_address) noexcept
-		:address(std::move(_address)) {}
+	Node(EventLoop &event_loop, AllocatedSocketAddress &&_address,
+	     bool monitorig) noexcept
+		:address(std::move(_address)),
+		 check_timer(event_loop, BIND_THIS_METHOD(OnCheckTimer))
+	{
+		if (monitorig)
+			check_timer.Schedule(Event::Duration{});
+	}
+
+	~Node() noexcept {
+		if (check_cancel)
+			check_cancel.Cancel();
+	}
+
+	auto &GetEventLoop() const noexcept {
+		return check_timer.GetEventLoop();
+	}
+
+private:
+	void OnCheckTimer() noexcept {
+		CheckServer(GetEventLoop(), address, *this, check_cancel);
+	}
+
+	// virtual methods from CheckServerHandler
+	void OnCheckServer(bool ok) noexcept override {
+		assert(check_cancel);
+		check_cancel = nullptr;
+
+		state = ok ? State::ALIVE : State::DEAD;
+		check_timer.Schedule(std::chrono::seconds{20});
+	}
 };
 
 inline
@@ -51,10 +87,12 @@ Cluster::RendezvousNode::RendezvousNode(const Node &_node) noexcept
 {
 }
 
-Cluster::Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept
+Cluster::Cluster(EventLoop &event_loop,
+		 std::forward_list<AllocatedSocketAddress> &&_nodes,
+		 bool monitoring) noexcept
 {
 	for (auto &&i : _nodes)
-		node_list.emplace_front(std::move(i));
+		node_list.emplace_front(event_loop, std::move(i), monitoring);
 
 	for (const auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
@@ -95,9 +133,11 @@ Cluster::Register(lua_State *L)
 
 Cluster *
 Cluster::New(lua_State *L,
-	     std::forward_list<AllocatedSocketAddress> &&nodes)
+	     EventLoop &event_loop,
+	     std::forward_list<AllocatedSocketAddress> &&nodes,
+	     bool monitoring)
 {
-	return LuaCluster::New(L, std::move(nodes));
+	return LuaCluster::New(L, event_loop, std::move(nodes), monitoring);
 }
 
 Cluster *

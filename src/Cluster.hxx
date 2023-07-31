@@ -11,6 +11,7 @@
 struct lua_State;
 class SocketAddress;
 class AllocatedSocketAddress;
+class EventLoop;
 
 class Cluster {
 	struct Node;
@@ -30,12 +31,16 @@ class Cluster {
 	std::vector<RendezvousNode> rendezvous_nodes;
 
 public:
-	explicit Cluster(std::forward_list<AllocatedSocketAddress> &&_nodes) noexcept;
+	Cluster(EventLoop &event_loop,
+		std::forward_list<AllocatedSocketAddress> &&_nodes,
+		bool monitoring) noexcept;
 	~Cluster() noexcept;
 
 	static void Register(lua_State *L);
 	static Cluster *New(lua_State *L,
-			    std::forward_list<AllocatedSocketAddress> &&nodes);
+			    EventLoop &event_loop,
+			    std::forward_list<AllocatedSocketAddress> &&nodes,
+			    bool monitoring);
 
 	[[gnu::pure]]
 	static Cluster *Check(lua_State *L, int idx) noexcept;

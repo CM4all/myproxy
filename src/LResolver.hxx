@@ -5,9 +5,10 @@
 #pragma once
 
 struct lua_State;
+class EventLoop;
 
 void
-RegisterLuaResolver(lua_State *L);
+RegisterLuaResolver(lua_State *L, EventLoop &event_loop);
 
 void
 UnregisterLuaResolver(lua_State *L);

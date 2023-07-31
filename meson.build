@@ -138,6 +138,7 @@ executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
   'src/Cluster.cxx',
+  'src/Check.cxx',
   'src/LResolver.cxx',
   'src/Policy.cxx',
   'src/MysqlReader.cxx',

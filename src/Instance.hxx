@@ -10,6 +10,7 @@
 #include "event/ShutdownListener.hxx"
 #include "event/net/ServerSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
+#include "config.h"
 
 #include <forward_list>
 

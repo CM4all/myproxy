@@ -100,14 +100,6 @@ add_global_arguments(compiler.get_supported_arguments(test_global_cxxflags), lan
 add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language: 'cpp')
 
 libsystemd = dependency('libsystemd', required: get_option('systemd'))
-if libsystemd.found()
-  libsystemd = declare_dependency(
-    compile_args: ['-DHAVE_LIBSYSTEMD'],
-    dependencies: [
-      libsystemd,
-    ],
-  )
-endif
 
 inc = include_directories(
   'src',
@@ -139,6 +131,7 @@ if pg_dep.found()
   pg_dep = lua_pg_dep
 endif
 
+conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_PG', pg_dep.found())
 configure_file(output: 'config.h', configuration: conf)
 

@@ -3,6 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "MysqlTextResultsetParser.hxx"
+#include "MysqlDeserializer.hxx"
 #include "MysqlParser.hxx"
 #include "MysqlProtocol.hxx"
 #include "util/Compiler.h"
@@ -26,7 +27,8 @@ TextResultsetParser::OnResponse(std::span<const std::byte> payload)
 {
 	switch (state) {
 	case State::COLUMN_COUNT:
-		handler.OnTextResultsetColumnCount(Mysql::ParseQueryMetadata(payload).column_count);
+		values.ResizeDiscard(Mysql::ParseQueryMetadata(payload).column_count);
+		handler.OnTextResultsetColumnCount(values.size());
 		state = State::COLUMN_DEFINITON;
 		return Result::MORE;
 
@@ -43,7 +45,12 @@ TextResultsetParser::OnResponse(std::span<const std::byte> payload)
 inline TextResultsetParser::Result
 TextResultsetParser::OnRow(std::span<const std::byte> payload)
 {
-	handler.OnTextResultsetRow(payload);
+	Mysql::PacketDeserializer d{payload};
+	for (auto &i : values)
+		i = d.ReadLengthEncodedString();
+	d.MustBeEmpty();
+
+	handler.OnTextResultsetRow(values);
 	return Result::MORE;
 }
 

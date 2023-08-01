@@ -4,10 +4,13 @@
 
 #pragma once
 
+#include "util/AllocatedArray.hxx"
+
 #include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <span>
+#include <string_view>
 
 namespace Mysql {
 
@@ -29,11 +32,9 @@ public:
 	/**
 	 * A row has been received.
 	 *
-	 * @param payload the values of the row; use
-	 * Mysql::PacketDeserializer::ReadLengthEncodedString() to
-	 * extract each of them
+	 * @param values the values of the row
 	 */
-	virtual void OnTextResultsetRow(std::span<const std::byte> payload) = 0;
+	virtual void OnTextResultsetRow(std::span<const std::string_view> values) = 0;
 
 	/**
 	 * The end of the resultset was reached.  This method is
@@ -56,6 +57,8 @@ public:
  */
 class TextResultsetParser {
 	TextResultsetHandler &handler;
+
+	AllocatedArray<std::string_view> values;
 
 	const uint_least32_t capabilities;
 

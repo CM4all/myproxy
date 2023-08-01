@@ -12,7 +12,6 @@
 #include "MysqlProtocol.hxx"
 #include "MysqlSerializer.hxx"
 #include "MysqlTextResultsetParser.hxx"
-#include "MysqlDeserializer.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SocketAddressFormatter.hxx"
@@ -145,7 +144,7 @@ private:
 			throw std::runtime_error{"Wrong column count"};
 	}
 
-	void OnTextResultsetRow(std::span<const std::byte> payload) override;
+	void OnTextResultsetRow(std::span<const std::string_view> values) override;
 	void OnTextResultsetEnd() override;
 
 	/* virtual methods from ConnectSocketHandler */
@@ -206,16 +205,17 @@ MysqlCheck::OnCommandPhase()
 }
 
 void
-MysqlCheck::OnTextResultsetRow(std::span<const std::byte> payload)
+MysqlCheck::OnTextResultsetRow(std::span<const std::string_view> values)
 {
 	assert(options.no_read_only);
 
 	if (have_read_only)
 		return;
 
-	Mysql::PacketDeserializer d{payload};
-	const auto value = d.ReadLengthEncodedString();
-	d.MustBeEmpty();
+	if (values.size() != 1)
+		throw std::runtime_error{"Wrong column count"};
+
+	const auto value = values.front();
 
 	if (value == "0"sv)
 		read_only = false;

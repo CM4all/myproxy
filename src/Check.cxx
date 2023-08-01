@@ -242,7 +242,7 @@ MysqlCheck::OnQueryResponseRow(std::span<const std::byte> payload)
 	if (value == "0"sv)
 		read_only = false;
 	else if (value == "1"sv)
-		read_only = false;
+		read_only = true;
 	else {
 		DestroyError("Malformed boolean");
 		return Result::CLOSED;

@@ -139,11 +139,6 @@ private:
 	}
 
 	/* virtual methods from Mysql:TextResultsetHandler */
-	void OnTextResultsetColumnCount(unsigned column_count) override {
-		if (column_count != 1)
-			throw std::runtime_error{"Wrong column count"};
-	}
-
 	void OnTextResultsetRow(std::span<const std::string_view> values) override;
 	void OnTextResultsetEnd() override;
 

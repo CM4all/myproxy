@@ -25,11 +25,6 @@ struct ErrPacket;
 class TextResultsetHandler {
 public:
 	/**
-	 * Learned about the number of columns.
-	 */
-	virtual void OnTextResultsetColumnCount(unsigned column_count) = 0;
-
-	/**
 	 * A row has been received.
 	 *
 	 * @param values the values of the row

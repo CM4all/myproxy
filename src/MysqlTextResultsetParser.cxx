@@ -28,7 +28,6 @@ TextResultsetParser::OnResponse(std::span<const std::byte> payload)
 	switch (state) {
 	case State::COLUMN_COUNT:
 		values.ResizeDiscard(Mysql::ParseQueryMetadata(payload).column_count);
-		handler.OnTextResultsetColumnCount(values.size());
 		state = State::COLUMN_DEFINITON;
 		return Result::MORE;
 

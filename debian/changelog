@@ -7,7 +7,7 @@ cm4all-myproxy (0.6) unstable; urgency=low
   * systemd watchdog support
   * debian: restart after upgrade
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 10 Aug 2023 16:55:00 +0200
 
 cm4all-myproxy (0.5) unstable; urgency=low
 

@@ -253,6 +253,10 @@ try {
 
 		try {
 			return OnHandshake(payload);
+		} catch (const Mysql::ErrPacket &err) {
+			throw;
+		} catch (Mysql::MalformedPacket) {
+			throw;
 		} catch (...) {
 			DestroyError("failed to handle server handshake",
 				     std::current_exception());

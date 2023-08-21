@@ -25,6 +25,7 @@
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
+#include "util/ScopeExit.hxx"
 #include "util/SpanCast.hxx"
 
 #include <cassert>
@@ -634,8 +635,10 @@ try {
 		SocketAddress address = connect_action->address;
 		if (connect_action->cluster) {
 			connect_action->cluster->Push(L);
-			address = Cluster::Cast(L, -1).Pick(lua_client_ptr->GetAccount());
-			lua_pop(L, 1);
+			AtScopeExit(L) { lua_pop(L, 1); };
+
+			auto &cluster = Cluster::Cast(L, -1);
+			address = cluster.Pick(lua_client_ptr->GetAccount());
 		}
 
 		/* connect to the outgoing server and perform the

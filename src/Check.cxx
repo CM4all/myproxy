@@ -164,6 +164,12 @@ MysqlCheck::OnHandshake(std::span<const std::byte> payload)
 {
 	using namespace Mysql;
 
+	if (!payload.empty() && static_cast<Mysql::Command>(payload.front()) == Mysql::Command::ERR) {
+		const auto err = Mysql::ParseErr(payload, peer->capabilities);
+		throw FmtRuntimeError("Connection rejected by server: {}",
+				      err.error_message);
+	}
+
 	const auto handshake = ParseHandshake(payload);
 
 	if (options.user.empty()) {

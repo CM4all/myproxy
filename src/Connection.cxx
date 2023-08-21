@@ -17,6 +17,7 @@
 #include "MysqlAuth.hxx"
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
+#include "lib/fmt/RuntimeError.hxx"
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
@@ -333,6 +334,12 @@ MysqlHandler::Result
 Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 {
 	assert(!connection.incoming.command_phase);
+
+	if (!payload.empty() && static_cast<Mysql::Command>(payload.front()) == Mysql::Command::ERR) {
+		const auto err = Mysql::ParseErr(payload, peer.capabilities);
+		throw FmtRuntimeError("Connection rejected by server: {}",
+				      err.error_message);
+	}
 
 	const auto packet = Mysql::ParseHandshake(payload);
 

@@ -9,6 +9,7 @@
 #include "MysqlHandler.hxx"
 #include "MysqlMakePacket.hxx"
 #include "MysqlParser.hxx"
+#include "MysqlDeserializer.hxx" // for Mysql::MalformedPacket
 #include "MysqlProtocol.hxx"
 #include "MysqlSerializer.hxx"
 #include "MysqlTextResultsetParser.hxx"
@@ -286,6 +287,9 @@ try {
 	return Result::IGNORE;
 } catch (const Mysql::ErrPacket &err) {
 	DestroyError(err.error_message);
+	return Result::CLOSED;
+} catch (Mysql::MalformedPacket) {
+	DestroyError("Malformed packet");
 	return Result::CLOSED;
 } catch (...) {
 	DestroyError(std::current_exception());

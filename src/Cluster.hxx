@@ -49,6 +49,9 @@ public:
 	[[gnu::pure]]
 	static Cluster *Check(lua_State *L, int idx) noexcept;
 
+	[[gnu::pure]]
+	static Cluster &Cast(lua_State *L, int idx) noexcept;
+
 	[[nodiscard]] [[gnu::pure]]
 	SocketAddress Pick(std::string_view account) noexcept;
 };

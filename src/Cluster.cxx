@@ -164,3 +164,9 @@ Cluster::Check(lua_State *L, int idx) noexcept
 {
 	return LuaCluster::Check(L, idx);
 }
+
+Cluster &
+Cluster::Cast(lua_State *L, int idx) noexcept
+{
+	return LuaCluster::Cast(L, idx);
+}

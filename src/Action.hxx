@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "lua/ValuePtr.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 
 #include <string>
@@ -13,7 +14,11 @@ struct ErrAction {
 };
 
 struct ConnectAction {
+	// either #address or #cluster is set
+
 	AllocatedSocketAddress address;
+
+	Lua::ValuePtr cluster;
 
 	std::string user, password, database;
 

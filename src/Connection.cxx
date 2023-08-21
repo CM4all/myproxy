@@ -4,6 +4,7 @@
 
 #include "Connection.hxx"
 #include "Action.hxx"
+#include "Cluster.hxx"
 #include "LAction.hxx"
 #include "LClient.hxx"
 #include "LHandler.hxx"
@@ -630,9 +631,16 @@ try {
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
 
+		SocketAddress address = connect_action->address;
+		if (connect_action->cluster) {
+			connect_action->cluster->Push(L);
+			address = Cluster::Cast(L, -1).Pick(lua_client_ptr->GetAccount());
+			lua_pop(L, 1);
+		}
+
 		/* connect to the outgoing server and perform the
 		   handshake to it */
-		connect.Connect(connect_action->address,
+		connect.Connect(address,
 				std::chrono::seconds{30});
 	} else
 		throw std::invalid_argument{"Bad return value"};

@@ -95,12 +95,10 @@ try {
 	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
 
-	auto &client = LuaClient::Cast(L, 1);
-
 	ConnectAction action;
 
-	if (auto *cluster = Cluster::Check(L, 2))
-		action.address = cluster->Pick(client.GetAccount());
+	if (Cluster::Check(L, 2))
+		action.cluster = std::make_shared<Lua::Value>(L, Lua::StackIndex{2});
 	else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
 

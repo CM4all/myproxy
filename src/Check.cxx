@@ -102,7 +102,7 @@ private:
 	}
 
 	void DestroyError(std::string_view msg, const std::exception_ptr &e) noexcept {
-		fmt::print(stderr, "[check/{}] {}: e\n", address, msg, e);
+		fmt::print(stderr, "[check/{}] {}: {}\n", address, msg, e);
 
 		handler.OnCheckServer(CheckServerResult::ERROR);
 		delete this;

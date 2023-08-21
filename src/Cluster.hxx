@@ -5,7 +5,9 @@
 #pragma once
 
 #include "Options.hxx"
+#include "util/IntrusiveList.hxx"
 
+#include <coroutine>
 #include <forward_list>
 #include <string_view>
 #include <vector>
@@ -34,6 +36,43 @@ class Cluster {
 	 */
 	std::vector<RendezvousNode> rendezvous_nodes;
 
+	class ReadyTask : public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
+		friend class Cluster;
+		Cluster &cluster;
+
+		std::coroutine_handle<> continuation;
+
+		ReadyTask(Cluster &_cluster) noexcept
+			:cluster(_cluster) {
+			cluster.ready_tasks.push_back(*this);
+		}
+
+	public:
+		ReadyTask(const ReadyTask &) = delete;
+
+		ReadyTask &operator=(const ReadyTask &) = delete;
+
+		[[nodiscard]]
+		bool await_ready() const noexcept {
+			return cluster.IsReady();
+		}
+
+		[[nodiscard]]
+		std::coroutine_handle<> await_suspend(std::coroutine_handle<> _continuation) noexcept {
+			continuation = _continuation;
+			return std::noop_coroutine();
+		}
+
+		void await_resume() noexcept {
+		}
+	};
+
+	IntrusiveList<ReadyTask> ready_tasks;
+
+	std::size_t n_unknown;
+
+	bool found_alive = false;
+
 public:
 	Cluster(EventLoop &event_loop,
 		std::forward_list<AllocatedSocketAddress> &&_nodes,
@@ -52,6 +91,23 @@ public:
 	[[gnu::pure]]
 	static Cluster &Cast(lua_State *L, int idx) noexcept;
 
+	bool IsReady() const noexcept {
+		return found_alive || n_unknown == 0;
+	}
+
+	/**
+	 * The returned task finishes as soon as IsReady() becomes
+	 * true.  This can be used to delay connect attempts to this
+	 * cluster right after startup until all nodes have been
+	 * checked.
+	 */
+	ReadyTask CoWaitReady() noexcept {
+		return ReadyTask{*this};
+	}
+
 	[[nodiscard]] [[gnu::pure]]
 	SocketAddress Pick(std::string_view account) noexcept;
+
+private:
+	void InvokeReady() noexcept;
 };

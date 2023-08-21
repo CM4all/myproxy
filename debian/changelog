@@ -1,6 +1,7 @@
 cm4all-myproxy (0.7) unstable; urgency=low
 
   * parse ERR packet if server rejects connection
+  * delay connects until all nodes of a cluster have been probed
 
  --   
 

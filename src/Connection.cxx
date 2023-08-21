@@ -638,6 +638,10 @@ try {
 			AtScopeExit(L) { lua_pop(L, 1); };
 
 			auto &cluster = Cluster::Cast(L, -1);
+
+			/* wait until all nodes have been probed */
+			co_await cluster.CoWaitReady();
+
 			address = cluster.Pick(lua_client_ptr->GetAccount());
 		}
 

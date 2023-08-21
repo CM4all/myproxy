@@ -35,6 +35,8 @@ AddressHash(SocketAddress address) noexcept
 }
 
 struct Cluster::Node final : CheckServerHandler {
+	Cluster &cluster;
+
 	AllocatedSocketAddress address;
 
 	const CheckOptions &check_options;
@@ -50,9 +52,10 @@ struct Cluster::Node final : CheckServerHandler {
 		ALIVE,
 	} state = State::UNKNOWN;
 
-	Node(EventLoop &event_loop, AllocatedSocketAddress &&_address,
+	Node(Cluster &_cluster, EventLoop &event_loop,
+	     AllocatedSocketAddress &&_address,
 	     const ClusterOptions &options) noexcept
-		:address(std::move(_address)),
+		:cluster(_cluster), address(std::move(_address)),
 		 check_options(options.check),
 		 check_timer(event_loop, BIND_THIS_METHOD(OnCheckTimer))
 	{
@@ -80,9 +83,25 @@ private:
 		assert(check_cancel);
 		check_cancel = nullptr;
 
+		bool ready = false;
+
+		if (state == State::UNKNOWN) {
+			assert(cluster.n_unknown > 0);
+			--cluster.n_unknown;
+
+			if (cluster.n_unknown == 0)
+				ready = true;
+		}
+
 		switch (result) {
 		case CheckServerResult::OK:
 			state = State::ALIVE;
+
+			if (!cluster.found_alive) {
+				cluster.found_alive = true;
+				ready = true;
+			}
+
 			break;
 
 		case CheckServerResult::READ_ONLY:
@@ -95,6 +114,9 @@ private:
 		}
 
 		check_timer.Schedule(std::chrono::seconds{20});
+
+		if (ready)
+			cluster.InvokeReady();
 	}
 };
 
@@ -111,10 +133,12 @@ Cluster::Cluster(EventLoop &event_loop,
 	:options(std::move(_options))
 {
 	for (auto &&i : _nodes)
-		node_list.emplace_front(event_loop, std::move(i), options);
+		node_list.emplace_front(*this, event_loop, std::move(i), options);
 
 	for (const auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
+
+	n_unknown = rendezvous_nodes.size();
 }
 
 Cluster::~Cluster() noexcept = default;
@@ -169,4 +193,13 @@ Cluster &
 Cluster::Cast(lua_State *L, int idx) noexcept
 {
 	return LuaCluster::Cast(L, idx);
+}
+
+void
+Cluster::InvokeReady() noexcept
+{
+	ready_tasks.clear_and_dispose([](auto *task){
+		if (task->continuation)
+			task->continuation.resume();
+	});
 }

@@ -77,7 +77,7 @@ public:
 		return socket.GetSocket();
 	}
 
-	bool Read() noexcept {
+	BufferedReadResult Read() noexcept {
 		return socket.Read();
 	}
 

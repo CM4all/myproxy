@@ -61,8 +61,15 @@ Connection::Outgoing::OnPeerWrite()
 
 	connection.got_raw_from_incoming = false;
 
-	if (!connection.incoming.Read())
+	switch (connection.incoming.Read()) {
+	case BufferedReadResult::OK:
+	case BufferedReadResult::BLOCKING:
+		break;
+
+	case BufferedReadResult::DISCONNECTED:
+	case BufferedReadResult::DESTROYED:
 		return WriteResult::CLOSED;
+	}
 
 	return connection.got_raw_from_incoming
 		? WriteResult::MORE
@@ -125,8 +132,15 @@ Connection::OnPeerWrite()
 
 	got_raw_from_outgoing = false;
 
-	if (!outgoing->peer.Read())
+	switch (outgoing->peer.Read()) {
+	case BufferedReadResult::OK:
+	case BufferedReadResult::BLOCKING:
+		break;
+
+	case BufferedReadResult::DISCONNECTED:
+	case BufferedReadResult::DESTROYED:
 		return WriteResult::CLOSED;
+	}
 
 	return got_raw_from_outgoing ? WriteResult::MORE : WriteResult::DONE;
 }

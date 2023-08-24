@@ -84,13 +84,13 @@ Peer::OnBufferedData()
 			break;
 
 		case MysqlReader::FlushResult::CLOSED:
-			return BufferedResult::CLOSED;
+			return BufferedResult::DESTROYED;
 		}
 
 		return BufferedResult::MORE;
 
 	case MysqlReader::ProcessResult::CLOSED:
-		return BufferedResult::CLOSED;
+		return BufferedResult::DESTROYED;
 	}
 
 	assert(false);

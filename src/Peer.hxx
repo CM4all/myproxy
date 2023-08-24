@@ -66,7 +66,6 @@ public:
 
 	~Peer() noexcept {
 		socket.Close();
-		socket.Destroy();
 	}
 
 	void Close() noexcept {

@@ -195,4 +195,5 @@ executable(
   install_dir: 'sbin',
 )
 
+subdir('test')
 subdir('doc')

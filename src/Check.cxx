@@ -110,6 +110,8 @@ private:
 
 	Result OnHandshake(uint8_t sequence_id,
 			   std::span<const std::byte> payload);
+	Result OnAuthSwitchRequest(uint8_t sequence_id,
+				   std::span<const std::byte> payload);
 	Result OnCommandPhase();
 
 	/* virtual methods from Cancellable */
@@ -186,6 +188,22 @@ MysqlCheck::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
 		return Result::CLOSED;
 
 	peer->handshake_response = true;
+	return Result::IGNORE;
+}
+
+inline MysqlHandler::Result
+MysqlCheck::OnAuthSwitchRequest(uint8_t sequence_id,
+				std::span<const std::byte> payload)
+{
+	using namespace Mysql;
+
+	const auto packet = ParseAuthSwitchRequest(payload);
+
+	auto s = MakeAuthSwitchResponse(packet, sequence_id + 1,
+					options.password, {});
+	if (!peer->Send(s.Finish()))
+		return Result::CLOSED;
+
 	return Result::IGNORE;
 }
 
@@ -271,9 +289,11 @@ try {
 	if (!peer->command_phase) {
 		switch (cmd) {
 		case Mysql::Command::OK:
-		case Mysql::Command::EOF_:
 			peer->command_phase = true;
 			return OnCommandPhase();
+
+		case Mysql::Command::EOF_:
+			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
 			throw FmtRuntimeError("Authentication error: {}",

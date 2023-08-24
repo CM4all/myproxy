@@ -9,6 +9,8 @@
 #include "SHA1.hxx"
 #include "util/SpanCast.hxx"
 
+#include <stdexcept> // for std::runtime_error
+
 using std::string_view_literals::operator""sv;
 
 namespace Mysql {
@@ -61,6 +63,40 @@ MakeHandshakeResponse41(const HandshakePacket &handshake,
 	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag,
 					      user, password, database,
 					      "mysql_clear_password"sv);
+}
+
+PacketSerializer
+MakeAuthSwitchResponse(const AuthSwitchRequest &auth_switch_request,
+		       uint8_t sequence_id,
+		       std::string_view password,
+		       std::string_view _password_sha1)
+{
+	if (auth_switch_request.auth_plugin_name == "mysql_native_password"sv) {
+		if (auth_switch_request.auth_plugin_data.size() != 21 ||
+		    auth_switch_request.auth_plugin_data.back() != '\0')
+			throw std::runtime_error{"Malformed auth_plugin_data"};
+
+		SHA1Digest password_sha1_buffer;
+
+		std::span<const std::byte> password_sha1 = AsBytes(_password_sha1);
+		if (password_sha1.empty())
+			password_sha1 = password_sha1_buffer = SHA1(password);
+
+		const auto password_sha1_sha1 = SHA1(password_sha1);
+
+		SHA1State sha1;
+		sha1.Update(auth_switch_request.auth_plugin_data.substr(0, 20));
+		sha1.Update(password_sha1_sha1);
+
+		auto auth_response = sha1.Final();
+		for (std::size_t i = 0; i < auth_response.size(); ++i)
+			auth_response[i] ^= password_sha1[i];
+
+		Mysql::PacketSerializer s{sequence_id};
+		s.WriteN(auth_response);
+		return s;
+	} else
+		throw std::runtime_error{"Unsupported auth_plugin"};
 }
 
 } // namespace Mysql

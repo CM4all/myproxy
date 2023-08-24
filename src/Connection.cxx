@@ -379,6 +379,31 @@ Connection::Outgoing::OnHandshake(uint8_t sequence_id, std::span<const std::byte
 	return Result::IGNORE;
 }
 
+static auto
+MakeAuthSwitchResponse(const Mysql::AuthSwitchRequest &auth_switch_request,
+		       uint8_t sequence_id,
+		       const ConnectAction &action)
+{
+	return Mysql::MakeAuthSwitchResponse(auth_switch_request, sequence_id,
+					     action.password, action.password_sha1);
+}
+
+MysqlHandler::Result
+Connection::Outgoing::OnAuthSwitchRequest(uint8_t sequence_id, std::span<const std::byte> payload)
+{
+	assert(!connection.incoming.command_phase);
+
+	const auto packet = Mysql::ParseAuthSwitchRequest(payload);
+
+	const auto &action = *connection.connect_action;
+
+	auto s = MakeAuthSwitchResponse(packet, sequence_id + 1, action);
+	if (!peer.Send(s.Finish()))
+		return Result::CLOSED;
+
+	return Result::IGNORE;
+}
+
 MysqlHandler::Result
 Connection::Outgoing::OnMysqlPacket(unsigned number,
 				    std::span<const std::byte> payload,
@@ -403,13 +428,15 @@ try {
 
 		switch (cmd) {
 		case Mysql::Command::OK:
-		case Mysql::Command::EOF_:
 			peer.command_phase = true;
 			connection.incoming.command_phase = true;
 
 			connection.StartCoroutine(connection.InvokeLuaCommandPhase());
 
 			return Result::FORWARD;
+
+		case Mysql::Command::EOF_:
+			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
 			return Result::FORWARD;

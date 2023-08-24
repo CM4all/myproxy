@@ -79,6 +79,9 @@ class Connection final
 		Result OnHandshake(uint8_t sequence_id,
 				   std::span<const std::byte> payload);
 
+		Result OnAuthSwitchRequest(uint8_t sequence_id,
+					   std::span<const std::byte> payload);
+
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
 		WriteResult OnPeerWrite() override;

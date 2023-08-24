@@ -47,6 +47,14 @@ struct HandshakeResponsePacket {
 HandshakeResponsePacket
 ParseHandshakeResponse(std::span<const std::byte> payload);
 
+struct AuthSwitchRequest {
+	std::string_view auth_plugin_name;
+	std::string_view auth_plugin_data;
+};
+
+AuthSwitchRequest
+ParseAuthSwitchRequest(std::span<const std::byte> payload);
+
 struct OkPacket {
 	uint_least64_t affected_rows;
 	uint_least64_t last_insert_id;

@@ -1,6 +1,6 @@
 cm4all-myproxy (0.8) unstable; urgency=low
 
-  * 
+  * support AuthSwitchRequest
 
  --   
 

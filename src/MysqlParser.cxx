@@ -111,6 +111,22 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 	return packet;
 }
 
+AuthSwitchRequest
+ParseAuthSwitchRequest(std::span<const std::byte> payload)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::EOF_));
+
+	PacketDeserializer d{payload};
+	AuthSwitchRequest packet{};
+
+	d.ReadInt1(); // command
+	packet.auth_plugin_name = d.ReadNullTerminatedString();
+	packet.auth_plugin_data = d.ReadRestOfPacketString();
+
+	return packet;
+}
+
 OkPacket
 ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities)
 {

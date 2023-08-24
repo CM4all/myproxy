@@ -35,6 +35,10 @@ public:
 	LClient(lua_State *L, SocketDescriptor socket, SocketAddress _address,
 		std::string_view server_version);
 
+	lua_State *GetLuaState() const noexcept {
+		return address.GetState();
+	}
+
 	static void Register(lua_State *L);
 	static LClient *New(lua_State *L, SocketDescriptor socket, SocketAddress address,
 			    std::string_view server_version);

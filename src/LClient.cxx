@@ -95,11 +95,18 @@ try {
 	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
 
+	const auto &client = LuaClient::Cast(L, 1);
+
 	ConnectAction action;
 
-	if (Cluster::Check(L, 2))
-		action.cluster = std::make_shared<Lua::Value>(L, Lua::StackIndex{2});
-	else
+	if (Cluster::Check(L, 2)) {
+		/* allocate the Lua::Value with the global Lua state,
+		   so it gets destructed by it (when the this thread
+		   may have been gone already); but fetch the object
+		   from this thread's stack */
+		action.cluster = std::make_shared<Lua::Value>(client.GetLuaState());
+		action.cluster->Set(L, Lua::StackIndex{2});
+	} else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
 
 	Lua::ApplyOptionsTable(L, 3, [L, &action](const char *key, auto value_idx){

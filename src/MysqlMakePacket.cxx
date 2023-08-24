@@ -55,7 +55,7 @@ MakeHandshakeV10(std::string_view server_version,
 }
 
 PacketSerializer
-MakeHandshakeResponse41(uint_least32_t client_flag,
+MakeHandshakeResponse41(uint8_t sequence_id, uint_least32_t client_flag,
 			std::string_view user, std::string_view auth_response,
 			std::string_view database,
 			std::string_view client_plugin_name)
@@ -76,7 +76,7 @@ MakeHandshakeResponse41(uint_least32_t client_flag,
 	if (!client_plugin_name.empty())
 		client_flag |= CLIENT_PLUGIN_AUTH|CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA;
 
-	Mysql::PacketSerializer s{1};
+	Mysql::PacketSerializer s{sequence_id};
 	s.WriteInt4(client_flag);
 	s.WriteInt4(0x1000000); // max_packet_size
 	s.WriteInt1(0x21); // character_set

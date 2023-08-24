@@ -108,7 +108,8 @@ private:
 		delete this;
 	}
 
-	Result OnHandshake(std::span<const std::byte> payload);
+	Result OnHandshake(uint8_t sequence_id,
+			   std::span<const std::byte> payload);
 	Result OnCommandPhase();
 
 	/* virtual methods from Cancellable */
@@ -160,7 +161,7 @@ private:
 };
 
 inline MysqlHandler::Result
-MysqlCheck::OnHandshake(std::span<const std::byte> payload)
+MysqlCheck::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
 {
 	using namespace Mysql;
 
@@ -177,7 +178,8 @@ MysqlCheck::OnHandshake(std::span<const std::byte> payload)
 		return Result::CLOSED;
 	}
 
-	auto s = MakeHandshakeResponse41(handshake, client_flag,
+	auto s = MakeHandshakeResponse41(handshake,
+					 sequence_id + 1, client_flag,
 					 options.user, options.password,
 					 {});
 	if (!peer->Send(s.Finish()))
@@ -244,7 +246,7 @@ MysqlCheck::OnTextResultsetEnd()
 }
 
 MysqlHandler::Result
-MysqlCheck::OnMysqlPacket([[maybe_unused]] unsigned number,
+MysqlCheck::OnMysqlPacket(unsigned number,
 			  std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
@@ -252,7 +254,7 @@ try {
 		peer->handshake = true;
 
 		try {
-			return OnHandshake(payload);
+			return OnHandshake(number, payload);
 		} catch (const Mysql::ErrPacket &err) {
 			throw;
 		} catch (Mysql::MalformedPacket) {

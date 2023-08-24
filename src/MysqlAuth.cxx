@@ -14,7 +14,8 @@ using std::string_view_literals::operator""sv;
 namespace Mysql {
 
 PacketSerializer
-MakeHandshakeResponse41SHA1(const HandshakePacket &handshake, uint_least32_t client_flag,
+MakeHandshakeResponse41SHA1(const HandshakePacket &handshake,
+			    uint8_t sequence_id, uint_least32_t client_flag,
 			    std::string_view user,
 			    std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1,
 			    std::string_view database)
@@ -30,14 +31,15 @@ MakeHandshakeResponse41SHA1(const HandshakePacket &handshake, uint_least32_t cli
 	for (std::size_t i = 0; i < auth_response.size(); ++i)
 		auth_response[i] ^= password_sha1[i];
 
-	return Mysql::MakeHandshakeResponse41(client_flag, user,
+	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag, user,
 					      ToStringView(auth_response),
 					      database,
 					      "mysql_native_password"sv);
 }
 
 PacketSerializer
-MakeHandshakeResponse41(const HandshakePacket &handshake, uint_least32_t client_flag,
+MakeHandshakeResponse41(const HandshakePacket &handshake,
+			uint8_t sequence_id, uint_least32_t client_flag,
 			std::string_view user, std::string_view password,
 			std::string_view database)
 {
@@ -51,12 +53,12 @@ MakeHandshakeResponse41(const HandshakePacket &handshake, uint_least32_t client_
 		   bytes", but it really is 21 bytes with a trailing
 		   null byte that must be ignored */
 
-		return MakeHandshakeResponse41SHA1(handshake, client_flag,
+		return MakeHandshakeResponse41SHA1(handshake, sequence_id, client_flag,
 						   user, SHA1(password),
 						   database);
 	}
 
-	return Mysql::MakeHandshakeResponse41(client_flag,
+	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag,
 					      user, password, database,
 					      "mysql_clear_password"sv);
 }

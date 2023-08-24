@@ -76,7 +76,8 @@ class Connection final
 		Outgoing(Connection &_connection,
 			 UniqueSocketDescriptor fd) noexcept;
 
-		Result OnHandshake(std::span<const std::byte> payload);
+		Result OnHandshake(uint8_t sequence_id,
+				   std::span<const std::byte> payload);
 
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;

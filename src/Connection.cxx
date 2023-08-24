@@ -328,26 +328,27 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 
 static auto
 MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
-			uint_least32_t client_flag,
+			uint8_t sequence_id, uint_least32_t client_flag,
 			const ConnectAction &action)
 {
 	if (!action.password_sha1.empty()) {
 		assert(action.password_sha1.size() == SHA1_DIGEST_LENGTH);
 
 		const std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1{AsBytes(action.password_sha1)};
-		return Mysql::MakeHandshakeResponse41SHA1(handshake, client_flag,
+		return Mysql::MakeHandshakeResponse41SHA1(handshake, sequence_id, client_flag,
 							  action.user, password_sha1,
 							  action.database);
 	}
 
-	return Mysql::MakeHandshakeResponse41(handshake, client_flag,
+	return Mysql::MakeHandshakeResponse41(handshake,
+					      sequence_id, client_flag,
 					      action.user,
 					      action.password,
 					      action.database);
 }
 
 MysqlHandler::Result
-Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
+Connection::Outgoing::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
 {
 	assert(!connection.incoming.command_phase);
 
@@ -368,7 +369,8 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 
 	const auto &action = *connection.connect_action;
 
-	auto s = MakeHandshakeResponse41(packet, connection.incoming.capabilities,
+	auto s = MakeHandshakeResponse41(packet, sequence_id + 1,
+					 connection.incoming.capabilities,
 					 action);
 	if (!peer.Send(s.Finish()))
 		return Result::CLOSED;
@@ -378,7 +380,7 @@ Connection::Outgoing::OnHandshake(std::span<const std::byte> payload)
 }
 
 MysqlHandler::Result
-Connection::Outgoing::OnMysqlPacket([[maybe_unused]] unsigned number,
+Connection::Outgoing::OnMysqlPacket(unsigned number,
 				    std::span<const std::byte> payload,
 				    [[maybe_unused]] bool complete) noexcept
 try {
@@ -388,7 +390,7 @@ try {
 
 	if (!peer.handshake) {
 		peer.handshake = true;
-		return OnHandshake(payload);
+		return OnHandshake(number, payload);
 	}
 
 	if (payload.empty())

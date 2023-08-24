@@ -141,6 +141,25 @@ conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_PG', pg_dep.found())
 configure_file(output: 'config.h', configuration: conf)
 
+my = static_library(
+  'my',
+  'src/MysqlReader.cxx',
+  'src/MysqlParser.cxx',
+  'src/MysqlMakePacket.cxx',
+  'src/MysqlAuth.cxx',
+  'src/MysqlTextResultsetParser.cxx',
+  include_directories: inc,
+  dependencies: [
+    event_net_dep,
+    util_dep,
+    dependency('libmd'), # SHA-1 implementation for "mysql_native_password"
+  ],
+)
+
+my_dep = declare_dependency(
+  link_with: my,
+)
+
 executable(
   'cm4all-myproxy',
   'src/system/SetupProcess.cxx',
@@ -149,11 +168,6 @@ executable(
   'src/Check.cxx',
   'src/LResolver.cxx',
   'src/Policy.cxx',
-  'src/MysqlReader.cxx',
-  'src/MysqlParser.cxx',
-  'src/MysqlMakePacket.cxx',
-  'src/MysqlAuth.cxx',
-  'src/MysqlTextResultsetParser.cxx',
   'src/Peer.cxx',
   'src/Connection.cxx',
   'src/LHandler.cxx',
@@ -165,18 +179,17 @@ executable(
   include_directories: inc,
   dependencies: [
     libsystemd,
+    my_dep,
     util_dep,
     io_linux_dep,
     net_dep,
     event_dep,
-    event_net_dep,
     lua_dep,
     lua_net_dep,
     lua_event_dep,
     lua_sodium_dep,
     pg_dep,
     sodium_dep,
-    dependency('libmd'), # SHA-1 implementation for "mysql_native_password"
   ],
   install: true,
   install_dir: 'sbin',

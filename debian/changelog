@@ -1,6 +1,7 @@
 cm4all-myproxy (0.9) unstable; urgency=low
 
   * don't delay connects if cluster monitoring is disabled
+  * schedule EPOLLOUT to retry short send
 
  --   
 

@@ -313,8 +313,12 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	got_raw_from_incoming = true;
 
 	const auto result = outgoing->peer.WriteSome(src);
-	if (result > 0) [[likely]]
+	if (result > 0) [[likely]] {
+		if (static_cast<std::size_t>(result) < src.size())
+			outgoing->peer.ScheduleWrite();
+
 		return {RawResult::OK, static_cast<std::size_t>(result)};
+	}
 
 	switch (result) {
 	case WRITE_BLOCKING:
@@ -495,8 +499,12 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	connection.got_raw_from_outgoing = true;
 
 	const auto result = connection.incoming.WriteSome(src);
-	if (result > 0) [[likely]]
+	if (result > 0) [[likely]] {
+		if (static_cast<std::size_t>(result) < src.size())
+			connection.incoming.ScheduleWrite();
+
 		return {RawResult::OK, static_cast<std::size_t>(result)};
+	}
 
 	switch (result) {
 	case WRITE_BLOCKING:

@@ -88,6 +88,10 @@ public:
 		socket.UnscheduleRead();
 	}
 
+	void ScheduleWrite() noexcept {
+		socket.ScheduleWrite();
+	}
+
 	void DeferWrite() noexcept {
 		socket.DeferWrite();
 	}

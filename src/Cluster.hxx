@@ -92,7 +92,7 @@ public:
 	static Cluster &Cast(lua_State *L, int idx) noexcept;
 
 	bool IsReady() const noexcept {
-		return found_alive || n_unknown == 0;
+		return !options.monitoring || found_alive || n_unknown == 0;
 	}
 
 	/**

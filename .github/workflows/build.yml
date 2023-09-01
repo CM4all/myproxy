@@ -40,8 +40,13 @@ jobs:
             libsodium-dev \
             libluajit-5.1-dev
 
-      - name: Meson Build
-        uses: BSFishy/meson-build@v1.0.3
-        with:
-          action: test
-          setup-options: -Dwrap_mode=nofallback -Dsystemd=enabled -Dpg=enabled
+      - name: Configure
+        run: |
+          meson setup \
+            -Dsystemd=enabled \
+            -Dpg=enabled \
+            -Dwrap_mode=nofallback \
+            output
+
+      - name: Build
+        run: ninja -C output -v

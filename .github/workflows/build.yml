@@ -43,6 +43,7 @@ jobs:
       - name: Configure
         run: |
           meson setup \
+            -Ddocumentation=disabled \
             -Dsystemd=enabled \
             -Dpg=enabled \
             -Dwrap_mode=nofallback \

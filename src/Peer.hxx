@@ -64,10 +64,6 @@ public:
 		socket.ScheduleRead();
 	}
 
-	~Peer() noexcept {
-		socket.Close();
-	}
-
 	void Close() noexcept {
 		socket.Close();
 	}

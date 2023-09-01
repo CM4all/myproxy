@@ -25,10 +25,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
+
       - id: cache-ccache
         uses: hendrikmuhs/ccache-action@v1
-        with:
-          key: ${{ matrix.os }}-${{ matrix.type }}
+
       - name: Install dependencies
         run: sudo apt install -y meson libfmt-dev libsystemd-dev libpq-dev libmd-dev libsodium-dev libluajit-5.1-dev
       - name: Meson Build

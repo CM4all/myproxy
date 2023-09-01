@@ -33,7 +33,6 @@ jobs:
         run: |
           sudo apt-get install -y --no-install-recommends \
             meson \
-            libfmt-dev \
             libsystemd-dev \
             libpq-dev \
             libmd-dev \
@@ -46,6 +45,7 @@ jobs:
             -Ddocumentation=disabled \
             -Dsystemd=enabled \
             -Dpg=enabled \
+             --force-fallback-for=fmt \
             -Dwrap_mode=nofallback \
             output
 

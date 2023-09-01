@@ -17,10 +17,6 @@ on:
 permissions:
   contents: read #  to fetch code (actions/checkout)
 
-env:
-  CC: 'ccache gcc-10'
-  CXX: 'ccache g++-10'
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,7 +30,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.type }}
       - name: Install dependencies
-        run: sudo apt install -y meson g++-10 libfmt-dev libsystemd-dev libpq-dev libmd-dev libsodium-dev libluajit-5.1-dev
+        run: sudo apt install -y meson libfmt-dev libsystemd-dev libpq-dev libmd-dev libsodium-dev libluajit-5.1-dev
       - name: Meson Build
         uses: BSFishy/meson-build@v1.0.3
         with:

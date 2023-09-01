@@ -14,10 +14,14 @@
  * another project.
  */
 class DefaultFifoBuffer : public ForeignFifoBuffer<std::byte> {
-	static constexpr size_t SIZE = 32768;
+	static constexpr size_t SIZE = 8192;
 
 public:
 	DefaultFifoBuffer() noexcept:ForeignFifoBuffer(nullptr) {}
+
+	~DefaultFifoBuffer() noexcept {
+		delete[] GetBuffer();
+	}
 
 	bool IsDefinedAndFull() const noexcept {
 		return IsDefined() && IsFull();

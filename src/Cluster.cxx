@@ -17,10 +17,10 @@
 
 [[gnu::pure]]
 static std::size_t
-AddressHash(SocketAddress address) noexcept
+RendezvousHash(SocketAddress address, std::string_view account) noexcept
 {
-	/* use libsodium's "generichash" (BLAKE2b) which is secure
-	   enough for class HashRing */
+	/* use libsodium's "generichash" (BLAKE2b) which is good
+	   enough for rendezvous hashing */
 	union {
 		std::array<std::byte, crypto_generichash_BYTES_MIN> hash;
 		std::size_t result;
@@ -30,6 +30,7 @@ AddressHash(SocketAddress address) noexcept
 
 	GenericHashState state{sizeof(u.hash)};
 	state.Update(address.GetSteadyPart());
+	state.Update(account);
 	state.Final(u.hash);
 
 	return u.result;
@@ -123,8 +124,7 @@ private:
 
 inline
 Cluster::RendezvousNode::RendezvousNode(const Node &_node) noexcept
-	:node(&_node),
-	 hash(AddressHash(node->address))
+	:node(&_node)
 {
 }
 
@@ -147,19 +147,18 @@ Cluster::~Cluster() noexcept = default;
 SocketAddress
 Cluster::Pick(std::string_view account) noexcept
 {
-	const std::size_t account_hash = djb_hash(AsBytes(account));
+	for (auto &i : rendezvous_nodes)
+		i.hash = RendezvousHash(i.node->address, account);
 
 	/* sort the list for Rendezvous Hashing */
 	std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
-		  [account_hash](const auto &a, const auto &b) noexcept
+		  [](const auto &a, const auto &b) noexcept
 		  {
 			  /* prefer nodes that are alive */
 			  if (a.node->state != b.node->state)
 				  return a.node->state > b.node->state;
 
-			  // TODO is XOR good enough to mix the two hashes?
-			  return (a.hash ^ account_hash) <
-				  (b.hash ^ account_hash);
+			  return a.hash < b.hash;
 		  });
 
 	return rendezvous_nodes.front().node->address;

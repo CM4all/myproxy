@@ -15,6 +15,7 @@
 #include <algorithm> // for std::sort()
 #include <cstdint>
 
+[[gnu::pure]]
 static std::size_t
 AddressHash(SocketAddress address) noexcept
 {

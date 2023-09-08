@@ -130,7 +130,6 @@ subdir('libcommon/src/lua/event')
 subdir('libcommon/src/lua/sodium')
 
 libcommon_require_pg = get_option('pg')
-subdir('libcommon/src/stock')
 subdir('libcommon/src/pg')
 if pg_dep.found()
   subdir('libcommon/src/lua/pg')

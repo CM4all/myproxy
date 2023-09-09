@@ -207,6 +207,14 @@ PostgreSQL arrays; the former encodes a Lua array to a PostgreSQL
 array string, and the latter decodes a PostgreSQL array string to a
 Lua array.
 
+To listen for `PostgreSQL notifications
+<https://www.postgresql.org/docs/current/sql-notify.html>`__, invoke
+the ``listen`` method with a callback function::
+
+  db:listen('bar', function()
+    print("Received a PostgreSQL NOTIFY")
+  end)
+
 
 Examples
 ^^^^^^^^

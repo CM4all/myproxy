@@ -5,9 +5,11 @@
 #pragma once
 
 #include "Listener.hxx"
+#include "Reload.hxx"
 #include "lua/State.hxx"
 #include "event/Loop.hxx"
 #include "event/ShutdownListener.hxx"
+#include "event/SignalEvent.hxx"
 #include "event/net/ServerSocket.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "config.h"
@@ -23,11 +25,15 @@ class Instance {
 
 	ShutdownListener shutdown_listener{event_loop, BIND_THIS_METHOD(OnShutdown)};
 
+	SignalEvent sighup_event;
+
 #ifdef HAVE_LIBSYSTEMD
 	Systemd::Watchdog systemd_watchdog{event_loop};
 #endif // HAVE_LIBSYSTEMD
 
 	Lua::State lua_state;
+
+	Reload reload;
 
 	std::forward_list<MyProxyListener> listeners;
 
@@ -60,4 +66,5 @@ public:
 
 private:
 	void OnShutdown() noexcept;
+	void OnReload(int) noexcept;
 };

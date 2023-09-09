@@ -5,6 +5,7 @@ cm4all-myproxy (0.13) unstable; urgency=low
   * lua: close Lua file descriptors when connection is closed
   * lua: refactor the cgroup API
   * lua: add attribute for inspecting a cgroup's parent
+  * lua: SIGHUP calls Lua function "reload"
 
  --   
 

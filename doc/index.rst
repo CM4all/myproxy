@@ -60,6 +60,14 @@ means they must not do any network I/O, launch child processes, and
 should avoid anything but querying the parameters.
 
 
+``SIGHUP``
+^^^^^^^^^^
+
+On ``systemctl reload cm4all-myproxy`` (i.e. ``SIGHUP``), myproxy
+calls the Lua function ``reload`` if one was defined.  It is up to the
+Lua script to define the exact meaning of this feature.
+
+
 Inspecting Client Connections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

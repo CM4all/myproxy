@@ -6,6 +6,7 @@ After=network-online.target
 [Service]
 User=cm4all-myproxy
 ExecStart=/usr/sbin/cm4all-myproxy
+ExecReload=/bin/kill -HUP $MAINPID
 
 WatchdogSec=2m
 

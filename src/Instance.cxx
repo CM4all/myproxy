@@ -19,12 +19,16 @@ extern "C" {
 
 #include <cstddef>
 
+#include <signal.h>
 #include <sys/socket.h>
 
 Instance::Instance()
-	:lua_state(luaL_newstate())
+	:sighup_event(event_loop, SIGHUP, BIND_THIS_METHOD(OnReload)),
+	 lua_state(luaL_newstate()),
+	 reload(lua_state.get())
 {
 	shutdown_listener.Enable();
+	sighup_event.Enable();
 }
 
 inline void
@@ -88,6 +92,8 @@ void
 Instance::OnShutdown() noexcept
 {
 	shutdown_listener.Disable();
+	sighup_event.Disable();
+
 	listeners.clear();
 
 #ifdef HAVE_LIBSYSTEMD
@@ -97,4 +103,10 @@ Instance::OnShutdown() noexcept
 	/* TODO this is currently necessary because the Pg::Stock
 	   instances created by Lua code don't call Shutdown() */
 	event_loop.Break();
+}
+
+void
+Instance::OnReload(int) noexcept
+{
+	reload.Start();
 }

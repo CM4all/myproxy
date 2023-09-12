@@ -176,7 +176,7 @@ LClient::Index(lua_State *L, const char *name)
 		if (!HavePeerCred())
 			return 0;
 
-		const auto path = ReadProcessCgroup(peer_cred.pid, "");
+		const auto path = ReadProcessCgroup(peer_cred.pid);
 		if (path.empty())
 			return 0;
 

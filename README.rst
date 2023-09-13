@@ -1,9 +1,11 @@
 myproxy
 =======
 
-*myproxy* is a proxy for MySQL.
+*myproxy* is a proxy for MySQL.  It is configured and customized with
+a Lua script.
 
-This project is in an early stage of development and is not yet usable.
+For more information, `read the manual
+<https://myproxy.readthedocs.io/en/latest/>`__ in the `doc` directory.
 
 
 Building myproxy

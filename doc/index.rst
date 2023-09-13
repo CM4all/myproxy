@@ -4,7 +4,8 @@ myproxy
 What is myproxy?
 ----------------
 
-myproxy is a proxy server for MySQL.
+myproxy is a proxy server for MySQL.  It is configured and customized
+with a Lua script.
 
 
 Configuration

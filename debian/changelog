@@ -2,7 +2,7 @@ cm4all-myproxy (0.11) unstable; urgency=low
 
   * fix assertion failure on disconnect
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 20 Sep 2023 22:36:06 +0200
 
 cm4all-myproxy (0.10) unstable; urgency=low
 

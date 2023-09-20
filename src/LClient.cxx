@@ -34,7 +34,7 @@ MakeClientName(SocketAddress address, const struct ucred &cred) noexcept
 		return fmt::format("pid={} uid={}", cred.pid, cred.uid);
 
 	char buffer[256];
-	if (ToString(buffer, sizeof(buffer), address))
+	if (ToString(buffer, address))
 		return buffer;
 
 	return "?";

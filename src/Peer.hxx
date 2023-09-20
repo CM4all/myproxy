@@ -66,6 +66,7 @@ public:
 
 	void Close() noexcept {
 		socket.Close();
+		socket.Destroy();
 	}
 
 	SocketDescriptor GetSocket() const noexcept {

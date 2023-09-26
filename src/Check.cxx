@@ -24,7 +24,7 @@
 
 using std::string_view_literals::operator""sv;
 
-constexpr uint_least32_t client_flag =
+static constexpr uint_least32_t client_flag =
 	Mysql::CLIENT_MYSQL |
 	Mysql::CLIENT_PROTOCOL_41 |
 	Mysql::CLIENT_IGNORE_SIGPIPE |

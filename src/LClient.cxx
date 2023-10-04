@@ -14,7 +14,7 @@
 #include "lua/net/SocketAddress.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
-#include "net/ToString.hxx"
+#include "net/FormatAddress.hxx"
 #include "io/linux/ProcCgroup.hxx"
 #include "util/StringAPI.hxx"
 

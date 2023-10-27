@@ -13,7 +13,7 @@
 bool
 Peer::Send(std::span<const std::byte> src) noexcept
 try {
-	const auto result = socket.Write(src.data(), src.size());
+	const auto result = socket.Write(src);
 	if (result > 0) [[likely]] {
 		if (static_cast<std::size_t>(result) != src.size()) [[unlikely]]
 			throw std::runtime_error{"Short send"};

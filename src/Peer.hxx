@@ -94,7 +94,7 @@ public:
 	}
 
 	ssize_t WriteSome(std::span<const std::byte> src) noexcept {
-		return socket.Write(src.data(), src.size());
+		return socket.Write(src);
 	}
 
 	bool Send(std::span<const std::byte> src) noexcept;

@@ -25,6 +25,10 @@
 #include "util/ScopeExit.hxx"
 #include "config.h"
 
+#ifdef HAVE_LIBSYSTEMD
+#include "AsyncResolver.hxx"
+#endif
+
 #ifdef HAVE_PG
 #include "lua/pg/Init.hxx"
 #endif
@@ -177,6 +181,11 @@ try {
 	instance.Check();
 
 	SetupRuntimeState(instance.GetLuaState());
+
+#ifdef HAVE_LIBSYSTEMD
+	InitAsyncResolver(instance.GetEventLoop(),
+			  instance.GetLuaState());
+#endif
 
 	policy_init();
 

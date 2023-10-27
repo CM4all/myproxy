@@ -108,6 +108,8 @@ inc = include_directories(
 
 libcommon_enable_boost = false
 
+sources = []
+
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
 subdir('libcommon/src/lib/sodium')
@@ -128,6 +130,31 @@ subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
 subdir('libcommon/src/lua/sodium')
+
+if libsystemd.found()
+  # systemd support also enables the systemd-resolved client which
+  # uses a protocol with JSON payloads
+  subdir('libcommon/src/json')
+
+  libresolved = static_library(
+    'resolved',
+    'src/ResolvedClient.cxx',
+    include_directories: inc,
+    dependencies: [
+      boost_json_dep,
+      event_dep,
+      net_dep,
+    ],
+  )
+
+  resolved_dep = declare_dependency(
+    link_with: libresolved,
+  )
+
+  sources += 'src/AsyncResolver.cxx'
+else
+  resolved_dep = dependency('', required: false)
+endif
 
 libcommon_require_pg = get_option('pg')
 subdir('libcommon/src/pg')
@@ -161,6 +188,7 @@ my_dep = declare_dependency(
 
 executable(
   'cm4all-myproxy',
+  sources,
   'src/system/SetupProcess.cxx',
   'src/Options.cxx',
   'src/Cluster.cxx',
@@ -189,6 +217,7 @@ executable(
     lua_sodium_dep,
     pg_dep,
     sodium_dep,
+    resolved_dep,
   ],
   install: true,
   install_dir: 'sbin',

@@ -13,6 +13,7 @@
 #include "net/Resolver.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/AllocatedSocketAddress.hxx"
+#include "config.h"
 
 extern "C" {
 #include <lauxlib.h>

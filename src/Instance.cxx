@@ -13,6 +13,7 @@ extern "C" {
 }
 
 #ifdef HAVE_LIBSYSTEMD
+#include "AsyncResolver.hxx"
 #include <systemd/sd-daemon.h>
 #endif
 

@@ -31,8 +31,8 @@ public:
 	}
 
 	/* virtual methods from ResolveHostnameHandler */
-	void OnResolveHostname(SocketAddress address) noexcept override {
-		Lua::NewSocketAddress(L, address);
+	void OnResolveHostname(std::span<const SocketAddress> address) noexcept override {
+		Lua::NewSocketAddress(L, address.front());
 		Lua::Resume(L, 1);
 	}
 

@@ -107,6 +107,7 @@ inc = include_directories(
 )
 
 libcommon_enable_boost = false
+libcommon_enable_json = false
 
 sources = []
 
@@ -130,7 +131,6 @@ if libsystemd.found()
   # systemd support also enables the systemd-resolved client which
   # uses a protocol with JSON payloads
   sources += 'src/AsyncResolver.cxx'
-  subdir('libcommon/src/json')
 
   subdir('libcommon/src/event/systemd')
   libsystemd = event_systemd_dep

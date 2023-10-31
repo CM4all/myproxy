@@ -46,7 +46,7 @@ jobs:
             -Ddocumentation=disabled \
             -Dsystemd=enabled \
             -Dpg=enabled \
-             --force-fallback-for=fmt \
+             --force-fallback-for=fmt,nlohmann_json \
             -Dwrap_mode=nofallback \
             output
 

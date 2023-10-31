@@ -3,7 +3,7 @@
 // author: Max Kellermann <mk@cm4all.com>
 
 #include "AsyncResolver.hxx"
-#include "ResolvedClient.hxx"
+#include "event/systemd/ResolvedClient.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"

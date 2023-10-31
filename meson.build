@@ -120,11 +120,6 @@ subdir('libcommon/src/net')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
 
-if libsystemd.found()
-  subdir('libcommon/src/event/systemd')
-  libsystemd = event_systemd_dep
-endif
-
 subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
 subdir('libcommon/src/lua/net')
@@ -134,26 +129,11 @@ subdir('libcommon/src/lua/sodium')
 if libsystemd.found()
   # systemd support also enables the systemd-resolved client which
   # uses a protocol with JSON payloads
+  sources += 'src/AsyncResolver.cxx'
   subdir('libcommon/src/json')
 
-  libresolved = static_library(
-    'resolved',
-    'src/ResolvedClient.cxx',
-    include_directories: inc,
-    dependencies: [
-      boost_json_dep,
-      event_dep,
-      net_dep,
-    ],
-  )
-
-  resolved_dep = declare_dependency(
-    link_with: libresolved,
-  )
-
-  sources += 'src/AsyncResolver.cxx'
-else
-  resolved_dep = dependency('', required: false)
+  subdir('libcommon/src/event/systemd')
+  libsystemd = event_systemd_dep
 endif
 
 libcommon_require_pg = get_option('pg')
@@ -217,7 +197,6 @@ executable(
     lua_sodium_dep,
     pg_dep,
     sodium_dep,
-    resolved_dep,
   ],
   install: true,
   install_dir: 'sbin',

@@ -9,15 +9,3 @@ executable(
     event_net_dep,
   ],
 )
-
-if resolved_dep.found()
-  executable(
-    'RunResolvedClient',
-    'RunResolvedClient.cxx',
-    include_directories: inc,
-    dependencies: [
-      resolved_dep,
-      event_net_dep,
-    ],
-  )
-endif

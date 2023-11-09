@@ -23,7 +23,8 @@ public:
 		:L(_L) {}
 
 	void Start(EventLoop &event_loop, std::string_view hostname) noexcept {
-		ResolveHostname(event_loop, hostname, 3306, *this, cancel_ptr);
+		ResolveHostname(event_loop, hostname, 3306, AF_UNSPEC,
+				*this, cancel_ptr);
 	}
 
 	void Cancel() noexcept {

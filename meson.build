@@ -113,6 +113,7 @@ sources = []
 
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
+subdir('libcommon/src/lib/nlohmann_json')
 subdir('libcommon/src/lib/sodium')
 subdir('libcommon/src/io')
 subdir('libcommon/src/io/linux')

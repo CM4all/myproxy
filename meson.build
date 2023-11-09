@@ -14,9 +14,6 @@ conf = configuration_data()
 
 common_flags = [
   '-D_GNU_SOURCE',
-
-  # disable boost specific code in libcommon
-  '-DNO_BOOST',
 ]
 
 test_common_flags = [
@@ -106,7 +103,6 @@ inc = include_directories(
   'libcommon/src',
 )
 
-libcommon_enable_boost = false
 libcommon_enable_json = false
 
 sources = []

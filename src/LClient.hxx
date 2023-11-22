@@ -25,6 +25,11 @@ class LClient {
 	 */
 	Lua::Value notes;
 
+	/**
+	 * An #XattrTable instance.
+	 */
+	Lua::Value cgroup_xattr;
+
 	const struct ucred peer_cred;
 
 	std::string name_;

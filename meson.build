@@ -120,6 +120,7 @@ subdir('libcommon/src/event/net')
 
 subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
+subdir('libcommon/src/lua/io')
 subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
 subdir('libcommon/src/lua/sodium')
@@ -189,6 +190,7 @@ executable(
     net_dep,
     event_dep,
     lua_dep,
+    lua_io_dep,
     lua_net_dep,
     lua_event_dep,
     lua_sodium_dep,

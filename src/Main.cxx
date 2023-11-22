@@ -17,6 +17,7 @@
 #include "lua/net/SocketAddress.hxx"
 #include "lua/sodium/Init.hxx"
 #include "lua/event/Init.hxx"
+#include "lua/io/XattrTable.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
 #include "net/AllocatedSocketAddress.hxx"
@@ -154,6 +155,8 @@ static void
 SetupRuntimeState(lua_State *L)
 {
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
+
+	Lua::InitXattrTable(L);
 
 	UnregisterLuaResolver(L);
 	LClient::Register(L);

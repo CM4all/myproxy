@@ -12,9 +12,14 @@
 #include "lua/ForEach.hxx"
 #include "lua/StringView.hxx"
 #include "lua/net/SocketAddress.hxx"
+#include "lua/io/XattrTable.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketDescriptor.hxx"
 #include "net/FormatAddress.hxx"
+#include "io/Beneath.hxx"
+#include "io/FileAt.hxx"
+#include "io/Open.hxx"
+#include "io/UniqueFileDescriptor.hxx"
 #include "io/linux/ProcCgroup.hxx"
 #include "util/StringAPI.hxx"
 
@@ -47,6 +52,7 @@ LClient::LClient(lua_State *L, SocketDescriptor socket,
 	:address(L),
 	 server_version(_server_version),
 	 notes(L),
+	 cgroup_xattr(L),
 	 peer_cred(socket.GetPeerCredentials()),
 	 name_(MakeClientName(_address, peer_cred))
 {
@@ -182,6 +188,29 @@ LClient::Index(lua_State *L, const char *name)
 
 		Lua::Push(L, path);
 		return 1;
+	} else if (StringIsEqual(name, "cgroup_xattr")) {
+		cgroup_xattr.Push(L);
+		if (!lua_isnil(L, -1))
+			return 1;
+
+		lua_pop(L, 1);
+
+		if (!HavePeerCred())
+			return 0;
+
+		const auto path = ReadProcessCgroup(peer_cred.pid);
+		if (path.empty())
+			return 0;
+
+		try {
+			const auto sys_fs_cgroup = OpenPath("/sys/fs/cgroup");
+			auto fd = OpenReadOnlyBeneath({sys_fs_cgroup, path.c_str() + 1});
+			Lua::NewXattrTable(L, std::move(fd));
+			cgroup_xattr.Set(L, Lua::RelativeStackIndex{-1});
+			return 1;
+		} catch (...) {
+			Lua::RaiseCurrent(L);
+		}
 	} else if (StringIsEqual(name, "server_version")) {
 		Lua::Push(L, server_version);
 		return 1;

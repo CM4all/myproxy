@@ -1,6 +1,7 @@
 cm4all-myproxy (0.12) unstable; urgency=low
 
   * asynchronous DNS resolver using systemd-resolved
+  * support cgroup xattr
 
  --   
 

@@ -78,6 +78,9 @@ The following attributes of the ``client`` parameter can be queried:
   noted in :file:`/proc/self/cgroup`,
   e.g. :file:`/user.slice/user-1000.slice/session-42.scope`
 
+* ``cgroup_xattr``: A table containing extended attributes of the
+  control group.
+
 * :samp:`server_version`: The server version string.  In
   ``on_connect``, this attribute may be modified to announce a
   different version to the client.  After a connection to the real

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "lua/Value.hxx"
-
 #include <string>
 #include <string_view>
 
@@ -16,19 +14,9 @@ class SocketAddress;
 class SocketDescriptor;
 
 class LClient {
-	Lua::Value address;
+	lua_State *const lua_state;
 
 	std::string server_version;
-
-	/**
-	 * A table containing notes created by Lua code.
-	 */
-	Lua::Value notes;
-
-	/**
-	 * An #XattrTable instance.
-	 */
-	Lua::Value cgroup_xattr;
 
 	const struct ucred peer_cred;
 
@@ -41,7 +29,7 @@ public:
 		std::string_view server_version);
 
 	lua_State *GetLuaState() const noexcept {
-		return address.GetState();
+		return lua_state;
 	}
 
 	static void Register(lua_State *L);

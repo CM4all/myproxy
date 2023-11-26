@@ -49,16 +49,17 @@ inline
 LClient::LClient(lua_State *L, SocketDescriptor socket,
 		 SocketAddress _address,
 		 std::string_view _server_version)
-	:address(L),
+	:lua_state(L),
 	 server_version(_server_version),
-	 notes(L),
-	 cgroup_xattr(L),
 	 peer_cred(socket.GetPeerCredentials()),
 	 name_(MakeClientName(_address, peer_cred))
 {
+	lua_newtable(L);
+
 	Lua::NewSocketAddress(L, _address);
-	address.Set(L, Lua::RelativeStackIndex{-1});
-	lua_pop(L, 1);
+	lua_setfield(L, -2, "address");
+
+	lua_setfenv(L, -2);
 }
 
 static constexpr char lua_client_class[] = "myproxy.client";
@@ -141,23 +142,32 @@ LClient::Index(lua_State *L, const char *name)
 		}
 	}
 
-	if (StringIsEqual(name, "address")) {
-		address.Push(L);
+	// look it up in the fenv (our cache)
+	lua_getfenv(L, 1);
+	lua_getfield(L, -1, name);
+
+	if (!lua_isnil(L, -1)) {
+		// remove the fenv from the Lua stack
+		lua_remove(L, -2);
 		return 1;
-	} else if (StringIsEqual(name, "account")) {
+	}
+
+	lua_pop(L, 2);
+
+	if (StringIsEqual(name, "account")) {
 		if (!account.empty())
 			Lua::Push(L, account);
 		else
 			lua_pushnil(L);
 		return 1;
 	} else if (StringIsEqual(name, "notes")) {
-		notes.Push(L);
+		lua_newtable(L);
 
-		if (lua_isnil(L, -1)) {
-			lua_pop(L, 1);
-			lua_newtable(L);
-			notes.Set(L, Lua::RelativeStackIndex{-1});
-		}
+		// copy a reference to the fenv (our cache)
+		lua_getfenv(L, 1);
+		Lua::SetField(L, Lua::RelativeStackIndex{-1},
+			      name, Lua::RelativeStackIndex{-2});
+		lua_pop(L, 1);
 
 		return 1;
 	} else if (StringIsEqual(name, "pid")) {
@@ -189,12 +199,6 @@ LClient::Index(lua_State *L, const char *name)
 		Lua::Push(L, path);
 		return 1;
 	} else if (StringIsEqual(name, "cgroup_xattr")) {
-		cgroup_xattr.Push(L);
-		if (!lua_isnil(L, -1))
-			return 1;
-
-		lua_pop(L, 1);
-
 		if (!HavePeerCred())
 			return 0;
 
@@ -206,11 +210,17 @@ LClient::Index(lua_State *L, const char *name)
 			const auto sys_fs_cgroup = OpenPath("/sys/fs/cgroup");
 			auto fd = OpenReadOnlyBeneath({sys_fs_cgroup, path.c_str() + 1});
 			Lua::NewXattrTable(L, std::move(fd));
-			cgroup_xattr.Set(L, Lua::RelativeStackIndex{-1});
-			return 1;
 		} catch (...) {
 			Lua::RaiseCurrent(L);
 		}
+
+		// copy a reference to the fenv (our cache)
+		lua_getfenv(L, 1);
+		Lua::SetField(L, Lua::RelativeStackIndex{-1},
+			      name, Lua::RelativeStackIndex{-2});
+		lua_pop(L, 1);
+
+		return 1;
 	} else if (StringIsEqual(name, "server_version")) {
 		Lua::Push(L, server_version);
 		return 1;
@@ -247,7 +257,10 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 			account = new_value;
 		}
 
-		address.Push(L);
+		lua_getfenv(L, 1);
+		lua_getfield(L, -1, "address");
+		lua_remove(L, -2);
+
 		name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
 		lua_pop(L, 1);
 

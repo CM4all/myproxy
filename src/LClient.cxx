@@ -9,6 +9,7 @@
 #include "OptionsTable.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
+#include "lua/FenvCache.hxx"
 #include "lua/ForEach.hxx"
 #include "lua/StringView.hxx"
 #include "lua/net/SocketAddress.hxx"
@@ -143,16 +144,8 @@ LClient::Index(lua_State *L, const char *name)
 	}
 
 	// look it up in the fenv (our cache)
-	lua_getfenv(L, 1);
-	lua_getfield(L, -1, name);
-
-	if (!lua_isnil(L, -1)) {
-		// remove the fenv from the Lua stack
-		lua_remove(L, -2);
+	if (Lua::GetFenvCache(L, 1, name))
 		return 1;
-	}
-
-	lua_pop(L, 2);
 
 	if (StringIsEqual(name, "account")) {
 		if (!account.empty())
@@ -164,10 +157,7 @@ LClient::Index(lua_State *L, const char *name)
 		lua_newtable(L);
 
 		// copy a reference to the fenv (our cache)
-		lua_getfenv(L, 1);
-		Lua::SetField(L, Lua::RelativeStackIndex{-1},
-			      name, Lua::RelativeStackIndex{-2});
-		lua_pop(L, 1);
+		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});
 
 		return 1;
 	} else if (StringIsEqual(name, "pid")) {
@@ -215,10 +205,7 @@ LClient::Index(lua_State *L, const char *name)
 		}
 
 		// copy a reference to the fenv (our cache)
-		lua_getfenv(L, 1);
-		Lua::SetField(L, Lua::RelativeStackIndex{-1},
-			      name, Lua::RelativeStackIndex{-2});
-		lua_pop(L, 1);
+		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});
 
 		return 1;
 	} else if (StringIsEqual(name, "server_version")) {
@@ -257,12 +244,10 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 			account = new_value;
 		}
 
-		lua_getfenv(L, 1);
-		lua_getfield(L, -1, "address");
-		lua_remove(L, -2);
-
-		name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
-		lua_pop(L, 1);
+		if (Lua::GetFenvCache(L, 1, "address")) {
+			name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
+			lua_pop(L, 1);
+		}
 
 		if (!account.empty())
 			name_ += fmt::format(" \"{}\"", account);

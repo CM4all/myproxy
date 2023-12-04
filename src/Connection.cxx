@@ -19,7 +19,6 @@
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
-#include "lua/AutoClose.hxx"
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
@@ -527,13 +526,15 @@ Connection::Connection(EventLoop &event_loop,
 		       UniqueSocketDescriptor fd,
 		       SocketAddress address)
 	:handler(std::move(_handler)),
+	 auto_close(handler->GetState()),
 	 lua_client(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
 	 defer_delete(event_loop, BIND_THIS_METHOD(OnDeferredDelete)),
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
-	lua_client_ptr = LClient::New(GetLuaState(), incoming.GetSocket(), address,
+	lua_client_ptr = LClient::New(GetLuaState(), auto_close,
+				      incoming.GetSocket(), address,
 				      "5.7.30"sv);
 	lua_client.Set(GetLuaState(), Lua::RelativeStackIndex{-1});
 	lua_pop(GetLuaState(), 1);
@@ -541,10 +542,7 @@ Connection::Connection(EventLoop &event_loop,
 	StartCoroutine(InvokeLuaConnect());
 }
 
-Connection::~Connection() noexcept
-{
-	Lua::AutoClose(GetLuaState(), lua_client);
-}
+Connection::~Connection() noexcept = default;
 
 std::string_view
 Connection::GetName() const noexcept

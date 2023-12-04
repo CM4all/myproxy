@@ -7,6 +7,7 @@
 #include "Action.hxx"
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
+#include "lua/AutoCloseList.hxx"
 #include "lua/Value.hxx"
 #include "co/InvokeTask.hxx"
 #include "event/DeferEvent.hxx"
@@ -29,6 +30,8 @@ class Connection final
 	  ConnectSocketHandler
 {
 	const std::shared_ptr<LuaHandler> handler;
+
+	Lua::AutoCloseList auto_close;
 
 	Lua::Value lua_client;
 

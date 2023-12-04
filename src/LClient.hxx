@@ -12,9 +12,12 @@
 struct lua_State;
 class SocketAddress;
 class SocketDescriptor;
+namespace Lua { class AutoCloseList; }
 
 class LClient {
 	lua_State *const lua_state;
+
+	Lua::AutoCloseList *auto_close;
 
 	std::string server_version;
 
@@ -25,7 +28,8 @@ class LClient {
 	std::string account;
 
 public:
-	LClient(lua_State *L, SocketDescriptor socket, SocketAddress _address,
+	LClient(lua_State *L, Lua::AutoCloseList &_auto_close,
+		SocketDescriptor socket, SocketAddress _address,
 		std::string_view server_version);
 
 	lua_State *GetLuaState() const noexcept {
@@ -33,7 +37,8 @@ public:
 	}
 
 	static void Register(lua_State *L);
-	static LClient *New(lua_State *L, SocketDescriptor socket, SocketAddress address,
+	static LClient *New(lua_State *L, Lua::AutoCloseList &_auto_close,
+			    SocketDescriptor socket, SocketAddress address,
 			    std::string_view server_version);
 
 	std::string_view GetName() const noexcept {

@@ -7,7 +7,7 @@
 #include "Action.hxx"
 #include "LAction.hxx"
 #include "OptionsTable.hxx"
-#include "lua/AutoClose.hxx"
+#include "lua/AutoCloseList.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/FenvCache.hxx"
@@ -48,10 +48,11 @@ MakeClientName(SocketAddress address, const struct ucred &cred) noexcept
 }
 
 inline
-LClient::LClient(lua_State *L, SocketDescriptor socket,
+LClient::LClient(lua_State *L, Lua::AutoCloseList &_auto_close,
+		 SocketDescriptor socket,
 		 SocketAddress _address,
 		 std::string_view _server_version)
-	:lua_state(L),
+	:lua_state(L), auto_close(&_auto_close),
 	 server_version(_server_version),
 	 peer_cred(socket.GetPeerCredentials()),
 	 name_(MakeClientName(_address, peer_cred))
@@ -211,7 +212,7 @@ LClient::Index(lua_State *L)
 		}
 
 		// auto-close the file descriptor when the connection is closed
-		Lua::AddAutoClose(L, Lua::StackIndex{1}, Lua::RelativeStackIndex{-1});
+		auto_close->Add(L, Lua::RelativeStackIndex{-1});
 
 		// copy a reference to the fenv (our cache)
 		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});
@@ -274,8 +275,10 @@ LClient::Register(lua_State *L)
 }
 
 LClient *
-LClient::New(lua_State *L, SocketDescriptor socket, SocketAddress address,
+LClient::New(lua_State *L, Lua::AutoCloseList &auto_close,
+	     SocketDescriptor socket, SocketAddress address,
 	     std::string_view server_version)
 {
-	return LuaClient::New(L, L, socket, address, server_version);
+	return LuaClient::New(L, L, auto_close,
+			      socket, address, server_version);
 }

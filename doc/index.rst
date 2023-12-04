@@ -74,12 +74,14 @@ The following attributes of the ``client`` parameter can be queried:
 * :samp:`account`: Set this to an identifier of the user account.
   This will be used in the log prefix and for choosing a cluster node.
 
-* :samp:`cgroup`: The control group path of the client process as
-  noted in :file:`/proc/self/cgroup`,
-  e.g. :file:`/user.slice/user-1000.slice/session-42.scope`
+* :samp:`cgroup`: The control group of the client process with the
+  following attributes:
 
-* ``cgroup_xattr``: A table containing extended attributes of the
-  control group.
+  * ``path``: the cgroup path as noted in :file:`/proc/self/cgroup`,
+    e.g. :file:`/user.slice/user-1000.slice/session-42.scope`
+
+  * ``xattr``: A table containing extended attributes of the
+    control group.
 
 * :samp:`server_version`: The server version string.  In
   ``on_connect``, this attribute may be modified to announce a

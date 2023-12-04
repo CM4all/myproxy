@@ -18,6 +18,7 @@
 #include "lua/sodium/Init.hxx"
 #include "lua/event/Init.hxx"
 #include "lua/io/XattrTable.hxx"
+#include "lua/io/CgroupInfo.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
 #include "net/AllocatedSocketAddress.hxx"
@@ -160,6 +161,7 @@ SetupRuntimeState(lua_State *L)
 
 	UnregisterLuaResolver(L);
 	LClient::Register(L);
+	Lua::RegisterCgroupInfo(L);
 	RegisterLuaAction(L);
 }
 

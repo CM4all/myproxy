@@ -143,6 +143,7 @@ LClient::Index(lua_State *L)
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameters");
 
+	constexpr Lua::StackIndex name_idx{2};
 	const char *const name = luaL_checkstring(L, 2);
 
 	if (IsStale())
@@ -156,7 +157,7 @@ LClient::Index(lua_State *L)
 	}
 
 	// look it up in the fenv (our cache)
-	if (Lua::GetFenvCache(L, 1, name))
+	if (Lua::GetFenvCache(L, 1, name_idx))
 		return 1;
 
 	if (StringIsEqual(name, "account")) {
@@ -169,7 +170,7 @@ LClient::Index(lua_State *L)
 		lua_newtable(L);
 
 		// copy a reference to the fenv (our cache)
-		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});
+		Lua::SetFenvCache(L, 1, name_idx, Lua::RelativeStackIndex{-1});
 
 		return 1;
 	} else if (StringIsEqual(name, "pid")) {
@@ -201,7 +202,7 @@ LClient::Index(lua_State *L)
 		Lua::NewCgroupInfo(L, *auto_close, path);
 
 		// copy a reference to the fenv (our cache)
-		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});
+		Lua::SetFenvCache(L, 1, name_idx, Lua::RelativeStackIndex{-1});
 
 		return 1;
 	} else if (StringIsEqual(name, "server_version")) {

@@ -7,6 +7,7 @@
 #include "Action.hxx"
 #include "LAction.hxx"
 #include "OptionsTable.hxx"
+#include "lua/AutoClose.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/FenvCache.hxx"
@@ -203,6 +204,9 @@ LClient::Index(lua_State *L, const char *name)
 		} catch (...) {
 			Lua::RaiseCurrent(L);
 		}
+
+		// auto-close the file descriptor when the connection is closed
+		Lua::AddAutoClose(L, Lua::StackIndex{1}, Lua::RelativeStackIndex{-1});
 
 		// copy a reference to the fenv (our cache)
 		Lua::SetFenvCache(L, 1, name, Lua::RelativeStackIndex{-1});

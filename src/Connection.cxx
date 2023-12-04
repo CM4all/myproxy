@@ -19,6 +19,7 @@
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
+#include "lua/AutoClose.hxx"
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
 #include "lua/net/SocketAddress.hxx"
@@ -33,8 +34,6 @@
 #include <stdexcept>
 
 using std::string_view_literals::operator""sv;
-
-Connection::~Connection() noexcept = default;
 
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
@@ -540,6 +539,11 @@ Connection::Connection(EventLoop &event_loop,
 	lua_pop(GetLuaState(), 1);
 
 	StartCoroutine(InvokeLuaConnect());
+}
+
+Connection::~Connection() noexcept
+{
+	Lua::AutoClose(GetLuaState(), lua_client);
 }
 
 std::string_view

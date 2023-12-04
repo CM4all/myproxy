@@ -53,11 +53,8 @@ public:
 	}
 
 private:
-	int Index(lua_State *L, const char *name);
-	static int _Index(lua_State *L);
-
-	int NewIndex(lua_State *L, const char *name, int value_idx);
-	static int _NewIndex(lua_State *L);
+	int Index(lua_State *L);
+	int NewIndex(lua_State *L);
 
 	bool HavePeerCred() const noexcept {
 		return peer_cred.pid >= 0;

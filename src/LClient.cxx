@@ -135,8 +135,13 @@ static constexpr struct luaL_Reg client_methods [] = {
 };
 
 inline int
-LClient::Index(lua_State *L, const char *name)
+LClient::Index(lua_State *L)
 {
+	if (lua_gettop(L) != 2)
+		return luaL_error(L, "Invalid parameters");
+
+	const char *const name = luaL_checkstring(L, 2);
+
 	for (const auto *i = client_methods; i->name != nullptr; ++i) {
 		if (StringIsEqual(i->name, name)) {
 			Lua::Push(L, i->func);
@@ -219,18 +224,15 @@ LClient::Index(lua_State *L, const char *name)
 		return luaL_error(L, "Unknown attribute");
 }
 
-int
-LClient::_Index(lua_State *L)
+inline int
+LClient::NewIndex(lua_State *L)
 {
-	if (lua_gettop(L) != 2)
+	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
 
-	return LuaClient::Cast(L, 1).Index(L, luaL_checkstring(L, 2));
-}
+	const char *const name = luaL_checkstring(L, 2);
+	constexpr int value_idx = 3;
 
-inline int
-LClient::NewIndex(lua_State *L, const char *name, int value_idx)
-{
 	if (StringIsEqual(name, "server_version")) {
 		const char *new_value = luaL_checkstring(L, value_idx);
 		luaL_argcheck(L, *new_value != 0, value_idx, "Empty string not allowed");
@@ -260,23 +262,14 @@ LClient::NewIndex(lua_State *L, const char *name, int value_idx)
 		return luaL_error(L, "Unknown attribute");
 }
 
-int
-LClient::_NewIndex(lua_State *L)
-{
-	if (lua_gettop(L) != 3)
-		return luaL_error(L, "Invalid parameters");
-
-	return LuaClient::Cast(L, 1).NewIndex(L, luaL_checkstring(L, 2), 3);
-}
-
 void
 LClient::Register(lua_State *L)
 {
 	using namespace Lua;
 
 	LuaClient::Register(L);
-	SetTable(L, RelativeStackIndex{-1}, "__index", _Index);
-	SetTable(L, RelativeStackIndex{-1}, "__newindex", _NewIndex);
+	SetField(L, RelativeStackIndex{-1}, "__index", LuaClient::WrapMethod<&LClient::Index>());
+	SetField(L, RelativeStackIndex{-1}, "__newindex", LuaClient::WrapMethod<&LClient::NewIndex>());
 	lua_pop(L, 1);
 }
 

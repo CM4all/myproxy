@@ -57,6 +57,8 @@ LClient::LClient(lua_State *L, Lua::AutoCloseList &_auto_close,
 	 peer_cred(socket.GetPeerCredentials()),
 	 name_(MakeClientName(_address, peer_cred))
 {
+	auto_close->Add(L, Lua::RelativeStackIndex{-1});
+
 	lua_newtable(L);
 
 	Lua::NewSocketAddress(L, _address);
@@ -142,6 +144,9 @@ LClient::Index(lua_State *L)
 		return luaL_error(L, "Invalid parameters");
 
 	const char *const name = luaL_checkstring(L, 2);
+
+	if (IsStale())
+		return luaL_error(L, "Stale object");
 
 	for (const auto *i = client_methods; i->name != nullptr; ++i) {
 		if (StringIsEqual(i->name, name)) {
@@ -234,6 +239,9 @@ LClient::NewIndex(lua_State *L)
 	const char *const name = luaL_checkstring(L, 2);
 	constexpr int value_idx = 3;
 
+	if (IsStale())
+		return luaL_error(L, "Stale object");
+
 	if (StringIsEqual(name, "server_version")) {
 		const char *new_value = luaL_checkstring(L, value_idx);
 		luaL_argcheck(L, *new_value != 0, value_idx, "Empty string not allowed");
@@ -269,6 +277,7 @@ LClient::Register(lua_State *L)
 	using namespace Lua;
 
 	LuaClient::Register(L);
+	SetTable(L, RelativeStackIndex{-1}, "__close", LuaClient::WrapMethod<&LClient::Close>());
 	SetField(L, RelativeStackIndex{-1}, "__index", LuaClient::WrapMethod<&LClient::Index>());
 	SetField(L, RelativeStackIndex{-1}, "__newindex", LuaClient::WrapMethod<&LClient::NewIndex>());
 	lua_pop(L, 1);

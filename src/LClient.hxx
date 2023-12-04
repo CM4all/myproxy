@@ -36,6 +36,10 @@ public:
 		return lua_state;
 	}
 
+	bool IsStale() const noexcept {
+		return auto_close == nullptr;
+	}
+
 	static void Register(lua_State *L);
 	static LClient *New(lua_State *L, Lua::AutoCloseList &_auto_close,
 			    SocketDescriptor socket, SocketAddress address,
@@ -58,6 +62,11 @@ public:
 	}
 
 private:
+	int Close(lua_State *) {
+		auto_close = nullptr;
+		return 0;
+	}
+
 	int Index(lua_State *L);
 	int NewIndex(lua_State *L);
 

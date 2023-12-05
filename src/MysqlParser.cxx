@@ -147,7 +147,14 @@ ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities)
 		packet.status_flags = d.ReadInt2();
 	}
 
-	// TODO implement the rest
+	if (capabilities & CLIENT_SESSION_TRACK) {
+		packet.info = d.ReadLengthEncodedString();
+
+		if (packet.status_flags & SERVER_SESSION_STATE_CHANGED)
+			packet.session_state_info = d.ReadLengthEncodedString();
+	} else {
+		packet.info = d.ReadRestOfPacketString();
+	}
 
 	return packet;
 }

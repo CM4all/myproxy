@@ -56,6 +56,7 @@ AuthSwitchRequest
 ParseAuthSwitchRequest(std::span<const std::byte> payload);
 
 struct OkPacket {
+	std::string_view info, session_state_info;
 	uint_least64_t affected_rows;
 	uint_least64_t last_insert_id;
 	uint_least16_t status_flags;

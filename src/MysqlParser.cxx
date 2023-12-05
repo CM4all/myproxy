@@ -187,7 +187,7 @@ ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
 
 	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
 		d.ReadVariableLengthString(1); // sql_state_marker
-		d.ReadVariableLengthString(5); // sql_state
+		packet.sql_state = d.ReadVariableLengthString(5); // sql_state
 	}
 
 	packet.error_message = d.ReadRestOfPacketString();

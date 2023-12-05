@@ -69,6 +69,7 @@ OkPacket
 ParseEof(std::span<const std::byte> payload, uint_least32_t capabilities);
 
 struct ErrPacket {
+	std::string_view sql_state;
 	std::string_view error_message;
 	ErrorCode error_code;
 };

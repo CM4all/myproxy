@@ -330,7 +330,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 
 static auto
 MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
-			uint8_t sequence_id, uint_least32_t client_flag,
+			uint_least8_t sequence_id, uint_least32_t client_flag,
 			const ConnectAction &action)
 {
 	if (!action.password_sha1.empty()) {
@@ -350,7 +350,8 @@ MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
 }
 
 MysqlHandler::Result
-Connection::Outgoing::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
+Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
+				  std::span<const std::byte> payload)
 {
 	assert(!connection.incoming.command_phase);
 
@@ -383,7 +384,7 @@ Connection::Outgoing::OnHandshake(uint8_t sequence_id, std::span<const std::byte
 
 static auto
 MakeAuthSwitchResponse(const Mysql::AuthSwitchRequest &auth_switch_request,
-		       uint8_t sequence_id,
+		       uint_least8_t sequence_id,
 		       const ConnectAction &action)
 {
 	return Mysql::MakeAuthSwitchResponse(auth_switch_request, sequence_id,
@@ -391,7 +392,8 @@ MakeAuthSwitchResponse(const Mysql::AuthSwitchRequest &auth_switch_request,
 }
 
 MysqlHandler::Result
-Connection::Outgoing::OnAuthSwitchRequest(uint8_t sequence_id, std::span<const std::byte> payload)
+Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
+					  std::span<const std::byte> payload)
 {
 	assert(!connection.incoming.command_phase);
 

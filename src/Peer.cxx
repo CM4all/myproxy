@@ -45,7 +45,7 @@ Peer::Send(Mysql::PacketSerializer &&s) noexcept
 }
 
 bool
-Peer::SendOk(uint8_t sequence_id) noexcept
+Peer::SendOk(uint_least8_t sequence_id) noexcept
 {
 	return Send(Mysql::MakeOk(sequence_id, capabilities));
 }

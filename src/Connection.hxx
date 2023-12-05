@@ -79,10 +79,10 @@ class Connection final
 		Outgoing(Connection &_connection,
 			 UniqueSocketDescriptor fd) noexcept;
 
-		Result OnHandshake(uint8_t sequence_id,
+		Result OnHandshake(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
 
-		Result OnAuthSwitchRequest(uint8_t sequence_id,
+		Result OnAuthSwitchRequest(uint_least8_t sequence_id,
 					   std::span<const std::byte> payload);
 
 		/* virtual methods from PeerSocketHandler */

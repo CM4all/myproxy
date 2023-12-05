@@ -108,9 +108,9 @@ private:
 		delete this;
 	}
 
-	Result OnHandshake(uint8_t sequence_id,
+	Result OnHandshake(uint_least8_t sequence_id,
 			   std::span<const std::byte> payload);
-	Result OnAuthSwitchRequest(uint8_t sequence_id,
+	Result OnAuthSwitchRequest(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
 	Result OnCommandPhase();
 
@@ -163,7 +163,7 @@ private:
 };
 
 inline MysqlHandler::Result
-MysqlCheck::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
+MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> payload)
 {
 	using namespace Mysql;
 
@@ -192,7 +192,7 @@ MysqlCheck::OnHandshake(uint8_t sequence_id, std::span<const std::byte> payload)
 }
 
 inline MysqlHandler::Result
-MysqlCheck::OnAuthSwitchRequest(uint8_t sequence_id,
+MysqlCheck::OnAuthSwitchRequest(uint_least8_t sequence_id,
 				std::span<const std::byte> payload)
 {
 	using namespace Mysql;

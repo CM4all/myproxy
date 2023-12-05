@@ -100,7 +100,7 @@ public:
 	bool Send(std::span<const std::byte> src) noexcept;
 	bool Send(Mysql::PacketSerializer &&s) noexcept;
 
-	bool SendOk(uint8_t sequence_id) noexcept;
+	bool SendOk(uint_least8_t sequence_id) noexcept;
 
 	bool SendErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
 		     std::string_view sql_state, std::string_view msg) noexcept;

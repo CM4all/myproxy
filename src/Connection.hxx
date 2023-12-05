@@ -98,6 +98,13 @@ class Connection final
 
 	std::optional<Outgoing> outgoing;
 
+	/**
+	 * The sequence_id of the HandshakeResponse packet received on
+	 * the incoming connection.  This will be used to translate
+	 * forwarded responses.
+	 */
+	uint_least8_t incoming_handshake_response_sequence_id;
+
 	bool got_raw_from_incoming, got_raw_from_outgoing;
 
 public:

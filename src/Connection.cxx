@@ -15,6 +15,7 @@
 #include "MysqlDeserializer.hxx"
 #include "MysqlSerializer.hxx"
 #include "MysqlMakePacket.hxx"
+#include "MysqlForwardPacket.hxx"
 #include "MysqlAuth.hxx"
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
@@ -461,13 +462,21 @@ try {
 
 			connection.StartCoroutine(connection.InvokeLuaCommandPhase());
 
-			return Result::FORWARD;
+			return connection.incoming.Send(Mysql::MakeOk(connection.incoming_handshake_response_sequence_id + 1,
+								      connection.incoming.capabilities,
+								      Mysql::ParseOk(payload, peer.capabilities)))
+				? Result::IGNORE
+				: Result::CLOSED;
 
 		case Mysql::Command::EOF_:
 			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
-			return Result::FORWARD;
+			return connection.incoming.Send(Mysql::MakeErr(connection.incoming_handshake_response_sequence_id + 1,
+								       connection.incoming.capabilities,
+								       Mysql::ParseErr(payload, peer.capabilities)))
+				? Result::IGNORE
+				: Result::CLOSED;
 
 		default:
 			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
@@ -723,6 +732,8 @@ try {
 
 			address = cluster.Pick(lua_client_ptr->GetAccount());
 		}
+
+		incoming_handshake_response_sequence_id = sequence_id;
 
 		/* connect to the outgoing server and perform the
 		   handshake to it */

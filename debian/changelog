@@ -1,6 +1,7 @@
 cm4all-myproxy (0.13) unstable; urgency=low
 
   * combine client/server capabilities flags with bit-wise "AND"
+  * adjust sequence_id of forwarded OK/ERR packets during handshake
   * lua: close Lua file descriptors when connection is closed
   * lua: refactor the cgroup API
   * lua: add attribute for inspecting a cgroup's parent

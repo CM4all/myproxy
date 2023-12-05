@@ -30,7 +30,13 @@ PacketSerializer
 MakeResetConnection(uint_least8_t sequence_id);
 
 PacketSerializer
-MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities);
+MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities,
+       uint_least64_t affected_rows,
+       uint_least64_t last_insert_id,
+       uint_least16_t status_flags,
+       uint_least16_t warnings,
+       std::string_view info,
+       std::string_view session_state_info);
 
 PacketSerializer
 MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,

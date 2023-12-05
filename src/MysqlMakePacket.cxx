@@ -96,33 +96,39 @@ MakeResetConnection(uint_least8_t sequence_id)
 }
 
 PacketSerializer
-MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities)
+MakeOk(uint_least8_t sequence_id, uint_least32_t capabilities,
+       uint_least64_t affected_rows,
+       uint_least64_t last_insert_id,
+       uint_least16_t status_flags,
+       uint_least16_t warnings,
+       std::string_view info,
+       std::string_view session_state_info)
 {
+	if (session_state_info.data() != nullptr)
+		status_flags |= SERVER_SESSION_STATE_CHANGED;
+	else
+		status_flags &= ~SERVER_SESSION_STATE_CHANGED;
+
 	Mysql::PacketSerializer s{sequence_id};
 	s.WriteCommand(Command::OK);
-	s.WriteLengthEncodedInteger(0); // affected_rows
-	s.WriteLengthEncodedInteger(0); // last_insert_id
+	s.WriteLengthEncodedInteger(affected_rows);
+	s.WriteLengthEncodedInteger(last_insert_id);
 
 	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
-		s.WriteInt2(0); // status_flags
-		s.WriteInt2(0); // warnings
+		s.WriteInt2(status_flags);
+		s.WriteInt2(warnings);
 	} else if (capabilities & Mysql::CLIENT_TRANSACTIONS) {
-		s.WriteInt2(0); // status_flags
+		s.WriteInt2(status_flags);
 	}
 
-#if 0
-	// TODO
 	if (capabilities & Mysql::CLIENT_SESSION_TRACK) {
-		s.WriteLengthEncodedString({}); // info
+		s.WriteLengthEncodedString(info);
 
-		/* TODO
-		if (status_flags & SERVER_SESSION_STATE_CHANGED)
-			s.WriteLengthEncodedString({}); // session state info
-		*/
+		if (session_state_info.data() != nullptr)
+			s.WriteLengthEncodedString(session_state_info);
 	} else {
-		// (no) info
+		s.WriteVariableLengthString(info);
 	}
-#endif
 
 	return s;
 }

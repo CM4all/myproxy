@@ -150,6 +150,7 @@ my = static_library(
   'src/MysqlReader.cxx',
   'src/MysqlParser.cxx',
   'src/MysqlMakePacket.cxx',
+  'src/MysqlForwardPacket.cxx',
   'src/MysqlAuth.cxx',
   'src/MysqlTextResultsetParser.cxx',
   include_directories: inc,

@@ -64,6 +64,23 @@ static constexpr uint_least32_t CLIENT_PROGRESS = 1UL << 29;
 static constexpr uint_least32_t CLIENT_SSL_VERIFY_SERVER_CERT = 1UL << 30;
 static constexpr uint_least32_t CLIENT_REMEMBER_OPTIONS = 1UL << 31;
 
+// for OK.status_flags
+static constexpr uint_least16_t SERVER_STATUS_IN_TRANS = 1;
+static constexpr uint_least16_t SERVER_STATUS_AUTOCOMMIT = 2;
+static constexpr uint_least16_t SERVER_MORE_RESULTS_EXIST = 8;
+static constexpr uint_least16_t SERVER_QUERY_NO_GOOD_INDEX_USED = 16;
+static constexpr uint_least16_t SERVER_QUERY_NO_INDEX_USED = 32;
+static constexpr uint_least16_t SERVER_STATUS_CURSOR_EXISTS = 64;
+static constexpr uint_least16_t SERVER_STATUS_LAST_ROW_SENT = 128;
+static constexpr uint_least16_t SERVER_STATUS_DB_DROPPED = 256;
+static constexpr uint_least16_t SERVER_STATUS_NO_BACKSLASH_ESCAPES = 512;
+static constexpr uint_least16_t SERVER_STATUS_METADATA_CHANGED = 1024;
+static constexpr uint_least16_t SERVER_QUERY_WAS_SLOW = 2048;
+static constexpr uint_least16_t SERVER_PS_OUT_PARAMS = 4096;
+static constexpr uint_least16_t SERVER_STATUS_IN_TRANS_READONLY = 8192;
+static constexpr uint_least16_t SERVER_SESSION_STATE_CHANGED = 16384;
+static constexpr uint_least16_t SERVER_STATUS_ANSI_QUOTES = 32768;
+
 struct Int2 {
 	uint8_t data[2];
 

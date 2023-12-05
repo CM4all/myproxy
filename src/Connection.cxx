@@ -122,6 +122,8 @@ Connection::OnPeerWrite()
 	if (!incoming.handshake) {
 		static constexpr std::array<std::byte, 0x15> auth_plugin_data{};
 
+		incoming.capabilities = handshake_capabilities;
+
 		auto s = Mysql::MakeHandshakeV10(lua_client_ptr->GetServerVersion(),
 						 handshake_capabilities,
 						 "mysql_clear_password"sv,
@@ -210,7 +212,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
-	incoming.capabilities = packet.capabilities;
+	incoming.capabilities &= packet.capabilities;
 
 	fmt::print("[{}] login user='{}' database='{}'\n", GetName(), packet.user, packet.database);
 
@@ -387,7 +389,7 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 
 	connection.lua_client_ptr->SetServerVersion(packet.server_version);
 
-	peer.capabilities = packet.capabilities;
+	peer.capabilities = packet.capabilities & connection.incoming.capabilities;
 
 	fmt::print("[{}] handshake server_version='{}'\n",
 		   connection.GetName(), packet.server_version);

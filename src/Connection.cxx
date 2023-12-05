@@ -456,6 +456,15 @@ try {
 	if (!peer.command_phase) {
 		assert(!connection.incoming.command_phase);
 
+		if (cmd == Mysql::Command{0x01})
+			/* kludge: this is "fast auth success" which
+			   is the first response packet after
+			   "caching_sha2_password"; here, we simply
+			   ignore it, because an "OK" packet will
+			   follow; what's the point of this packet,
+			   anyway? */
+			return Result::IGNORE;
+
 		switch (cmd) {
 		case Mysql::Command::OK:
 			peer.command_phase = true;

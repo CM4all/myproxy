@@ -7,6 +7,7 @@
 #include "MysqlMakePacket.hxx"
 #include "MysqlSerializer.hxx"
 #include "SHA1.hxx"
+#include "SHA256.hxx"
 #include "net/SocketProtocolError.hxx"
 #include "util/SpanCast.hxx"
 
@@ -53,6 +54,46 @@ MakeHandshakeResponse41SHA1(const HandshakePacket &handshake,
 					      "mysql_native_password"sv);
 }
 
+static auto
+MakeCachingSHA2Password(std::string_view password,
+			std::string_view auth_plugin_data1,
+			std::string_view auth_plugin_data2) noexcept
+{
+	assert(auth_plugin_data1.size() + auth_plugin_data2.size() == 20);
+
+	const auto password_sha256 = SHA256(password);
+	const auto password_sha256_sha256 = SHA256(password_sha256);
+
+	SHA256State s;
+	s.Update(password_sha256_sha256);
+	s.Update(auth_plugin_data1);
+	s.Update(auth_plugin_data2);
+
+	auto auth_response = s.Final();
+	for (std::size_t i = 0; i < auth_response.size(); ++i)
+		auth_response[i] ^= password_sha256[i];
+
+	return auth_response;
+}
+
+static PacketSerializer
+MakeHandshakeResponse41SHA256(const HandshakePacket &handshake,
+			      uint_least8_t sequence_id, uint_least32_t client_flag,
+			      std::string_view user,
+			      std::string_view password,
+			      std::string_view database)
+{
+	const auto auth_response =
+		MakeCachingSHA2Password(password,
+					handshake.auth_plugin_data1,
+					handshake.auth_plugin_data2.substr(0, 12));
+
+	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag, user,
+					      ToStringView(auth_response),
+					      database,
+					      "caching_sha2_password"sv);
+}
+
 PacketSerializer
 MakeHandshakeResponse41(const HandshakePacket &handshake,
 			uint_least8_t sequence_id, uint_least32_t client_flag,
@@ -72,6 +113,13 @@ MakeHandshakeResponse41(const HandshakePacket &handshake,
 		return MakeHandshakeResponse41SHA1(handshake, sequence_id, client_flag,
 						   user, SHA1(password),
 						   database);
+	} else if (handshake.auth_plugin_name == "caching_sha2_password"sv &&
+		   handshake.auth_plugin_data1.size() == 8 &&
+		   handshake.auth_plugin_data2.size() == 13 &&
+		   handshake.auth_plugin_data2.back() == '\0') {
+		return MakeHandshakeResponse41SHA256(handshake, sequence_id, client_flag,
+						     user, password,
+						     database);
 	}
 
 	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag,
@@ -100,6 +148,19 @@ MakeAuthSwitchResponse(const AuthSwitchRequest &auth_switch_request,
 			MakeMysqlNativePasswordSHA1(password_sha1,
 						    auth_switch_request.auth_plugin_data.substr(0, 20),
 						    {});
+
+		Mysql::PacketSerializer s{sequence_id};
+		s.WriteN(auth_response);
+		return s;
+	} else if (auth_switch_request.auth_plugin_name == "caching_sha2_password"sv) {
+		if (auth_switch_request.auth_plugin_data.size() != 21 ||
+		    auth_switch_request.auth_plugin_data.back() != '\0')
+			throw std::runtime_error{"Malformed auth_plugin_data"};
+
+		const auto auth_response =
+			MakeCachingSHA2Password(password,
+						auth_switch_request.auth_plugin_data.substr(0, 20),
+						{});
 
 		Mysql::PacketSerializer s{sequence_id};
 		s.WriteN(auth_response);

@@ -83,6 +83,10 @@ The following attributes of the ``client`` parameter can be queried:
   * ``xattr``: A table containing extended attributes of the
     control group.
 
+  * ``parent``: Information about the parent of this cgroup; it is
+    another object of this type (or ``nil`` if there is no parent
+    cgroup).
+
 * :samp:`server_version`: The server version string.  In
   ``on_connect``, this attribute may be modified to announce a
   different version to the client.  After a connection to the real

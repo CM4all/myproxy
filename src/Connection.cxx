@@ -34,6 +34,27 @@
 
 using std::string_view_literals::operator""sv;
 
+/**
+ * The capabilities bit mask we send to clients connecting to us.
+ */
+static constexpr uint_least32_t handshake_capabilities =
+	Mysql::CLIENT_MYSQL |
+	Mysql::CLIENT_FOUND_ROWS |
+	Mysql::CLIENT_LONG_FLAG |
+	Mysql::CLIENT_CONNECT_WITH_DB |
+	Mysql::CLIENT_PROTOCOL_41 |
+	Mysql::CLIENT_IGNORE_SIGPIPE |
+	Mysql::CLIENT_TRANSACTIONS |
+	Mysql::CLIENT_RESERVED |
+	Mysql::CLIENT_SECURE_CONNECTION | // TODO removing this breaks the HandshakeResponse??
+	Mysql::CLIENT_MULTI_STATEMENTS |
+	Mysql::CLIENT_MULTI_RESULTS |
+	Mysql::CLIENT_PS_MULTI_RESULTS |
+	Mysql::CLIENT_PLUGIN_AUTH |
+	Mysql::CLIENT_SESSION_TRACK |
+	Mysql::CLIENT_DEPRECATE_EOF |
+	Mysql::CLIENT_REMEMBER_OPTIONS;
+
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {
@@ -102,6 +123,7 @@ Connection::OnPeerWrite()
 		static constexpr std::array<std::byte, 0x15> auth_plugin_data{};
 
 		auto s = Mysql::MakeHandshakeV10(lua_client_ptr->GetServerVersion(),
+						 handshake_capabilities,
 						 "mysql_clear_password"sv,
 						 auth_plugin_data);
 		if (!incoming.Send(s.Finish()))

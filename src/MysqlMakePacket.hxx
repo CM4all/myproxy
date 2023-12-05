@@ -16,6 +16,7 @@ class PacketSerializer;
 
 PacketSerializer
 MakeHandshakeV10(std::string_view server_version,
+		 uint_least32_t capabilities,
 		 std::string_view auth_plugin_name,
 		 std::span<const std::byte> auth_plugin_data);
 

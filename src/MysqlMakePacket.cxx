@@ -14,24 +14,11 @@ namespace Mysql {
 
 PacketSerializer
 MakeHandshakeV10(std::string_view server_version,
+		 uint_least32_t capabilities,
 		 std::string_view auth_plugin_name,
 		 std::span<const std::byte> auth_plugin_data)
 {
 	assert(auth_plugin_data.size() >= 8);
-
-	static constexpr uint_least32_t capabilities =
-		CLIENT_MYSQL | CLIENT_FOUND_ROWS |
-		CLIENT_LONG_FLAG | CLIENT_CONNECT_WITH_DB |
-		CLIENT_PROTOCOL_41 |
-		CLIENT_IGNORE_SIGPIPE | CLIENT_TRANSACTIONS |
-		CLIENT_RESERVED |
-		CLIENT_SECURE_CONNECTION | // TODO removing this breaks the HandshakeResponse??
-		CLIENT_MULTI_STATEMENTS | CLIENT_MULTI_RESULTS |
-		CLIENT_PS_MULTI_RESULTS |
-		CLIENT_PLUGIN_AUTH |
-		CLIENT_SESSION_TRACK |
-		CLIENT_DEPRECATE_EOF |
-		CLIENT_REMEMBER_OPTIONS;
 
 	Mysql::PacketSerializer s{0};
 	s.WriteInt1(10);
@@ -45,11 +32,18 @@ MakeHandshakeV10(std::string_view server_version,
 	s.WriteInt1(0x21); // character_set
 	s.WriteInt2(0x0002); // status_flags
 	s.WriteInt2((capabilities >> 16) & 0xffff);
-	s.WriteInt1(auth_plugin_data.size());
+
+	if (capabilities & CLIENT_PLUGIN_AUTH) {
+		s.WriteInt1(auth_plugin_data.size());
+	} else {
+		s.WriteInt1(0);
+	}
+
 	s.WriteZero(10); // reserved
 	s.WriteN(auth_plugin_data.subspan(8));
 
-	s.WriteNullTerminatedString(auth_plugin_name);
+	if (capabilities & CLIENT_PLUGIN_AUTH)
+		s.WriteNullTerminatedString(auth_plugin_name);
 
 	return s;
 }

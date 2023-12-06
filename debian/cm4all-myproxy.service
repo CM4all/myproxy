@@ -17,7 +17,7 @@ TimerSlackNSec=10ms
 # Resource limits
 MemoryMax=1G
 TasksMax=16
-LimitNOFILE=16384
+LimitNOFILE=65536
 
 # Paranoid security settings
 NoNewPrivileges=yes

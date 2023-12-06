@@ -19,8 +19,14 @@ You need:
 - `libmd <https://www.hadrons.org/software/libmd/>`__
 - `libsodium <https://www.libsodium.org/>`__
 - `LuaJIT <http://luajit.org/>`__
+
+Optional dependencies:
+
 - `libpq <https://www.postgresql.org/>`__ for PostgreSQL support in
-  Lua code (optional)
+  Lua code
+- `nlohmann_json <https://json.nlohmann.me/>`__ (for the
+  systemd-resolved client)
+- `systemd <https://www.freedesktop.org/wiki/Software/systemd/>`__
 
 Get the source code::
 

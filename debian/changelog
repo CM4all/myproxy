@@ -9,7 +9,7 @@ cm4all-myproxy (0.13) unstable; urgency=low
   * systemd: enable more security settings
   * systemd: increase LimitNOFILE to 65536
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 06 Dec 2023 13:18:34 +0100
 
 cm4all-myproxy (0.12) unstable; urgency=low
 

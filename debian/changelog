@@ -6,6 +6,7 @@ cm4all-myproxy (0.13) unstable; urgency=low
   * lua: refactor the cgroup API
   * lua: add attribute for inspecting a cgroup's parent
   * lua: SIGHUP calls Lua function "reload"
+  * systemd: enable more security settings
 
  --   
 

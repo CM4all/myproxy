@@ -21,9 +21,16 @@ LimitNOFILE=16384
 
 # Paranoid security settings
 NoNewPrivileges=yes
-ProtectSystem=yes
+ProtectSystem=strict
 ProtectHome=yes
 ProtectKernelTunables=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHostname=yes
+ProtectClock=yes
 ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=yes
+RestrictRealtime=yes

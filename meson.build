@@ -180,7 +180,6 @@ executable(
   'src/LClient.cxx',
   'src/LAction.cxx',
   'src/Instance.cxx',
-  'src/Reload.cxx',
   'src/CommandLine.cxx',
   'src/Main.cxx',
   include_directories: inc,

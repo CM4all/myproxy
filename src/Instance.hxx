@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Listener.hxx"
-#include "Reload.hxx"
+#include "lua/ReloadRunner.hxx"
 #include "lua/State.hxx"
 #include "event/Loop.hxx"
 #include "event/ShutdownListener.hxx"
@@ -33,7 +33,7 @@ class Instance {
 
 	Lua::State lua_state;
 
-	Reload reload;
+	Lua::ReloadRunner reload{lua_state.get()};
 
 	std::forward_list<MyProxyListener> listeners;
 

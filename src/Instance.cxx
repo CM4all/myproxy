@@ -24,8 +24,7 @@ extern "C" {
 
 Instance::Instance()
 	:sighup_event(event_loop, SIGHUP, BIND_THIS_METHOD(OnReload)),
-	 lua_state(luaL_newstate()),
-	 reload(lua_state.get())
+	 lua_state(luaL_newstate())
 {
 	shutdown_listener.Enable();
 	sighup_event.Enable();

@@ -148,6 +148,12 @@ ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities)
 	}
 
 	if (capabilities & CLIENT_SESSION_TRACK) {
+		if (d.empty())
+			/* contrary to the MySQL protocol
+			   documentation, the OK packet can end
+			   here */
+			return packet;
+
 		packet.info = d.ReadLengthEncodedString();
 
 		if (packet.status_flags & SERVER_SESSION_STATE_CHANGED)

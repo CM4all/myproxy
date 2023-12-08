@@ -197,7 +197,7 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 
 	fmt::print(stderr, "[{}] {}\n", GetName(), e);
 
-	if (incoming.SendErr(2,
+	if (incoming.SendErr(incoming_handshake_response_sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			     "Connection error"sv))
 		SafeDelete();

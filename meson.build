@@ -109,7 +109,6 @@ sources = []
 
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
-subdir('libcommon/src/lib/nlohmann_json')
 subdir('libcommon/src/lib/sodium')
 subdir('libcommon/src/io')
 subdir('libcommon/src/io/linux')
@@ -130,6 +129,7 @@ if libsystemd.found()
   # uses a protocol with JSON payloads
   sources += 'src/AsyncResolver.cxx'
 
+  subdir('libcommon/src/lib/nlohmann_json')
   subdir('libcommon/src/event/systemd')
   libsystemd = event_systemd_dep
 endif

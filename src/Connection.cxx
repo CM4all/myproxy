@@ -508,18 +508,6 @@ try {
 		   connection.GetName());
 	connection.SafeDelete();
 	return Result::CLOSED;
-} catch (const Mysql::ErrPacket &packet) {
-	if (!packet.error_message.empty())
-		fmt::print(stderr, "[{}] MySQL error: '{}' ({})\n",
-			   connection.GetName(),
-			   packet.error_message,
-			   static_cast<uint_least16_t>(packet.error_code));
-	else
-		fmt::print(stderr, "[{}] MySQL error: {}\n",
-			   connection.GetName(),
-			   static_cast<uint_least16_t>(packet.error_code));
-	connection.SafeDelete();
-	return Result::CLOSED;
 } catch (...) {
 	fmt::print(stderr, "[{}] {}\n", connection.GetName(), std::current_exception());
 	connection.SafeDelete();

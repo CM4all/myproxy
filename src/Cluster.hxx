@@ -45,7 +45,8 @@ class Cluster {
 
 		ReadyTask(Cluster &_cluster) noexcept
 			:cluster(_cluster) {
-			cluster.ready_tasks.push_back(*this);
+			if (!cluster.IsReady())
+				cluster.ready_tasks.push_back(*this);
 		}
 
 	public:

@@ -49,6 +49,7 @@ struct Cluster::Node final : CheckServerHandler {
 
 	enum class State : uint_least8_t {
 		DEAD,
+		AUTH_FAILED,
 		UNKNOWN,
 		READ_ONLY,
 		ALIVE,
@@ -108,6 +109,10 @@ private:
 
 		case CheckServerResult::READ_ONLY:
 			state = State::READ_ONLY;
+			break;
+
+		case CheckServerResult::AUTH_FAILED:
+			state = State::AUTH_FAILED;
 			break;
 
 		case CheckServerResult::ERROR:

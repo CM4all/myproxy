@@ -51,6 +51,11 @@ class MysqlCheck final
 
 	std::optional<Mysql::TextResultsetParser> text_resultset_parser;
 
+	/**
+	 * The result code to use by DestroyError().
+	 */
+	CheckServerResult error_result = CheckServerResult::ERROR;
+
 	bool have_read_only;
 
 	/**
@@ -91,21 +96,21 @@ private:
 	void DestroyError(std::string_view msg) noexcept {
 		fmt::print(stderr, "[check/{}] {}\n", address, msg);
 
-		handler.OnCheckServer(CheckServerResult::ERROR);
+		handler.OnCheckServer(error_result);
 		delete this;
 	}
 
 	void DestroyError(const std::exception_ptr &error) noexcept {
 		fmt::print(stderr, "[check/{}] {}\n", address, error);
 
-		handler.OnCheckServer(CheckServerResult::ERROR);
+		handler.OnCheckServer(error_result);
 		delete this;
 	}
 
 	void DestroyError(std::string_view msg, const std::exception_ptr &e) noexcept {
 		fmt::print(stderr, "[check/{}] {}: {}\n", address, msg, e);
 
-		handler.OnCheckServer(CheckServerResult::ERROR);
+		handler.OnCheckServer(error_result);
 		delete this;
 	}
 
@@ -297,6 +302,7 @@ try {
 			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
+			error_result = CheckServerResult::AUTH_FAILED;
 			throw FmtRuntimeError("Authentication error: {}",
 					      Mysql::ParseErr(payload, client_flag).error_message);
 

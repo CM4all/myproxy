@@ -22,5 +22,11 @@ struct ClusterOptions {
 
 	bool monitoring = false;
 
+	/**
+	 * Close all proxied connections when a node is found
+	 * unavailable?
+	 */
+	bool disconnect_unavailable = false;
+
 	void ApplyLuaTable(lua_State *L, int table_idx);
 };

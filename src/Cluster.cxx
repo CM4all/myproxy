@@ -4,6 +4,7 @@
 
 #include "Cluster.hxx"
 #include "Check.hxx"
+#include "NodeObserver.hxx"
 #include "lib/sodium/GenericHash.hxx"
 #include "lua/Class.hxx"
 #include "event/CoarseTimerEvent.hxx"
@@ -47,13 +48,11 @@ struct Cluster::Node final : CheckServerHandler {
 
 	CancellablePointer check_cancel;
 
-	enum class State : uint_least8_t {
-		DEAD,
-		AUTH_FAILED,
-		UNKNOWN,
-		READ_ONLY,
-		ALIVE,
-	} state = State::UNKNOWN;
+	IntrusiveList<ClusterNodeObserver,
+		      IntrusiveListBaseHookTraits<ClusterNodeObserver, Cluster>> observers;
+
+	using State = Cluster::NodeState;
+	State state = State::UNKNOWN;
 
 	Node(Cluster &_cluster, EventLoop &event_loop,
 	     AllocatedSocketAddress &&_address,
@@ -69,10 +68,18 @@ struct Cluster::Node final : CheckServerHandler {
 	~Node() noexcept {
 		if (check_cancel)
 			check_cancel.Cancel();
+
+		InvokeUnavailable();
 	}
 
 	auto &GetEventLoop() const noexcept {
 		return check_timer.GetEventLoop();
+	}
+
+	void InvokeUnavailable() noexcept {
+		observers.clear_and_dispose([](auto *observer){
+			observer->OnClusterNodeUnavailable();
+		});
 	}
 
 private:
@@ -124,6 +131,22 @@ private:
 
 		if (ready)
 			cluster.InvokeReady();
+
+		if (cluster.HasBetterState(state))
+			/* if this state is not "alive" and the
+			   cluster has at least one node that is
+			   better than this one, close all connections
+			   to this node, so clients will reconnect to
+			   better nodes; this avoids clients to
+			   continue working with nodes that have
+			   turned read-only, for example */
+			InvokeUnavailable();
+		else
+			/* if this node has now become better than
+			   others, then close all connections to these
+			   worse nodes to give them a chance to
+			   reconnect to this one */
+			cluster.InvokeUnavailableWorse(state);
 	}
 };
 
@@ -135,7 +158,7 @@ Cluster::Cluster(EventLoop &event_loop,
 	for (auto &&i : _nodes)
 		node_list.emplace_front(*this, event_loop, std::move(i), options);
 
-	for (const auto &i : node_list)
+	for (auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
 
 	n_unknown = rendezvous_nodes.size();
@@ -148,7 +171,8 @@ Cluster::~Cluster() noexcept
 }
 
 SocketAddress
-Cluster::Pick(std::string_view account) noexcept
+Cluster::Pick(std::string_view account,
+	      ClusterNodeObserver *observer) noexcept
 {
 	for (auto &i : rendezvous_nodes)
 		i.hash = RendezvousHash(i.node->address, account);
@@ -164,7 +188,16 @@ Cluster::Pick(std::string_view account) noexcept
 			  return a.hash < b.hash;
 		  });
 
-	return rendezvous_nodes.front().node->address;
+	auto &node = *rendezvous_nodes.front().node;
+
+	if (observer != nullptr && options.disconnect_unavailable) {
+		/* register the observer only if option
+		   "disconnect_unavailable" is enabled */
+		assert(!observer->is_linked());
+		node.observers.push_front(*observer);
+	}
+
+	return node.address;
 }
 
 static constexpr char lua_cluster_class[] = "myproxy.cluster";
@@ -205,4 +238,31 @@ Cluster::InvokeReady() noexcept
 		if (task->continuation)
 			task->continuation.resume();
 	});
+}
+
+inline bool
+Cluster::HasBetterState(NodeState state) const noexcept
+{
+	if (state == NodeState::ALIVE)
+		// can't be better than this
+		return false;
+
+	for (const auto &node : node_list)
+		if (node.state > state)
+			return true;
+
+	return false;
+}
+
+
+inline void
+Cluster::InvokeUnavailableWorse(NodeState state) noexcept
+{
+	if (state == NodeState::DEAD)
+		// can't be worse than this
+		return;
+
+	for (auto &node : node_list)
+		if (node.state < state)
+			node.InvokeUnavailable();
 }

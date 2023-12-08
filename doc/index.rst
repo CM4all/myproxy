@@ -181,6 +181,10 @@ An optional second parameter is a table of options:
   active master instance automatically (depends on ``monitoring`` and
   ``user`` / ``password``)
 
+- ``disconnect_unavailable``: if ``true`` and a node becomes
+  unavailable through monitoring, then all proxied connections to that
+  node will be closed (if a node exists that is available)
+
 When using such a cluster with ``client:connect()``, myproxy will
 automatically choose a node using consistent hashing with the
 ``client.account`` attribute.

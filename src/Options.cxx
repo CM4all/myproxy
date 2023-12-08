@@ -22,6 +22,9 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 		else if (StringIsEqual(key, "no_read_only"))
 			check.no_read_only = Lua::CheckBool(L, value_idx,
 							    "Bad 'no_read_only' value");
+		else if (StringIsEqual(key, "disconnect_unavailable"))
+			disconnect_unavailable = Lua::CheckBool(L, value_idx,
+								"Bad `disconnect_unavailable` option");
 		else
 			throw Lua::ArgError{"Unknown option"};
 	});
@@ -41,5 +44,8 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 
 		if (check.no_read_only)
 			throw Lua::ArgError{"'no_read_only' without 'monitoring'"};
+
+		if (disconnect_unavailable)
+			throw Lua::ArgError{"'disconnect_unavailable' without 'monitoring'"};
 	}
 }

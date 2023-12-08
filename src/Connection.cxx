@@ -112,6 +112,13 @@ Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 }
 
 void
+Connection::OnClusterNodeUnavailable() noexcept
+{
+	fmt::print(stderr, "[{}] Closing because node is unavailable\n", GetName());
+	OnOutgoingError("Node is unavailable"sv);
+}
+
+void
 Connection::OnPeerClosed() noexcept
 {
 	SafeDelete();
@@ -746,7 +753,7 @@ try {
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();
 
-			address = cluster.Pick(lua_client_ptr->GetAccount());
+			address = cluster.Pick(lua_client_ptr->GetAccount(), this);
 		}
 
 		incoming_handshake_response_sequence_id = sequence_id;

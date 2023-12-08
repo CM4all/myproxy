@@ -8,6 +8,7 @@
 #include "util/IntrusiveList.hxx"
 
 #include <coroutine>
+#include <cstdint>
 #include <forward_list>
 #include <string_view>
 #include <vector>
@@ -16,18 +17,27 @@ struct lua_State;
 class SocketAddress;
 class AllocatedSocketAddress;
 class EventLoop;
+class ClusterNodeObserver;
 
 class Cluster {
 	const ClusterOptions options;
+
+	enum class NodeState : uint_least8_t {
+		DEAD,
+		AUTH_FAILED,
+		UNKNOWN,
+		READ_ONLY,
+		ALIVE,
+	};
 
 	struct Node;
 	std::forward_list<Node> node_list;
 
 	struct RendezvousNode {
-		const Node *node;
+		Node *node;
 		std::size_t hash;
 
-		explicit constexpr RendezvousNode(const Node &_node) noexcept
+		explicit constexpr RendezvousNode(Node &_node) noexcept
 			:node(&_node) {}
 	};
 
@@ -106,8 +116,21 @@ public:
 	}
 
 	[[nodiscard]] [[gnu::pure]]
-	SocketAddress Pick(std::string_view account) noexcept;
+	SocketAddress Pick(std::string_view account,
+			   ClusterNodeObserver *observer=nullptr) noexcept;
 
 private:
 	void InvokeReady() noexcept;
+
+	/**
+	 * Does a node with a state better than this one exist?
+	 */
+	[[gnu::pure]]
+	bool HasBetterState(NodeState state) const noexcept;
+
+	/**
+	 * Invoke OnClusterNodeUnavailable() on all nodes that are
+	 * worse than this state.
+	 */
+	void InvokeUnavailableWorse(NodeState state) noexcept;
 };

@@ -7,6 +7,7 @@
 #include "Action.hxx"
 #include "Peer.hxx"
 #include "MysqlHandler.hxx"
+#include "NodeObserver.hxx"
 #include "lua/AutoCloseList.hxx"
 #include "lua/Value.hxx"
 #include "co/InvokeTask.hxx"
@@ -26,6 +27,7 @@ class LClient;
  */
 class Connection final
 	: public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK>,
+	  ClusterNodeObserver,
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
@@ -175,6 +177,9 @@ private:
 
 	void OnCoroutineComplete(std::exception_ptr error) noexcept;
 	void StartCoroutine(Co::InvokeTask &&_coroutine) noexcept;
+
+	/* virtual methods from ClusterNodeObserver */
+	void OnClusterNodeUnavailable() noexcept override;
 
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;

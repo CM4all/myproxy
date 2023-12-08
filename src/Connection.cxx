@@ -100,14 +100,14 @@ Connection::Outgoing::OnPeerWrite()
 void
 Connection::Outgoing::OnPeerClosed() noexcept
 {
-	connection.SafeDelete();
+	connection.OnOutgoingError("Server closed the connection"sv);
 }
 
 void
 Connection::Outgoing::OnPeerError(std::exception_ptr e) noexcept
 {
 	fmt::print(stderr, "[{}] {}\n", connection.GetName(), e);
-	connection.SafeDelete();
+	connection.OnOutgoingError("Error on connection to server"sv);
 }
 
 void

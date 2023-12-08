@@ -122,12 +122,6 @@ private:
 	}
 };
 
-inline
-Cluster::RendezvousNode::RendezvousNode(const Node &_node) noexcept
-	:node(&_node)
-{
-}
-
 Cluster::Cluster(EventLoop &event_loop,
 		 std::forward_list<AllocatedSocketAddress> &&_nodes,
 		 ClusterOptions &&_options) noexcept

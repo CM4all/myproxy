@@ -27,7 +27,8 @@ class Cluster {
 		const Node *node;
 		std::size_t hash;
 
-		explicit RendezvousNode(const Node &_node) noexcept;
+		explicit constexpr RendezvousNode(const Node &_node) noexcept
+			:node(&_node) {}
 	};
 
 	/**

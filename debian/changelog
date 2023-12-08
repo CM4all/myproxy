@@ -1,6 +1,7 @@
 cm4all-myproxy (0.14) unstable; urgency=low
 
   * accept OK packet with `info` field missing
+  * send ERR to client when connection to server fails
 
  --   
 

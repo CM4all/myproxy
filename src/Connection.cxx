@@ -507,11 +507,15 @@ try {
 } catch (Mysql::MalformedPacket) {
 	fmt::print(stderr, "[{}] Malformed packet from server\n",
 		   connection.GetName());
-	connection.SafeDelete();
+	connection.OnOutgoingError("Malformed packet from server"sv);
+	return Result::CLOSED;
+} catch (const SocketProtocolError &e) {
+	fmt::print(stderr, "[{}] {}\n", connection.GetName(), e.what());
+	connection.OnOutgoingError(e.what());
 	return Result::CLOSED;
 } catch (...) {
 	fmt::print(stderr, "[{}] {}\n", connection.GetName(), std::current_exception());
-	connection.SafeDelete();
+	connection.OnOutgoingError("Connection error");
 	return Result::CLOSED;
 }
 
@@ -572,6 +576,19 @@ std::string_view
 Connection::GetName() const noexcept
 {
 	return lua_client_ptr->GetName();
+}
+
+void
+Connection::OnOutgoingError(std::string_view msg) noexcept
+{
+	if (incoming.SendErr(incoming.command_phase
+			     ? 0
+			     : incoming_handshake_response_sequence_id + 1,
+			     incoming.command_phase
+			     ? Mysql::ErrorCode::UNKNOWN_COM_ERROR
+			     : Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			     msg))
+		SafeDelete();
 }
 
 inline void

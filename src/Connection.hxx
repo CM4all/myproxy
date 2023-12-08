@@ -143,6 +143,13 @@ private:
 		outgoing.reset();
 	}
 
+	/**
+	 * The outgoing connection has failed.  Send an error to the
+	 * incoming client and close the connection.  After returning,
+	 * the #Connection object has been destroyed.
+	 */
+	void OnOutgoingError(std::string_view msg) noexcept;
+
 	bool IsDelayed() const noexcept {
 		return coroutine;
 	}

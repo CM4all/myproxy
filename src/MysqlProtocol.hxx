@@ -29,6 +29,7 @@ enum class Command : uint_least8_t {
 enum class ErrorCode : uint_least16_t {
 	HANDSHAKE_ERROR = 1043,
 	DBACCESS_DENIED_ERROR = 1044,
+	UNKNOWN_COM_ERROR = 1047,
 };
 
 static constexpr uint_least32_t CLIENT_MYSQL = 1;

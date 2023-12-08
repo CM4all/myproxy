@@ -136,7 +136,11 @@ Cluster::Cluster(EventLoop &event_loop,
 	n_unknown = rendezvous_nodes.size();
 }
 
-Cluster::~Cluster() noexcept = default;
+Cluster::~Cluster() noexcept
+{
+	// at this point, all tasks must have been canceled
+	assert(ready_tasks.empty());
+}
 
 SocketAddress
 Cluster::Pick(std::string_view account) noexcept

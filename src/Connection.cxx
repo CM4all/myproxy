@@ -19,6 +19,7 @@
 #include "MysqlAuth.hxx"
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
+#include "lib/fmt/SocketAddressFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lua/CoAwaitable.hxx"
 #include "lua/Thread.hxx"
@@ -752,6 +753,7 @@ try {
 
 		/* connect to the outgoing server and perform the
 		   handshake to it */
+		fmt::print("[{}] connecting to {}\n", GetName(), address);
 		connect.Connect(address,
 				std::chrono::seconds{30});
 	} else

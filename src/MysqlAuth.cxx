@@ -7,9 +7,8 @@
 #include "MysqlMakePacket.hxx"
 #include "MysqlSerializer.hxx"
 #include "SHA1.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "util/SpanCast.hxx"
-
-#include <stdexcept> // for std::runtime_error
 
 using std::string_view_literals::operator""sv;
 
@@ -89,7 +88,7 @@ MakeAuthSwitchResponse(const AuthSwitchRequest &auth_switch_request,
 	if (auth_switch_request.auth_plugin_name == "mysql_native_password"sv) {
 		if (auth_switch_request.auth_plugin_data.size() != 21 ||
 		    auth_switch_request.auth_plugin_data.back() != '\0')
-			throw std::runtime_error{"Malformed auth_plugin_data"};
+			throw SocketProtocolError{"Malformed auth_plugin_data"};
 
 		SHA1Digest password_sha1_buffer;
 
@@ -106,7 +105,7 @@ MakeAuthSwitchResponse(const AuthSwitchRequest &auth_switch_request,
 		s.WriteN(auth_response);
 		return s;
 	} else
-		throw std::runtime_error{"Unsupported auth_plugin"};
+		throw SocketProtocolError{"Unsupported auth_plugin"};
 }
 
 } // namespace Mysql

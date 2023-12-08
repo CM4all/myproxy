@@ -6,6 +6,7 @@
 #include "MysqlDeserializer.hxx"
 #include "MysqlParser.hxx"
 #include "MysqlProtocol.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "util/Compiler.h"
 
 #include <stdexcept>
@@ -58,7 +59,7 @@ TextResultsetParser::OnEof()
 {
 	switch (state) {
 	case State::COLUMN_COUNT:
-		throw std::runtime_error{"COLUMN_COUNT expected"};
+		throw SocketProtocolError{"COLUMN_COUNT expected"};
 
 	case State::COLUMN_DEFINITON:
 		state = State::ROW;

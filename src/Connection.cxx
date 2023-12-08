@@ -25,6 +25,7 @@
 #include "lua/net/SocketAddress.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/ConnectSocket.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
 #include "util/ScopeExit.hxx"
 #include "util/SpanCast.hxx"
@@ -278,7 +279,7 @@ Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
 	if (!incoming.handshake)
-		throw std::runtime_error{"Unexpected client data before handshake"};
+		throw SocketProtocolError{"Unexpected client data before handshake"};
 
 	if (!incoming.handshake_response)
 		return OnHandshakeResponse(number, payload);
@@ -479,7 +480,7 @@ try {
 				: Result::CLOSED;
 
 		default:
-			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
+			throw SocketProtocolError{"Unexpected server reply to HandshakeResponse"};
 		}
 	}
 

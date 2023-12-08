@@ -18,6 +18,7 @@
 #include "lib/fmt/SocketAddressFormatter.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "net/SocketAddress.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "util/Cancellable.hxx"
 
 #include <optional>
@@ -300,7 +301,7 @@ try {
 					      Mysql::ParseErr(payload, client_flag).error_message);
 
 		default:
-			throw std::runtime_error{"Unexpected server reply to HandshakeResponse"};
+			throw SocketProtocolError{"Unexpected server reply to HandshakeResponse"};
 		}
 	}
 

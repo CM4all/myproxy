@@ -39,12 +39,10 @@ class Cluster {
 
 	class ReadyTask : public IntrusiveListHook<IntrusiveHookMode::AUTO_UNLINK> {
 		friend class Cluster;
-		Cluster &cluster;
 
 		std::coroutine_handle<> continuation;
 
-		ReadyTask(Cluster &_cluster) noexcept
-			:cluster(_cluster) {
+		ReadyTask(Cluster &cluster) noexcept {
 			if (!cluster.IsReady())
 				cluster.ready_tasks.push_back(*this);
 		}
@@ -56,7 +54,7 @@ class Cluster {
 
 		[[nodiscard]]
 		bool await_ready() const noexcept {
-			return cluster.IsReady();
+			return !is_linked();
 		}
 
 		[[nodiscard]]

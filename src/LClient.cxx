@@ -70,8 +70,8 @@ LClient::LClient(lua_State *L, Lua::AutoCloseList &_auto_close,
 static constexpr char lua_client_class[] = "myproxy.client";
 typedef Lua::Class<LClient, lua_client_class> LuaClient;
 
-static int
-NewErrAction(lua_State *L)
+inline int
+LClient::NewErrAction(lua_State *L)
 {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameters");
@@ -101,13 +101,11 @@ Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 		throw Lua::ArgError{"Unknown attribute"};
 }
 
-static int
-NewConnectAction(lua_State *L)
+inline int
+LClient::NewConnectAction(lua_State *L)
 try {
 	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
-
-	const auto &client = LuaClient::Cast(L, 1);
 
 	ConnectAction action;
 
@@ -116,7 +114,7 @@ try {
 		   so it gets destructed by it (when the this thread
 		   may have been gone already); but fetch the object
 		   from this thread's stack */
-		action.cluster = std::make_shared<Lua::Value>(client.GetLuaState());
+		action.cluster = std::make_shared<Lua::Value>(GetLuaState());
 		action.cluster->Set(L, Lua::StackIndex{2});
 	} else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
@@ -132,8 +130,8 @@ try {
 }
 
 static constexpr struct luaL_Reg client_methods [] = {
-	{"err", NewErrAction},
-	{"connect", NewConnectAction},
+	{"err", LuaClient::WrapMethod<&LClient::NewErrAction>()},
+	{"connect", LuaClient::WrapMethod<&LClient::NewConnectAction>()},
 	{nullptr, nullptr}
 };
 

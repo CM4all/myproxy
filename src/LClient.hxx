@@ -61,6 +61,9 @@ public:
 		server_version = _server_version;
 	}
 
+	int NewErrAction(lua_State *L);
+	int NewConnectAction(lua_State *L);
+
 private:
 	int Close(lua_State *) {
 		auto_close = nullptr;

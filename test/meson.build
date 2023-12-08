@@ -6,6 +6,7 @@ executable(
   include_directories: inc,
   dependencies: [
     my_dep,
+    auth_dep,
     event_net_dep,
   ],
 )

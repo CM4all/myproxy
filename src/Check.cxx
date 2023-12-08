@@ -5,7 +5,6 @@
 #include "Check.hxx"
 #include "Options.hxx"
 #include "Peer.hxx"
-#include "MysqlAuth.hxx"
 #include "MysqlHandler.hxx"
 #include "MysqlMakePacket.hxx"
 #include "MysqlParser.hxx"
@@ -13,6 +12,8 @@
 #include "MysqlProtocol.hxx"
 #include "MysqlSerializer.hxx"
 #include "MysqlTextResultsetParser.hxx"
+#include "auth/Handler.hxx"
+#include "auth/Factory.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SocketAddressFormatter.hxx"
@@ -48,6 +49,8 @@ class MysqlCheck final
 	ConnectSocket connect;
 
 	std::optional<Peer> peer;
+
+	std::unique_ptr<Mysql::AuthHandler> auth_handler;
 
 	std::optional<Mysql::TextResultsetParser> text_resultset_parser;
 
@@ -188,10 +191,19 @@ MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> pa
 
 	peer->capabilities = handshake.capabilities & client_flag;
 
-	auto s = MakeHandshakeResponse41(handshake,
-					 sequence_id + 1, peer->capabilities,
-					 options.user, options.password,
-					 {});
+	auth_handler = Mysql::MakeAuthHandler(handshake.auth_plugin_name, false);
+
+	const auto auth_response =
+		auth_handler->GenerateResponse(options.password, {},
+					       AsBytes(handshake.auth_plugin_data1),
+					       AsBytes(handshake.auth_plugin_data2));
+
+	auto s = Mysql::MakeHandshakeResponse41(sequence_id + 1,
+						peer->capabilities,
+						options.user,
+						ToStringView(auth_response),
+						{},
+						auth_handler->GetName());
 	if (!peer->Send(s.Finish()))
 		return Result::CLOSED;
 
@@ -207,8 +219,17 @@ MysqlCheck::OnAuthSwitchRequest(uint_least8_t sequence_id,
 
 	const auto packet = ParseAuthSwitchRequest(payload);
 
-	auto s = MakeAuthSwitchResponse(packet, sequence_id + 1,
-					options.password, {});
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, true);
+	if (!auth_handler)
+		throw SocketProtocolError{"Unsupported auth_plugin"};
+
+	const auto response =
+		auth_handler->GenerateResponse(options.password, {},
+					       AsBytes(packet.auth_plugin_data),
+					       {});
+
+	Mysql::PacketSerializer s(sequence_id + 1);
+	s.WriteN(response);
 	if (!peer->Send(s.Finish()))
 		return Result::CLOSED;
 

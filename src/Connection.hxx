@@ -22,6 +22,10 @@
 class LuaHandler;
 class LClient;
 
+namespace Mysql {
+class AuthHandler;
+}
+
 /**
  * Manage connections from MySQL clients.
  */
@@ -78,8 +82,11 @@ class Connection final
 
 		Peer peer;
 
+		std::unique_ptr<Mysql::AuthHandler> auth_handler;
+
 		Outgoing(Connection &_connection,
 			 UniqueSocketDescriptor fd) noexcept;
+		~Outgoing() noexcept;
 
 		Result OnHandshake(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);

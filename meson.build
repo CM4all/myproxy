@@ -145,13 +145,14 @@ conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_PG', pg_dep.found())
 configure_file(output: 'config.h', configuration: conf)
 
+subdir('src/auth')
+
 my = static_library(
   'my',
   'src/MysqlReader.cxx',
   'src/MysqlParser.cxx',
   'src/MysqlMakePacket.cxx',
   'src/MysqlForwardPacket.cxx',
-  'src/MysqlAuth.cxx',
   'src/MysqlTextResultsetParser.cxx',
   include_directories: inc,
   dependencies: [
@@ -186,6 +187,7 @@ executable(
   dependencies: [
     libsystemd,
     my_dep,
+    auth_dep,
     util_dep,
     io_linux_dep,
     net_dep,

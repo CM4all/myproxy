@@ -16,7 +16,8 @@
 #include "MysqlSerializer.hxx"
 #include "MysqlMakePacket.hxx"
 #include "MysqlForwardPacket.hxx"
-#include "MysqlAuth.hxx"
+#include "auth/Factory.hxx"
+#include "auth/Handler.hxx"
 #include "Policy.hxx"
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/SocketAddressFormatter.hxx"
@@ -57,6 +58,9 @@ static constexpr uint_least32_t handshake_capabilities =
 	Mysql::CLIENT_SESSION_TRACK |
 	Mysql::CLIENT_DEPRECATE_EOF |
 	Mysql::CLIENT_REMEMBER_OPTIONS;
+
+inline
+Connection::Outgoing::~Outgoing() noexcept = default;
 
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
@@ -362,27 +366,6 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
-static auto
-MakeHandshakeResponse41(const Mysql::HandshakePacket &handshake,
-			uint_least8_t sequence_id, uint_least32_t client_flag,
-			const ConnectAction &action)
-{
-	if (!action.password_sha1.empty()) {
-		assert(action.password_sha1.size() == SHA1_DIGEST_LENGTH);
-
-		const std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1{AsBytes(action.password_sha1)};
-		return Mysql::MakeHandshakeResponse41SHA1(handshake, sequence_id, client_flag,
-							  action.user, password_sha1,
-							  action.database);
-	}
-
-	return Mysql::MakeHandshakeResponse41(handshake,
-					      sequence_id, client_flag,
-					      action.user,
-					      action.password,
-					      action.database);
-}
-
 MysqlHandler::Result
 Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 				  std::span<const std::byte> payload)
@@ -404,25 +387,26 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 	fmt::print("[{}] handshake server_version='{}'\n",
 		   connection.GetName(), packet.server_version);
 
-	const auto &action = *connection.connect_action;
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, false);
 
-	auto s = MakeHandshakeResponse41(packet, sequence_id + 1,
-					 connection.incoming.capabilities,
-					 action);
+	const auto &action = *connection.connect_action;
+	const auto response =
+		auth_handler->GenerateResponse(action.password,
+					       AsBytes(action.password_sha1),
+					       AsBytes(packet.auth_plugin_data1),
+					       AsBytes(packet.auth_plugin_data2));
+
+	auto s = Mysql::MakeHandshakeResponse41(sequence_id + 1,
+						connection.incoming.capabilities,
+						action.user,
+						ToStringView(response),
+						action.database,
+						auth_handler->GetName());
 	if (!peer.Send(s.Finish()))
 		return Result::CLOSED;
 
 	peer.handshake_response = true;
 	return Result::IGNORE;
-}
-
-static auto
-MakeAuthSwitchResponse(const Mysql::AuthSwitchRequest &auth_switch_request,
-		       uint_least8_t sequence_id,
-		       const ConnectAction &action)
-{
-	return Mysql::MakeAuthSwitchResponse(auth_switch_request, sequence_id,
-					     action.password, action.password_sha1);
 }
 
 MysqlHandler::Result
@@ -433,9 +417,19 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 
 	const auto packet = Mysql::ParseAuthSwitchRequest(payload);
 
-	const auto &action = *connection.connect_action;
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, true);
+	if (!auth_handler)
+		throw SocketProtocolError{"Unsupported auth_plugin"};
 
-	auto s = MakeAuthSwitchResponse(packet, sequence_id + 1, action);
+	const auto &action = *connection.connect_action;
+	const auto response =
+		auth_handler->GenerateResponse(action.password,
+					       AsBytes(action.password_sha1),
+					       AsBytes(packet.auth_plugin_data),
+					       {});
+
+	Mysql::PacketSerializer s(sequence_id + 1);
+	s.WriteN(response);
 	if (!peer.Send(s.Finish()))
 		return Result::CLOSED;
 
@@ -490,6 +484,7 @@ try {
 		case Mysql::Command::OK:
 			peer.command_phase = true;
 			connection.incoming.command_phase = true;
+			auth_handler.reset();
 
 			connection.StartCoroutine(connection.InvokeLuaCommandPhase());
 

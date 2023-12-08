@@ -9,6 +9,7 @@ Build-Depends: debhelper (>= 13.3~),
  libfmt-dev (>= 9),
  libmd-dev,
  libpq-dev,
+ libssl-dev (>= 3),
  libsystemd-dev,
  nlohmann-json3-dev (>= 3.11),
  libluajit-5.1-dev

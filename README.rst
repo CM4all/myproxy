@@ -26,6 +26,8 @@ Optional dependencies:
   Lua code
 - `nlohmann_json <https://json.nlohmann.me/>`__ (for the
   systemd-resolved client)
+- `OpenSSL <https://www.openssl.org/>`__ for ``caching_sha2_password``
+  support
 - `systemd <https://www.freedesktop.org/wiki/Software/systemd/>`__
 
 Get the source code::

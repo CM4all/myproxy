@@ -35,7 +35,7 @@ test_common_flags = [
 
   # clang specific warning options:
   '-Wunreachable-code-aggressive',
-  '-Wused-but-marked-unused',
+  #'-Wused-but-marked-unused', (disabled due to OpenSSL)
 ]
 
 test_global_common_flags = [
@@ -99,16 +99,21 @@ add_project_arguments(compiler.get_supported_arguments(test_cxxflags), language:
 libsystemd = dependency('libsystemd', required: get_option('systemd'))
 
 inc = include_directories(
+  '.',
   'src',
   'libcommon/src',
 )
 
 libcommon_enable_json = false
+libcommon_require_libcrypto = get_option('openssl')
+openssl_min_version = '3'
+openssl_api_compat = '0x30000000L'
 
 sources = []
 
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
+subdir('libcommon/src/lib/openssl')
 subdir('libcommon/src/lib/sodium')
 subdir('libcommon/src/io')
 subdir('libcommon/src/io/linux')
@@ -142,6 +147,7 @@ if pg_dep.found()
 endif
 
 conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
+conf.set('HAVE_OPENSSL', crypto_dep.found())
 conf.set('HAVE_PG', pg_dep.found())
 configure_file(output: 'config.h', configuration: conf)
 

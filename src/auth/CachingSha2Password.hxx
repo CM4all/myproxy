@@ -5,17 +5,29 @@
 #pragma once
 
 #include "Handler.hxx"
+#include "util/AllocatedArray.hxx"
 
 #include <array>
+#include <string>
 
 namespace Mysql {
 
 class CachingSha2Password final : public AuthHandler {
 	std::array<std::byte, 32> buffer;
 
+	std::string last_password;
+
+	std::array<std::byte, 20> last_auth_plugin_data;
+
+	AllocatedArray<std::byte> encrypted_password;
+
+	bool public_key_requested = false;
+
 public:
-	constexpr CachingSha2Password() noexcept
+	CachingSha2Password() noexcept
 		:AuthHandler("caching_sha2_password") {}
+
+	~CachingSha2Password() noexcept override;
 
 	// virtual methods from class AuthHandler
 	std::span<const std::byte> GenerateResponse(std::string_view password,

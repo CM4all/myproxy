@@ -15,6 +15,27 @@ using std::string_view_literals::operator""sv;
 
 namespace Mysql {
 
+static auto
+MakeMysqlNativePasswordSHA1(std::span<const std::byte> password_sha1,
+			    std::string_view auth_plugin_data1,
+			    std::string_view auth_plugin_data2) noexcept
+{
+	assert(auth_plugin_data1.size() + auth_plugin_data2.size() == 20);
+
+	const auto password_sha1_sha1 = SHA1(password_sha1);
+
+	SHA1State s;
+	s.Update(auth_plugin_data1);
+	s.Update(auth_plugin_data2);
+	s.Update(password_sha1_sha1);
+
+	auto auth_response = s.Final();
+	for (std::size_t i = 0; i < auth_response.size(); ++i)
+		auth_response[i] ^= password_sha1[i];
+
+	return auth_response;
+}
+
 PacketSerializer
 MakeHandshakeResponse41SHA1(const HandshakePacket &handshake,
 			    uint_least8_t sequence_id, uint_least32_t client_flag,
@@ -22,16 +43,10 @@ MakeHandshakeResponse41SHA1(const HandshakePacket &handshake,
 			    std::span<const std::byte, SHA1_DIGEST_LENGTH> password_sha1,
 			    std::string_view database)
 {
-	const auto password_sha1_sha1 = SHA1(password_sha1);
-
-	SHA1State s;
-	s.Update(handshake.auth_plugin_data1);
-	s.Update(handshake.auth_plugin_data2.substr(0, 12));
-	s.Update(password_sha1_sha1);
-
-	auto auth_response = s.Final();
-	for (std::size_t i = 0; i < auth_response.size(); ++i)
-		auth_response[i] ^= password_sha1[i];
+	const auto auth_response =
+		MakeMysqlNativePasswordSHA1(password_sha1,
+					    handshake.auth_plugin_data1,
+					    handshake.auth_plugin_data2.substr(0, 12));
 
 	return Mysql::MakeHandshakeResponse41(sequence_id, client_flag, user,
 					      ToStringView(auth_response),
@@ -82,15 +97,10 @@ MakeAuthSwitchResponse(const AuthSwitchRequest &auth_switch_request,
 		if (password_sha1.empty())
 			password_sha1 = password_sha1_buffer = SHA1(password);
 
-		const auto password_sha1_sha1 = SHA1(password_sha1);
-
-		SHA1State sha1;
-		sha1.Update(auth_switch_request.auth_plugin_data.substr(0, 20));
-		sha1.Update(password_sha1_sha1);
-
-		auto auth_response = sha1.Final();
-		for (std::size_t i = 0; i < auth_response.size(); ++i)
-			auth_response[i] ^= password_sha1[i];
+		const auto auth_response =
+			MakeMysqlNativePasswordSHA1(password_sha1,
+						    auth_switch_request.auth_plugin_data.substr(0, 20),
+						    {});
 
 		Mysql::PacketSerializer s{sequence_id};
 		s.WriteN(auth_response);

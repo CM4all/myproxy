@@ -35,11 +35,14 @@ public:
 	 * Give this object a chance to handle a raw packet during
 	 * authentication.
 	 *
-	 * @return true if the packet was handled
+	 * @return nullptr if the packet was not handled, a non-empty
+	 * span if a packet shall be sent to the server, an empty
+	 * (non-nullptr) span if the packet was handled by nothing
+	 * should be sent to the server
 	 */
-	virtual bool HandlePacket(std::span<const std::byte> payload) {
+	virtual std::span<const std::byte> HandlePacket(std::span<const std::byte> payload) {
 		(void)payload;
-		return false;
+		return {};
 	}
 };
 

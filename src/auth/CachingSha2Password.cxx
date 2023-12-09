@@ -46,11 +46,11 @@ CachingSha2Password::GenerateResponse(std::string_view password,
 	return buffer;
 }
 
-bool
+std::span<const std::byte>
 CachingSha2Password::HandlePacket(std::span<const std::byte> payload)
 {
 	if (payload.empty() || payload.front() != std::byte{0x01})
-		return false;
+		return {};
 
 	/* this is "fast auth result" which is the first response
 	   packet after "caching_sha2_password" */
@@ -62,7 +62,8 @@ CachingSha2Password::HandlePacket(std::span<const std::byte> payload)
 	if (result == std::byte{3}) {
 		/* fast auth success - ignore this one and forward the
 		   "OK" packet that will follow */
-		return true;
+		static constexpr std::byte dummy{};
+		return {&dummy, 0};
 	} else if (result == std::byte{4}) {
 		/* fast auth failed */
 

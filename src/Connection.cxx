@@ -458,8 +458,19 @@ try {
 	if (!peer.command_phase) {
 		assert(!connection.incoming.command_phase);
 
-		if (auth_handler && auth_handler->HandlePacket(payload))
-			return Result::IGNORE;
+		if (auth_handler) {
+			if (const auto new_payload = auth_handler->HandlePacket(payload);
+			    new_payload.data() != nullptr) {
+				if (!new_payload.empty()) {
+					Mysql::PacketSerializer s(number + 1);
+					s.WriteN(new_payload);
+					if (!peer.Send(s.Finish()))
+						return Result::CLOSED;
+				}
+
+				return Result::IGNORE;
+			}
+		}
 
 		switch (cmd) {
 		case Mysql::Command::OK:

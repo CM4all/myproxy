@@ -22,7 +22,7 @@ public:
 						    std::span<const std::byte> password_sha1,
 						    std::span<const std::byte> data1,
 						    std::span<const std::byte> data2) override;
-	bool HandlePacket(std::span<const std::byte> payload) override;
+	std::span<const std::byte> HandlePacket(std::span<const std::byte> payload) override;
 };
 
 } // namespace Mysql

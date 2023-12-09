@@ -7,7 +7,7 @@ cm4all-myproxy (0.14) unstable; urgency=low
   * cluster: add option "disconnect_unavailable"
   * check: combine client/server capabilities flags with bit-wise "AND"
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Sat, 09 Dec 2023 17:48:33 +0100
 
 cm4all-myproxy (0.13) unstable; urgency=low
 

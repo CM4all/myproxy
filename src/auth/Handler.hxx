@@ -30,6 +30,17 @@ public:
 							    std::span<const std::byte> password_sha1,
 							    std::span<const std::byte> data1,
 							    std::span<const std::byte> data2) = 0;
+
+	/**
+	 * Give this object a chance to handle a raw packet during
+	 * authentication.
+	 *
+	 * @return true if the packet was handled
+	 */
+	virtual bool HandlePacket(std::span<const std::byte> payload) {
+		(void)payload;
+		return false;
+	}
 };
 
 } // namespace Mysql

@@ -458,27 +458,8 @@ try {
 	if (!peer.command_phase) {
 		assert(!connection.incoming.command_phase);
 
-		if (cmd == Mysql::Command{0x01}) {
-			/* this is "fast auth result" which is the
-			   first response packet after
-			   "caching_sha2_password" */
-			if (payload.size() != 2)
-				throw SocketProtocolError{"Bad fast auth result packet from server"};
-
-			const auto result = payload[1];
-
-			if (result == std::byte{3}) {
-				/* fast auth success - ignore this one
-				   and forward the "OK" packet that
-				   will follow */
-				return Result::IGNORE;
-			} else if (result == std::byte{4}) {
-				/* fast auth failed */
-
-				throw SocketProtocolError{"fast auth failed"};
-			} else
-				throw SocketProtocolError{"Bad fast auth result code from server"};
-		}
+		if (auth_handler && auth_handler->HandlePacket(payload))
+			return Result::IGNORE;
 
 		switch (cmd) {
 		case Mysql::Command::OK:

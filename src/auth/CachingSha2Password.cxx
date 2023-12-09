@@ -5,6 +5,7 @@
 #include "CachingSha2Password.hxx"
 #include "SHA256.hxx"
 #include "MysqlSerializer.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "util/SpanCast.hxx"
 
 #include <stdexcept>
@@ -43,6 +44,31 @@ CachingSha2Password::GenerateResponse(std::string_view password,
 		buffer[i] ^= password_sha256[i];
 
 	return buffer;
+}
+
+bool
+CachingSha2Password::HandlePacket(std::span<const std::byte> payload)
+{
+	if (payload.empty() || payload.front() != std::byte{0x01})
+		return false;
+
+	/* this is "fast auth result" which is the first response
+	   packet after "caching_sha2_password" */
+	if (payload.size() != 2)
+		throw SocketProtocolError{"Bad fast auth result packet from server"};
+
+	const auto result = payload[1];
+
+	if (result == std::byte{3}) {
+		/* fast auth success - ignore this one and forward the
+		   "OK" packet that will follow */
+		return true;
+	} else if (result == std::byte{4}) {
+		/* fast auth failed */
+
+		throw SocketProtocolError{"fast auth failed"};
+	} else
+		throw SocketProtocolError{"Bad fast auth result code from server"};
 }
 
 } // namespace Mysql

@@ -186,8 +186,10 @@ MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> pa
 		return Result::CLOSED;
 	}
 
+	peer->capabilities = handshake.capabilities & client_flag;
+
 	auto s = MakeHandshakeResponse41(handshake,
-					 sequence_id + 1, client_flag,
+					 sequence_id + 1, peer->capabilities,
 					 options.user, options.password,
 					 {});
 	if (!peer->Send(s.Finish()))
@@ -222,7 +224,7 @@ MysqlCheck::OnCommandPhase()
 	}
 
 	Mysql::TextResultsetHandler &_handler = *this;
-	text_resultset_parser.emplace(client_flag, _handler);
+	text_resultset_parser.emplace(peer->capabilities, _handler);
 
 	have_read_only = false;
 	auto s = Mysql::MakeQuery(0x00, "SELECT @@global.read_only");
@@ -304,7 +306,7 @@ try {
 		case Mysql::Command::ERR:
 			error_result = CheckServerResult::AUTH_FAILED;
 			throw FmtRuntimeError("Authentication error: {}",
-					      Mysql::ParseErr(payload, client_flag).error_message);
+					      Mysql::ParseErr(payload, peer->capabilities).error_message);
 
 		default:
 			throw SocketProtocolError{"Unexpected server reply to HandshakeResponse"};

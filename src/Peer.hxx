@@ -34,6 +34,17 @@ public:
 
 	virtual void OnPeerClosed() noexcept = 0;
 	virtual WriteResult OnPeerWrite() = 0;
+
+	/**
+	 * Writing to the socket has failed.
+	 *
+	 * @return true to forward the error condition OnPeerError(),
+	 * false if this method has destroyed the #Peer
+	 */
+	virtual bool OnPeerBroken() noexcept {
+		return true;
+	}
+
 	virtual void OnPeerError(std::exception_ptr e) noexcept = 0;
 };
 
@@ -114,5 +125,6 @@ private:
 	BufferedResult OnBufferedData() override;
 	bool OnBufferedClosed() noexcept override;
 	bool OnBufferedWrite() override;
+	enum write_result OnBufferedBroken() noexcept override;
 	void OnBufferedError(std::exception_ptr e) noexcept override;
 };

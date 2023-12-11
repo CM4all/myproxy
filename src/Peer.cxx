@@ -125,6 +125,14 @@ Peer::OnBufferedWrite()
 	gcc_unreachable();
 }
 
+enum write_result
+Peer::OnBufferedBroken() noexcept
+{
+	return handler.OnPeerBroken()
+		? WRITE_ERRNO
+		: WRITE_DESTROYED;
+}
+
 void
 Peer::OnBufferedError(std::exception_ptr e) noexcept
 {

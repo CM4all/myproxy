@@ -181,6 +181,15 @@ Connection::OnPeerWrite()
 	return got_raw_from_outgoing ? WriteResult::MORE : WriteResult::DONE;
 }
 
+bool
+Connection::OnPeerBroken() noexcept
+{
+	/* do not log error if the client closes the connection while
+	   we're sending to it */
+	SafeDelete();
+	return false;
+}
+
 void
 Connection::OnPeerError(std::exception_ptr e) noexcept
 {

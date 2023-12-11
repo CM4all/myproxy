@@ -191,6 +191,7 @@ private:
 	/* virtual methods from PeerSocketHandler */
 	void OnPeerClosed() noexcept override;
 	WriteResult OnPeerWrite() override;
+	bool OnPeerBroken() noexcept override;
 	void OnPeerError(std::exception_ptr e) noexcept override;
 
 	/* virtual methods from MysqlHandler */

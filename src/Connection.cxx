@@ -450,9 +450,10 @@ Connection::Outgoing::OnMysqlPacket(unsigned number,
 				    std::span<const std::byte> payload,
 				    [[maybe_unused]] bool complete) noexcept
 try {
-	assert(connection.incoming.handshake);
-	assert(connection.incoming.handshake_response);
-	assert(connection.connect_action);
+	auto &c = connection;
+	assert(c.incoming.handshake);
+	assert(c.incoming.handshake_response);
+	assert(c.connect_action);
 
 	if (!peer.handshake) {
 		peer.handshake = true;
@@ -465,7 +466,7 @@ try {
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	if (!peer.command_phase) {
-		assert(!connection.incoming.command_phase);
+		assert(!c.incoming.command_phase);
 
 		if (auth_handler) {
 			if (const auto new_payload = auth_handler->HandlePacket(payload);
@@ -484,14 +485,14 @@ try {
 		switch (cmd) {
 		case Mysql::Command::OK:
 			peer.command_phase = true;
-			connection.incoming.command_phase = true;
+			c.incoming.command_phase = true;
 			auth_handler.reset();
 
-			connection.StartCoroutine(connection.InvokeLuaCommandPhase());
+			c.StartCoroutine(c.InvokeLuaCommandPhase());
 
-			return connection.incoming.Send(Mysql::MakeOk(connection.incoming_handshake_response_sequence_id + 1,
-								      connection.incoming.capabilities,
-								      Mysql::ParseOk(payload, peer.capabilities)))
+			return c.incoming.Send(Mysql::MakeOk(c.incoming_handshake_response_sequence_id + 1,
+							     c.incoming.capabilities,
+							     Mysql::ParseOk(payload, peer.capabilities)))
 				? Result::IGNORE
 				: Result::CLOSED;
 
@@ -499,9 +500,9 @@ try {
 			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
-			return connection.incoming.Send(Mysql::MakeErr(connection.incoming_handshake_response_sequence_id + 1,
-								       connection.incoming.capabilities,
-								       Mysql::ParseErr(payload, peer.capabilities)))
+			return c.incoming.Send(Mysql::MakeErr(c.incoming_handshake_response_sequence_id + 1,
+							      c.incoming.capabilities,
+							      Mysql::ParseErr(payload, peer.capabilities)))
 				? Result::IGNORE
 				: Result::CLOSED;
 
@@ -512,10 +513,10 @@ try {
 
 	switch (cmd) {
 	case Mysql::Command::EOF_:
-		if (connection.request_time != Event::TimePoint{}) {
-			const auto duration = connection.GetEventLoop().SteadyNow() - connection.request_time;
-			policy_duration(connection.user.c_str(), duration);
-			connection.request_time = Event::TimePoint{};
+		if (c.request_time != Event::TimePoint{}) {
+			const auto duration = c.GetEventLoop().SteadyNow() - c.request_time;
+			policy_duration(c.user.c_str(), duration);
+			c.request_time = Event::TimePoint{};
 		}
 
 		break;

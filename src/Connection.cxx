@@ -500,11 +500,14 @@ try {
 			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
-			return c.incoming.Send(Mysql::MakeErr(c.incoming_handshake_response_sequence_id + 1,
-							      c.incoming.capabilities,
-							      Mysql::ParseErr(payload, peer.capabilities)))
-				? Result::IGNORE
-				: Result::CLOSED;
+			if (c.incoming.Send(Mysql::MakeErr(c.incoming_handshake_response_sequence_id + 1,
+							   c.incoming.capabilities,
+							   Mysql::ParseErr(payload, peer.capabilities))))
+				/* connection can't be reused after an
+				   auth error */
+				c.SafeDelete();
+
+			return Result::CLOSED;
 
 		default:
 			throw SocketProtocolError{"Unexpected server reply to HandshakeResponse"};
@@ -750,6 +753,7 @@ try {
 		incoming.SendErr(sequence_id + 1,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 				 err->msg);
+		SafeDelete();
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
 

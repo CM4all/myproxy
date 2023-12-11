@@ -1,6 +1,6 @@
 cm4all-myproxy (0.15) unstable; urgency=low
 
-  * 
+  * implement auth plugin "client_ed25519"
 
  --   
 

@@ -44,6 +44,7 @@ jobs:
         run: |
           meson setup \
             -Ddocumentation=disabled \
+            -Dopenssl=enabled \
             -Dsystemd=enabled \
             -Dpg=enabled \
              --force-fallback-for=fmt,nlohmann_json \

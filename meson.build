@@ -121,6 +121,8 @@ subdir('libcommon/src/system')
 subdir('libcommon/src/net')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
+subdir('libcommon/src/memory')
+subdir('src/memory')
 
 subdir('libcommon/src/co')
 subdir('libcommon/src/lua')
@@ -205,6 +207,7 @@ executable(
     lua_sodium_dep,
     pg_dep,
     sodium_dep,
+    memory_dep,
   ],
   install: true,
   install_dir: 'sbin',

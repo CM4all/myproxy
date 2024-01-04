@@ -8,5 +8,6 @@ executable(
     my_dep,
     auth_dep,
     event_net_dep,
+    memory_dep,
   ],
 )

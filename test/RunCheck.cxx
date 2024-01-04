@@ -4,6 +4,7 @@
 
 #include "Check.hxx"
 #include "Options.hxx"
+#include "memory/fb_pool.hxx"
 #include "event/Loop.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/Resolver.hxx"
@@ -28,6 +29,8 @@ try {
 		.password = argv[3],
 		.no_read_only = true,
 	};
+
+	const ScopeFbPoolInit fb_pool_init;
 
 	EventLoop event_loop;
 

@@ -21,6 +21,7 @@
 #include "lua/io/CgroupInfo.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
+#include "memory/fb_pool.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
@@ -177,6 +178,8 @@ try {
 	   even if stdout is a pipe to systemd-journald */
 	setvbuf(stdout, nullptr, _IOLBF, 0);
 	setvbuf(stderr, nullptr, _IOLBF, 0);
+
+	const ScopeFbPoolInit fb_pool_init;
 
 	Instance instance;
 	SetupConfigState(instance.GetLuaState(), instance);

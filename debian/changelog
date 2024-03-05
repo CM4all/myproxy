@@ -1,6 +1,7 @@
 cm4all-myproxy (0.16) unstable; urgency=low
 
   * use an optimized buffer allocator
+  * debian: add missing build-dependency on libsodium-dev
 
  --   
 

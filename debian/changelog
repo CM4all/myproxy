@@ -6,7 +6,7 @@ cm4all-myproxy (0.16) unstable; urgency=low
   * lua: fix crash if handler keys not strings
   * debian: add missing build-dependency on libsodium-dev
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 08 Mar 2024 17:51:30 +0100
 
 cm4all-myproxy (0.15) unstable; urgency=low
 

@@ -22,7 +22,7 @@ LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 	bool have_on_handshake_response = false;
 
 	Lua::ForEach(L, idx, [this, L, &have_on_handshake_response](auto key_idx, auto value_idx){
-		if (!lua_isstring(L, Lua::GetStackIndex(key_idx)))
+		if (lua_type(L, Lua::GetStackIndex(key_idx)) != LUA_TSTRING)
 			throw std::invalid_argument{"Key is not a string"};
 
 		const char *key = lua_tostring(L, Lua::GetStackIndex(key_idx));

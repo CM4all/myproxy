@@ -3,6 +3,7 @@ cm4all-myproxy (0.16) unstable; urgency=low
   * use an optimized buffer allocator
   * lua/libsodium: add bindings for bin2hex, hex2bin, randombytes,
     crypto_scalarmult_base
+  * lua: fix crash if handler keys not strings
   * debian: add missing build-dependency on libsodium-dev
 
  --   

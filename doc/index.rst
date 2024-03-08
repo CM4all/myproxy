@@ -195,12 +195,27 @@ libsodium
 
 There are some `libsodium <https://www.libsodium.org/>`__ bindings.
 
+`Helpers <https://doc.libsodium.org/helpers>`__::
+
+  bin = sodium.hex2bin("deadbeef") -- returns "\xde\xad\xbe\ef"
+  hex = sodium.bin2hex("A\0\xff") -- returns "4100ff"
+
+`Generating random data
+<https://doc.libsodium.org/generating_random_data>`__::
+
+  key = sodium.randombytes(32)
+
 `Sealed boxes
 <https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes>`__::
 
   pk, sk = sodium.crypto_box_keypair()
   ciphertext = sodium.crypto_box_seal('hello world', pk)
   message = sodium.crypto_box_seal_open(ciphertext, pk, sk)
+
+`Point*scalar multiplication
+<https://doc.libsodium.org/advanced/scalar_multiplication>__::
+
+  pk = sodium.crypto_scalarmult_base(sk)
 
 
 PostgreSQL Client

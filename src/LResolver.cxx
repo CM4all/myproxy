@@ -11,7 +11,6 @@
 #include "lua/PushCClosure.hxx"
 #include "lua/net/Resolver.hxx"
 #include "lua/net/SocketAddress.hxx"
-#include "net/Resolver.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "config.h"

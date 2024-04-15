@@ -1,6 +1,6 @@
 cm4all-myproxy (0.17) unstable; urgency=low
 
-  * 
+  * quote client-specified strings for logging
 
  --   
 

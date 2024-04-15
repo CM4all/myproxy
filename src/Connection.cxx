@@ -237,7 +237,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	incoming.capabilities &= packet.capabilities;
 
-	fmt::print("[{}] login user='{}' database='{}'\n", GetName(), packet.user, packet.database);
+	fmt::print("[{}] login user={:?} database={:?}\n", GetName(), packet.user, packet.database);
 
 	user = packet.user;
 	auth_response = packet.auth_response;
@@ -393,7 +393,7 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 
 	peer.capabilities = packet.capabilities & connection.incoming.capabilities;
 
-	fmt::print("[{}] handshake server_version='{}'\n",
+	fmt::print("[{}] handshake server_version={:?}\n",
 		   connection.GetName(), packet.server_version);
 
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, false);

@@ -14,6 +14,7 @@
 #include "lua/PushCClosure.hxx"
 #include "lua/RunFile.hxx"
 #include "lua/Util.hxx"
+#include "lua/StringView.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "lua/sodium/Init.hxx"
 #include "lua/event/Init.hxx"
@@ -22,7 +23,7 @@
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
 #include "memory/fb_pool.hxx"
-#include "net/AllocatedSocketAddress.hxx"
+#include "net/LocalSocketAddress.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
 #include "util/ScopeExit.hxx"
@@ -88,12 +89,9 @@ try {
 	auto handler = ParameterToLuaHandler(L, 2);
 
 	if (lua_isstring(L, 1)) {
-		const char *address_string = lua_tostring(L, 1);
+		const auto address_string = Lua::ToStringView(L, 1);
 
-		AllocatedSocketAddress address;
-		address.SetLocal(address_string);
-
-		instance.AddListener(address, std::move(handler));
+		instance.AddListener(LocalSocketAddress{address_string}, std::move(handler));
 #ifdef HAVE_LIBSYSTEMD
 	} else if (IsSystemdMagic(L, 1)) {
 		instance.AddSystemdListener(std::move(handler));

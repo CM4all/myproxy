@@ -4,7 +4,7 @@ cm4all-myproxy (0.17) unstable; urgency=low
   * quote client-specified strings for logging
   * export Promtheus metrics
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 03 May 2024 17:29:01 +0200
 
 cm4all-myproxy (0.16) unstable; urgency=low
 

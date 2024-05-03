@@ -43,13 +43,14 @@ MakeListener(SocketAddress address)
 {
 	constexpr int socktype = SOCK_STREAM;
 
-	SocketConfig config{address};
-	config.mode = 0666;
+	const SocketConfig config{
+		.bind_address = AllocatedSocketAddress{address},
+		.listen = 64,
+		.mode = 0666,
 
-	/* we want to receive the client's UID */
-	config.pass_cred = true;
-
-	config.listen = 64;
+		/* we want to receive the client's UID */
+		.pass_cred = true,
+	};
 
 	return config.Create(socktype);
 }

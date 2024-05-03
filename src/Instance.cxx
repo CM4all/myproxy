@@ -57,7 +57,7 @@ MakeListener(SocketAddress address)
 
 void
 Instance::AddListener(SocketAddress address,
-		      std::shared_ptr<LuaHandler> handler) noexcept
+		      std::shared_ptr<LuaHandler> handler)
 {
 	AddListener(MakeListener(address), std::move(handler));
 }

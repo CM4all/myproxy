@@ -52,7 +52,7 @@ public:
 			 std::shared_ptr<LuaHandler> &&handler) noexcept;
 
 	void AddListener(SocketAddress address,
-			 std::shared_ptr<LuaHandler> handler) noexcept;
+			 std::shared_ptr<LuaHandler> handler);
 
 	/**
 	 * Listen for incoming connections on sockets passed by systemd

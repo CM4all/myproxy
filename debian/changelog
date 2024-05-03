@@ -1,5 +1,6 @@
 cm4all-myproxy (0.17) unstable; urgency=low
 
+  * fix startup crash if bind address is already in use
   * quote client-specified strings for logging
 
  --   

@@ -5,6 +5,7 @@
 #include "Instance.hxx"
 #include "Config.hxx"
 #include "Connection.hxx"
+#include "event/net/PrometheusExporterListener.hxx"
 #include "net/SocketConfig.hxx"
 #include "system/Error.hxx"
 
@@ -30,11 +31,13 @@ Instance::Instance()
 	sighup_event.Enable();
 }
 
+Instance::~Instance() noexcept = default;
+
 inline void
 Instance::AddListener(UniqueSocketDescriptor &&fd,
 		      std::shared_ptr<LuaHandler> &&handler) noexcept
 {
-	listeners.emplace_front(event_loop, event_loop, std::move(handler));
+	listeners.emplace_front(event_loop, event_loop, stats, std::move(handler));
 	listeners.front().Listen(std::move(fd));
 }
 
@@ -82,6 +85,23 @@ Instance::AddSystemdListener(std::shared_ptr<LuaHandler> handler)
 #endif // HAVE_LIBSYSTEMD
 
 void
+Instance::AddPrometheusListener(SocketAddress address)
+{
+	const SocketConfig config{
+		.bind_address = AllocatedSocketAddress{address},
+		.listen = 16,
+		.tcp_defer_accept = 10,
+		.mode = 0666,
+		.tcp_no_delay = true,
+	};
+
+	PrometheusExporterHandler &handler = *this;
+	prometheus_exporters.emplace_front(event_loop,
+					   config.Create(SOCK_STREAM),
+					   handler);
+}
+
+void
 Instance::Check()
 {
 	if (listeners.empty())
@@ -95,6 +115,7 @@ Instance::OnShutdown() noexcept
 	sighup_event.Disable();
 
 	listeners.clear();
+	prometheus_exporters.clear();
 
 #ifdef HAVE_LIBSYSTEMD
 	systemd_watchdog.Disable();

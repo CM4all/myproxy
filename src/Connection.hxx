@@ -19,6 +19,8 @@
 #include <optional>
 #include <string>
 
+struct Stats;
+struct NodeStats;
 class LuaHandler;
 class LClient;
 
@@ -35,6 +37,9 @@ class Connection final
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
+	Stats &stats;
+	NodeStats *outgoing_stats;
+
 	const std::shared_ptr<LuaHandler> handler;
 
 	Lua::AutoCloseList auto_close;
@@ -80,11 +85,14 @@ class Connection final
 	struct Outgoing final : PeerHandler, MysqlHandler {
 		Connection &connection;
 
+		NodeStats &stats;
+
 		Peer peer;
 
 		std::unique_ptr<Mysql::AuthHandler> auth_handler;
 
 		Outgoing(Connection &_connection,
+			 NodeStats &_stats,
 			 UniqueSocketDescriptor fd) noexcept;
 		~Outgoing() noexcept;
 
@@ -117,7 +125,7 @@ class Connection final
 	bool got_raw_from_incoming, got_raw_from_outgoing;
 
 public:
-	Connection(EventLoop &event_loop,
+	Connection(EventLoop &event_loop, Stats &_stats,
 		   std::shared_ptr<LuaHandler> _handler,
 		   UniqueSocketDescriptor fd,
 		   SocketAddress address);

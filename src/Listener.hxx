@@ -10,5 +10,8 @@
 
 #include <memory>
 
+struct Stats;
+
 using MyProxyListener =
-	TemplateServerSocket<Connection, EventLoop &, std::shared_ptr<LuaHandler>>;
+	TemplateServerSocket<Connection, EventLoop &, Stats &,
+			     std::shared_ptr<LuaHandler>>;

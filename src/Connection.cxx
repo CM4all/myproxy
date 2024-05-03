@@ -202,10 +202,12 @@ Connection::OnSocketConnectSuccess(UniqueSocketDescriptor fd) noexcept
 {
 	assert(!outgoing);
 
+	++outgoing_stats->n_connects;
+
 	/* disable Nagle's algorithm to reduce latency */
 	fd.SetNoDelay();
 
-	outgoing.emplace(*this, std::move(fd));
+	outgoing.emplace(*this, *outgoing_stats, std::move(fd));
 }
 
 void
@@ -215,6 +217,8 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 	assert(incoming.handshake);
 	assert(incoming.handshake_response);
 	assert(!incoming.command_phase);
+
+	++outgoing_stats->n_connect_errors;
 
 	fmt::print(stderr, "[{}] {}\n", GetName(), e);
 
@@ -232,6 +236,8 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	assert(!incoming.handshake_response);
 	assert(!incoming.command_phase);
 	assert(!outgoing);
+
+	++stats.n_client_handshake_responses;
 
 	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
@@ -299,6 +305,8 @@ MysqlHandler::Result
 Connection::OnMysqlPacket(unsigned number, std::span<const std::byte> payload,
 			  [[maybe_unused]] bool complete) noexcept
 try {
+	++stats.n_client_packets_received;
+
 	if (!incoming.handshake)
 		throw SocketProtocolError{"Unexpected client data before handshake"};
 
@@ -323,6 +331,7 @@ try {
 		break;
 
 	case Mysql::Command::QUERY:
+		++stats.n_client_queries;
 		if (request_time == Event::TimePoint{})
 			request_time = GetEventLoop().SteadyNow();
 		break;
@@ -336,6 +345,7 @@ try {
 
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
+	++stats.n_client_malformed_packets;
 	fmt::print(stderr, "[{}] Malformed packet from client\n", GetName());
 	SafeDelete();
 	return Result::CLOSED;
@@ -362,6 +372,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 		if (static_cast<std::size_t>(result) < src.size())
 			outgoing->peer.ScheduleWrite();
 
+		stats.n_client_bytes_received += result;
 		return {RawResult::OK, static_cast<std::size_t>(result)};
 	}
 
@@ -455,6 +466,8 @@ try {
 	assert(c.incoming.handshake_response);
 	assert(c.connect_action);
 
+	++stats.n_packets_received;
+
 	if (!peer.handshake) {
 		peer.handshake = true;
 		return OnHandshake(number, payload);
@@ -484,6 +497,8 @@ try {
 
 		switch (cmd) {
 		case Mysql::Command::OK:
+			++connection.stats.n_client_auth_ok;
+
 			peer.command_phase = true;
 			c.incoming.command_phase = true;
 			auth_handler.reset();
@@ -500,6 +515,8 @@ try {
 			return OnAuthSwitchRequest(number, payload);
 
 		case Mysql::Command::ERR:
+			++connection.stats.n_client_auth_err;
+
 			if (c.incoming.Send(Mysql::MakeErr(c.incoming_handshake_response_sequence_id + 1,
 							   c.incoming.capabilities,
 							   Mysql::ParseErr(payload, peer.capabilities))))
@@ -535,11 +552,13 @@ try {
 
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
+	++stats.n_malformed_packets;
 	fmt::print(stderr, "[{}] Malformed packet from server\n",
 		   connection.GetName());
 	connection.OnOutgoingError("Malformed packet from server"sv);
 	return Result::CLOSED;
 } catch (const SocketProtocolError &e) {
+	++stats.n_malformed_packets;
 	fmt::print(stderr, "[{}] {}\n", connection.GetName(), e.what());
 	connection.OnOutgoingError(e.what());
 	return Result::CLOSED;
@@ -559,6 +578,7 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 		if (static_cast<std::size_t>(result) < src.size())
 			connection.incoming.ScheduleWrite();
 
+		stats.n_bytes_received += result;
 		return {RawResult::OK, static_cast<std::size_t>(result)};
 	}
 
@@ -573,17 +593,20 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 }
 
 Connection::Outgoing::Outgoing(Connection &_connection,
+			       NodeStats &_stats,
 			       UniqueSocketDescriptor fd) noexcept
 	:connection(_connection),
+	 stats(_stats),
 	 peer(connection.GetEventLoop(), std::move(fd), *this, *this)
 {
 }
 
-Connection::Connection(EventLoop &event_loop,
+Connection::Connection(EventLoop &event_loop, Stats &_stats,
 		       std::shared_ptr<LuaHandler> _handler,
 		       UniqueSocketDescriptor fd,
 		       SocketAddress address)
-	:handler(std::move(_handler)),
+	:stats(_stats),
+	 handler(std::move(_handler)),
 	 auto_close(handler->GetState()),
 	 lua_client(handler->GetState()),
 	 defer_start_handler(event_loop, BIND_THIS_METHOD(OnDeferredStartHandler)),
@@ -591,6 +614,8 @@ Connection::Connection(EventLoop &event_loop,
 	 incoming(event_loop, std::move(fd), *this, *this),
 	 connect(event_loop, *this)
 {
+	++stats.n_accepted_connections;
+
 	lua_client_ptr = LClient::New(GetLuaState(), auto_close,
 				      incoming.GetSocket(), address,
 				      "5.7.30"sv);
@@ -672,6 +697,8 @@ try {
 			// OK
 			// TODO implement more actions
 		} else if (auto *err = CheckLuaErrAction(L, -1)) {
+			++stats.n_rejected_connections;
+
 			if (incoming.SendErr(0,
 					     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 					     err->msg))
@@ -684,6 +711,7 @@ try {
 	/* write the handshake */
 	incoming.DeferWrite();
 } catch (...) {
+	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
 	if (incoming.SendErr(0,
@@ -750,6 +778,8 @@ try {
 	co_await Lua::CoAwaitable{thread, L, 2};
 
 	if (auto *err = CheckLuaErrAction(L, -1)) {
+		++stats.n_rejected_connections;
+
 		incoming.SendErr(sequence_id + 1,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 				 err->msg);
@@ -767,7 +797,11 @@ try {
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();
 
-			address = cluster.Pick(lua_client_ptr->GetAccount(), this);
+			const auto p = cluster.Pick(lua_client_ptr->GetAccount(), this);
+			address = p.first;
+			outgoing_stats = &p.second;
+		} else {
+			outgoing_stats = &stats.GetNode(address);
 		}
 
 		incoming_handshake_response_sequence_id = sequence_id;
@@ -780,6 +814,7 @@ try {
 	} else
 		throw std::invalid_argument{"Bad return value"};
 } catch (...) {
+	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
 	if (incoming.SendErr(sequence_id + 1,

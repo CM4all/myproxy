@@ -60,6 +60,18 @@ means they must not do any network I/O, launch child processes, and
 should avoid anything but querying the parameters.
 
 
+Prometheus Exporter
+^^^^^^^^^^^^^^^^^^^
+
+The function ``prometheus_listen(ADDRESS)`` creates a simple HTTP
+listener which exposes statistics in the `Prometheus format
+<https://prometheus.io/docs/instrumenting/writing_exporters/>`__.
+Example::
+
+ prometheus_listen("*:8022")
+ prometheus_listen("/run/cm4all/myproxy/prometheus_exporter.socket")
+
+
 ``SIGHUP``
 ^^^^^^^^^^
 

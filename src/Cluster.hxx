@@ -11,9 +11,12 @@
 #include <cstdint>
 #include <forward_list>
 #include <string_view>
+#include <utility> // for std::pair
 #include <vector>
 
 struct lua_State;
+struct Stats;
+struct NodeStats;
 class SocketAddress;
 class AllocatedSocketAddress;
 class EventLoop;
@@ -84,14 +87,14 @@ class Cluster {
 	bool found_alive = false;
 
 public:
-	Cluster(EventLoop &event_loop,
+	Cluster(EventLoop &event_loop, Stats &stats,
 		std::forward_list<AllocatedSocketAddress> &&_nodes,
 		ClusterOptions &&_options) noexcept;
 	~Cluster() noexcept;
 
 	static void Register(lua_State *L);
 	static Cluster *New(lua_State *L,
-			    EventLoop &event_loop,
+			    EventLoop &event_loop, Stats &stats,
 			    std::forward_list<AllocatedSocketAddress> &&nodes,
 			    ClusterOptions &&options);
 
@@ -116,10 +119,12 @@ public:
 	}
 
 	[[nodiscard]] [[gnu::pure]]
-	SocketAddress Pick(std::string_view account,
-			   ClusterNodeObserver *observer=nullptr) noexcept;
+	std::pair<SocketAddress, NodeStats &> Pick(std::string_view account,
+						   ClusterNodeObserver *observer=nullptr) noexcept;
 
 private:
+	static constexpr const char *ToString(NodeState state) noexcept;
+
 	void InvokeReady() noexcept;
 
 	/**

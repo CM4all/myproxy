@@ -23,7 +23,9 @@
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
 #include "memory/fb_pool.hxx"
+#include "net/AllocatedSocketAddress.hxx"
 #include "net/LocalSocketAddress.hxx"
+#include "net/Parser.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
 #include "util/ScopeExit.hxx"
@@ -104,6 +106,24 @@ try {
 	Lua::RaiseCurrent(L);
 }
 
+static int
+l_prometheus_listen(lua_State *L)
+try {
+	auto &instance = *(Instance *)lua_touserdata(L, lua_upvalueindex(1));
+
+	if (lua_gettop(L) != 1)
+		return luaL_error(L, "Invalid parameter count");
+
+	if (lua_isstring(L, 1)) {
+		instance.AddPrometheusListener(ParseSocketAddress(lua_tostring(L, 1), 9100, true));
+	} else
+		luaL_argerror(L, 1, "path expected");
+
+	return 0;
+} catch (...) {
+	Lua::RaiseCurrent(L);
+}
+
 static void
 SetupConfigState(lua_State *L, Instance &instance)
 {
@@ -118,7 +138,7 @@ SetupConfigState(lua_State *L, Instance &instance)
 #endif
 
 	Lua::InitSocketAddress(L);
-	RegisterLuaResolver(L, instance.GetEventLoop());
+	RegisterLuaResolver(L, instance.GetEventLoop(), instance.GetStats());
 
 #ifdef HAVE_LIBSYSTEMD
 	Lua::SetGlobal(L, "systemd", Lua::LightUserData(&systemd_magic));
@@ -126,6 +146,10 @@ SetupConfigState(lua_State *L, Instance &instance)
 
 	Lua::SetGlobal(L, "mysql_listen",
 		       Lua::MakeCClosure(l_mysql_listen,
+					 Lua::LightUserData(&instance)));
+
+	Lua::SetGlobal(L, "prometheus_listen",
+		       Lua::MakeCClosure(l_prometheus_listen,
 					 Lua::LightUserData(&instance)));
 }
 
@@ -155,6 +179,7 @@ static void
 SetupRuntimeState(lua_State *L)
 {
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
+	Lua::SetGlobal(L, "prometheus_listen", nullptr);
 
 	Lua::InitXattrTable(L);
 

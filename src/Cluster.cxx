@@ -5,6 +5,7 @@
 #include "Cluster.hxx"
 #include "Check.hxx"
 #include "NodeObserver.hxx"
+#include "Stats.hxx"
 #include "lib/sodium/GenericHash.hxx"
 #include "lua/Class.hxx"
 #include "event/CoarseTimerEvent.hxx"
@@ -15,6 +16,29 @@
 
 #include <algorithm> // for std::sort()
 #include <cstdint>
+
+constexpr const char *
+Cluster::ToString(NodeState state) noexcept
+{
+	switch (state) {
+	case NodeState::DEAD:
+		return "dead";
+
+	case NodeState::AUTH_FAILED:
+		return "auth_failed";
+
+	case NodeState::UNKNOWN:
+		return "unknown";
+
+	case NodeState::READ_ONLY:
+		return "read_only";
+
+	case NodeState::ALIVE:
+		return "alive";
+	}
+
+	return nullptr;
+}
 
 [[gnu::pure]]
 static std::size_t
@@ -42,6 +66,8 @@ struct Cluster::Node final : CheckServerHandler {
 
 	AllocatedSocketAddress address;
 
+	NodeStats &stats;
+
 	const CheckOptions &check_options;
 
 	CoarseTimerEvent check_timer;
@@ -56,8 +82,10 @@ struct Cluster::Node final : CheckServerHandler {
 
 	Node(Cluster &_cluster, EventLoop &event_loop,
 	     AllocatedSocketAddress &&_address,
+	     NodeStats &_stats,
 	     const ClusterOptions &options) noexcept
 		:cluster(_cluster), address(std::move(_address)),
+		 stats(_stats),
 		 check_options(options.check),
 		 check_timer(event_loop, BIND_THIS_METHOD(OnCheckTimer))
 	{
@@ -106,6 +134,7 @@ private:
 		switch (result) {
 		case CheckServerResult::OK:
 			state = State::ALIVE;
+			stats.state = ToString(state);
 
 			if (!cluster.found_alive) {
 				cluster.found_alive = true;
@@ -116,14 +145,17 @@ private:
 
 		case CheckServerResult::READ_ONLY:
 			state = State::READ_ONLY;
+			stats.state = ToString(state);
 			break;
 
 		case CheckServerResult::AUTH_FAILED:
 			state = State::AUTH_FAILED;
+			stats.state = ToString(state);
 			break;
 
 		case CheckServerResult::ERROR:
 			state = State::DEAD;
+			stats.state = ToString(state);
 			break;
 		}
 
@@ -150,13 +182,17 @@ private:
 	}
 };
 
-Cluster::Cluster(EventLoop &event_loop,
+Cluster::Cluster(EventLoop &event_loop, Stats &stats,
 		 std::forward_list<AllocatedSocketAddress> &&_nodes,
 		 ClusterOptions &&_options) noexcept
 	:options(std::move(_options))
 {
-	for (auto &&i : _nodes)
-		node_list.emplace_front(*this, event_loop, std::move(i), options);
+	for (auto &&i : _nodes) {
+		auto &node_stats = stats.GetNode(i);
+		node_list.emplace_front(*this, event_loop,
+					std::move(i), node_stats,
+					options);
+	}
 
 	for (auto &i : node_list)
 		rendezvous_nodes.emplace_back(i);
@@ -170,7 +206,7 @@ Cluster::~Cluster() noexcept
 	assert(ready_tasks.empty());
 }
 
-SocketAddress
+std::pair<SocketAddress, NodeStats &>
 Cluster::Pick(std::string_view account,
 	      ClusterNodeObserver *observer) noexcept
 {
@@ -197,7 +233,7 @@ Cluster::Pick(std::string_view account,
 		node.observers.push_front(*observer);
 	}
 
-	return node.address;
+	return {node.address, node.stats};
 }
 
 static constexpr char lua_cluster_class[] = "myproxy.cluster";
@@ -212,11 +248,12 @@ Cluster::Register(lua_State *L)
 
 Cluster *
 Cluster::New(lua_State *L,
-	     EventLoop &event_loop,
+	     EventLoop &event_loop, Stats &stats,
 	     std::forward_list<AllocatedSocketAddress> &&nodes,
 	     ClusterOptions &&options)
 {
-	return LuaCluster::New(L, event_loop, std::move(nodes), std::move(options));
+	return LuaCluster::New(L, event_loop, stats,
+			       std::move(nodes), std::move(options));
 }
 
 Cluster *

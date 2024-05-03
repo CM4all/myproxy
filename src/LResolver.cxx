@@ -25,6 +25,7 @@ static int
 l_mysql_cluster(lua_State *L)
 try {
 	auto &event_loop = *(EventLoop *)lua_touserdata(L, lua_upvalueindex(1));
+	auto &stats = *(Stats *)lua_touserdata(L, lua_upvalueindex(2));
 
 	if (lua_gettop(L) < 1)
 		return luaL_error(L, "Not enough parameters");
@@ -50,14 +51,15 @@ try {
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 
-	Cluster::New(L, event_loop, std::move(nodes), std::move(options));
+	Cluster::New(L, event_loop, stats,
+		     std::move(nodes), std::move(options));
 	return 1;
 } catch (...) {
 	Lua::RaiseCurrent(L);
 }
 
 void
-RegisterLuaResolver(lua_State *L, EventLoop &event_loop)
+RegisterLuaResolver(lua_State *L, EventLoop &event_loop, Stats &stats)
 {
 	Cluster::Register(L);
 
@@ -67,7 +69,8 @@ RegisterLuaResolver(lua_State *L, EventLoop &event_loop)
 
 	Lua::SetGlobal(L, "mysql_cluster",
 		       Lua::MakeCClosure(l_mysql_cluster,
-					 Lua::LightUserData{&event_loop}));
+					 Lua::LightUserData{&event_loop},
+					 Lua::LightUserData{&stats}));
 }
 
 void

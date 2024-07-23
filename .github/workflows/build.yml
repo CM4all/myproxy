@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -32,6 +32,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             meson \
             ccache \
+            nlohmann-json3-dev \
+            libfmt-dev \
             libsystemd-dev \
             libpq-dev \
             libmd-dev \
@@ -48,7 +50,6 @@ jobs:
             -Dopenssl=enabled \
             -Dsystemd=enabled \
             -Dpg=enabled \
-             --force-fallback-for=fmt,nlohmann_json \
             -Dwrap_mode=nofallback \
             output
 

@@ -1,4 +1,4 @@
-project('CM4all MyProxy', 'cpp', version: '0.18',
+project('CM4all MyProxy', 'cpp', version: '0.19',
   meson_version: '>= 1.0',
   default_options: [
     'cpp_std=c++2a',

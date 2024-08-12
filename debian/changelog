@@ -1,6 +1,6 @@
 cm4all-myproxy (0.19) unstable; urgency=low
 
-  * 
+  * pg: fix 0.18 regression
 
  --   
 

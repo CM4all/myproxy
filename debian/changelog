@@ -2,7 +2,7 @@ cm4all-myproxy (0.19) unstable; urgency=low
 
   * pg: fix 0.18 regression
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 12 Aug 2024 14:59:20 +0200
 
 cm4all-myproxy (0.18) unstable; urgency=low
 

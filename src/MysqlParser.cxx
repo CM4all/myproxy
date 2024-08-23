@@ -255,6 +255,45 @@ ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
 	return packet;
 }
 
+QueryPacket
+ParseQuery(std::span<const std::byte> payload, uint_least32_t capabilities)
+{
+	assert(!payload.empty());
+	assert(payload.front() == static_cast<std::byte>(Command::QUERY));
+
+	PacketDeserializer d{payload};
+	QueryPacket packet{};
+
+	d.ReadInt1(); // command
+
+	if (capabilities & CLIENT_QUERY_ATTRIBUTES) {
+		const std::size_t parameter_count = d.ReadLengthEncodedInteger();
+		[[maybe_unused]] const std::size_t parameter_set_count = d.ReadLengthEncodedInteger();
+
+		if (parameter_count > 0) {
+			d.ReadN((parameter_count + 7) / 8); // null_bitmap
+			const auto new_params_bind_flag = d.ReadInt1();
+			if (new_params_bind_flag != 1)
+				throw MalformedPacket{};
+
+			if (new_params_bind_flag) {
+				for (std::size_t i = 0; i < parameter_count; ++i) {
+					d.ReadInt2(); // param_type_and_flag
+					d.ReadLengthEncodedString(); // parameter name
+				}
+			}
+		}
+
+		for (std::size_t i = 0; i < parameter_count; ++i) {
+			d.ReadLengthEncodedString(); // parameter_values
+		}
+	}
+
+	packet.query = d.ReadRestOfPacketString();
+
+	return packet;
+}
+
 QueryMetadataPacket
 ParseQueryMetadata(std::span<const std::byte> payload)
 {

@@ -97,6 +97,13 @@ struct ChangeUserPacket {
 ChangeUserPacket
 ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities);
 
+struct QueryPacket {
+	std::string_view query;
+};
+
+QueryPacket
+ParseQuery(std::span<const std::byte> payload, uint_least32_t capabilities);
+
 struct QueryMetadataPacket {
 	unsigned column_count;
 };

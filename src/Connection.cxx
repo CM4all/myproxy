@@ -464,6 +464,15 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 	return Result::IGNORE;
 }
 
+inline void
+Connection::Outgoing::OnQueryOk(Event::Duration duration) noexcept
+{
+	++stats.n_queries;
+	stats.query_wait += duration;
+
+	policy_duration(connection.user.c_str(), duration);
+}
+
 MysqlHandler::Result
 Connection::Outgoing::OnMysqlPacket(unsigned number,
 				    std::span<const std::byte> payload,
@@ -541,12 +550,8 @@ try {
 
 	switch (cmd) {
 	case Mysql::Command::EOF_:
-		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0) {
-			++stats.n_queries;
-			stats.query_wait += duration;
-
-			policy_duration(c.user.c_str(), duration);
-		}
+		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0)
+			OnQueryOk(duration);
 
 		break;
 

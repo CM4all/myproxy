@@ -106,6 +106,8 @@ class Connection final
 		Result OnAuthSwitchRequest(uint_least8_t sequence_id,
 					   std::span<const std::byte> payload);
 
+		void OnQueryOk(Event::Duration duration) noexcept;
+
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
 		WriteResult OnPeerWrite() override;

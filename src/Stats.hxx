@@ -21,6 +21,7 @@ struct NodeStats {
 	uint_least64_t n_malformed_packets = 0;
 
 	uint_least64_t n_queries = 0;
+	uint_least64_t n_query_warnings = 0;
 
 	Event::Duration query_wait{};
 };

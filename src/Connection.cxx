@@ -465,9 +465,11 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 }
 
 inline void
-Connection::Outgoing::OnQueryOk(Event::Duration duration) noexcept
+Connection::Outgoing::OnQueryOk(const Mysql::OkPacket &packet,
+				Event::Duration duration) noexcept
 {
 	++stats.n_queries;
+	stats.n_query_warnings += packet.warnings;
 	stats.query_wait += duration;
 
 	policy_duration(connection.user.c_str(), duration);
@@ -551,7 +553,8 @@ try {
 	switch (cmd) {
 	case Mysql::Command::EOF_:
 		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0)
-			OnQueryOk(duration);
+			OnQueryOk(Mysql::ParseEof(payload, peer.capabilities),
+				  duration);
 
 		break;
 

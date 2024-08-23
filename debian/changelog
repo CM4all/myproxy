@@ -1,6 +1,7 @@
 cm4all-myproxy (0.20) unstable; urgency=low
 
-  * 
+  * increase listener backlog to 256
+  * prometheus: wait for HTTP request to arrive
 
  --   
 

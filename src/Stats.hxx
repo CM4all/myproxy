@@ -22,7 +22,7 @@ struct NodeStats {
 
 	uint_least64_t n_queries = 0;
 
-	Event::Duration wait{};
+	Event::Duration query_wait{};
 };
 
 struct Stats {

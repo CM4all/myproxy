@@ -107,7 +107,7 @@ myproxy_server_query_wait{{server={:?}}} {}
 				 server, node.n_packets_received,
 				 server, node.n_malformed_packets,
 				 server, node.n_queries,
-				 server, ToFloatSeconds(node.wait));
+				 server, ToFloatSeconds(node.query_wait));
 
 		if (node.state != nullptr)
 			s += fmt::format("myproxy_server_state{{server={:?},state={:?}}} 1\n",

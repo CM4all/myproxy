@@ -475,6 +475,16 @@ Connection::Outgoing::OnQueryOk(const Mysql::OkPacket &packet,
 	policy_duration(connection.user.c_str(), duration);
 }
 
+inline void
+Connection::Outgoing::OnQueryErr(Event::Duration duration) noexcept
+{
+	++stats.n_queries;
+	++stats.n_query_errors;
+	stats.query_wait += duration;
+
+	policy_duration(connection.user.c_str(), duration);
+}
+
 MysqlHandler::Result
 Connection::Outgoing::OnMysqlPacket(unsigned number,
 				    std::span<const std::byte> payload,
@@ -566,6 +576,11 @@ try {
 		break;
 
 	case Mysql::Command::ERR:
+		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0)
+			OnQueryErr(duration);
+
+		break;
+
 	case Mysql::Command::QUERY:
 	case Mysql::Command::INIT_DB:
 	case Mysql::Command::CHANGE_USER:

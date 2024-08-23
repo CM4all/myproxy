@@ -110,6 +110,8 @@ class Connection final
 		void OnQueryOk(const Mysql::OkPacket &packet,
 			       Event::Duration duration) noexcept;
 
+		void OnQueryErr(Event::Duration duration) noexcept;
+
 		/* virtual methods from PeerSocketHandler */
 		void OnPeerClosed() noexcept override;
 		WriteResult OnPeerWrite() override;

@@ -64,7 +64,10 @@ Instance::OnPrometheusExporterRequest()
 # HELP myproxy_server_queries Number of queries sent to this server
 # TYPE myproxy_server_queries counter
 
-# HELP myproxy_server_query_warnings Number of query warnigs received from this server
+# HELP myproxy_server_query_errors Number of query warnigs received from this server
+# TYPE myproxy_server_query_errors counter
+
+# HELP myproxy_server_query_warnings Number of query warnings received from this server
 # TYPE myproxy_server_query_warnings counter
 
 # HELP myproxy_server_query_wait Total wait time for query results
@@ -102,6 +105,7 @@ myproxy_server_bytes_received{{server={:?}}} {}
 myproxy_server_packets_received{{server={:?}}} {}
 myproxy_server_malformed_packets{{server={:?}}} {}
 myproxy_server_queries{{server={:?}}} {}
+myproxy_server_query_errors{{server={:?}}} {}
 myproxy_server_query_warnings{{server={:?}}} {}
 myproxy_server_query_wait{{server={:?}}} {}
 )",
@@ -111,6 +115,7 @@ myproxy_server_query_wait{{server={:?}}} {}
 				 server, node.n_packets_received,
 				 server, node.n_malformed_packets,
 				 server, node.n_queries,
+				 server, node.n_query_errors,
 				 server, node.n_query_warnings,
 				 server, ToFloatSeconds(node.query_wait));
 

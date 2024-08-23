@@ -39,6 +39,9 @@ Instance::OnPrometheusExporterRequest()
 # HELP myproxy_client_queries Number of queries received from clients
 # TYPE myproxy_client_queries counter
 
+# HELP myproxy_lua_errors Number of Lua errors
+# TYPE myproxy_lua_errors counter
+
 # HELP myproxy_server_state Monitoring state of the server
 # TYPE myproxy_server_state gauge
 
@@ -66,6 +69,7 @@ myproxy_client_handshake_responses {}
 myproxy_client_auth_ok {}
 myproxy_client_auth_err {}
 myproxy_client_queries {}
+myproxy_lua_errors {}
 )",
 			   stats.n_accepted_connections,
 			   stats.n_rejected_connections,
@@ -75,7 +79,8 @@ myproxy_client_queries {}
 			   stats.n_client_handshake_responses,
 			   stats.n_client_auth_ok,
 			   stats.n_client_auth_err,
-			   stats.n_client_queries);
+			   stats.n_client_queries,
+			   stats.n_lua_errors);
 
 	for (const auto &[address, node] : stats.nodes) {
 		const auto server = ToString(address);

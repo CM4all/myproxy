@@ -79,6 +79,9 @@ Instance::OnPrometheusExporterRequest()
 # HELP myproxy_server_slow_queries Number of slow queries
 # TYPE myproxy_server_slow_queries counter
 
+# HELP myproxy_server_affected_rows Number of affected rows by INSERT, UPDATE etc.
+# TYPE myproxy_server_affected_rows counter
+
 # HELP myproxy_server_query_wait Total wait time for query results
 # TYPE myproxy_server_query_wait counter
 
@@ -119,6 +122,7 @@ myproxy_server_query_warnings{{server={:?}}} {}
 myproxy_server_no_good_index_queries{{server={:?}}} {}
 myproxy_server_no_index_queries{{server={:?}}} {}
 myproxy_server_slow_queries{{server={:?}}} {}
+myproxy_server_affected_rows{{server={:?}}} {}
 myproxy_server_query_wait{{server={:?}}} {}
 )",
 				 server, node.n_connects,
@@ -132,6 +136,7 @@ myproxy_server_query_wait{{server={:?}}} {}
 				 server, node.n_no_good_index_queries,
 				 server, node.n_no_index_queries,
 				 server, node.n_slow_queries,
+				 server, node.n_affected_rows,
 				 server, ToFloatSeconds(node.query_wait));
 
 		if (node.state != nullptr)

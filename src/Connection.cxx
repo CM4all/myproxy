@@ -480,6 +480,7 @@ Connection::Outgoing::OnQueryOk(const Mysql::OkPacket &packet,
 	if (packet.status_flags & Mysql::SERVER_QUERY_WAS_SLOW)
 		++stats.n_slow_queries;
 
+	stats.n_affected_rows += packet.affected_rows;
 	stats.query_wait += duration;
 
 	policy_duration(connection.user.c_str(), duration);

@@ -26,6 +26,7 @@ struct NodeStats {
 	uint_least64_t n_no_good_index_queries = 0;
 	uint_least64_t n_no_index_queries = 0;
 	uint_least64_t n_slow_queries = 0;
+	uint_least64_t n_affected_rows = 0;
 
 	Event::Duration query_wait{};
 };

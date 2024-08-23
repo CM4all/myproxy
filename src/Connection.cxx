@@ -386,7 +386,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
-MysqlHandler::Result
+inline MysqlHandler::Result
 Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 				  std::span<const std::byte> payload)
 {
@@ -429,7 +429,7 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 	return Result::IGNORE;
 }
 
-MysqlHandler::Result
+inline MysqlHandler::Result
 Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 					  std::span<const std::byte> payload)
 {

@@ -386,6 +386,14 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 	}
 }
 
+inline Event::Duration
+Connection::MaybeFinishQuery() noexcept
+{
+	return request_time != Event::TimePoint{}
+	       ? GetEventLoop().SteadyNow() - std::exchange(request_time, Event::TimePoint{})
+	       : Event::Duration{-1};
+}
+
 inline MysqlHandler::Result
 Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 				  std::span<const std::byte> payload)
@@ -533,14 +541,11 @@ try {
 
 	switch (cmd) {
 	case Mysql::Command::EOF_:
-		if (c.request_time != Event::TimePoint{}) {
-			const auto duration = c.GetEventLoop().SteadyNow() - c.request_time;
-
+		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0) {
 			++stats.n_queries;
 			stats.query_wait += duration;
 
 			policy_duration(c.user.c_str(), duration);
-			c.request_time = Event::TimePoint{};
 		}
 
 		break;

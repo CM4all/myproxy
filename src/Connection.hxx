@@ -197,6 +197,13 @@ private:
 	void OnCoroutineComplete(std::exception_ptr error) noexcept;
 	void StartCoroutine(Co::InvokeTask &&_coroutine) noexcept;
 
+	/**
+	 * Finish the stopwatch for the current query and return its
+	 * duration.  If no query was in progress, return a negative
+	 * duration.
+	 */
+	Event::Duration MaybeFinishQuery() noexcept;
+
 	/* virtual methods from ClusterNodeObserver */
 	void OnClusterNodeUnavailable() noexcept override;
 

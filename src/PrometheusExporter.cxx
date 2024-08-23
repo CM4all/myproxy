@@ -70,6 +70,15 @@ Instance::OnPrometheusExporterRequest()
 # HELP myproxy_server_query_warnings Number of query warnings received from this server
 # TYPE myproxy_server_query_warnings counter
 
+# HELP myproxy_server_no_good_index_queries Number of queries which used no good index
+# TYPE myproxy_server_no_good_index_queries counter
+
+# HELP myproxy_server_no_index_queries Number of queries which used no index
+# TYPE myproxy_server_no_index_queries counter
+
+# HELP myproxy_server_slow_queries Number of slow queries
+# TYPE myproxy_server_slow_queries counter
+
 # HELP myproxy_server_query_wait Total wait time for query results
 # TYPE myproxy_server_query_wait counter
 
@@ -107,6 +116,9 @@ myproxy_server_malformed_packets{{server={:?}}} {}
 myproxy_server_queries{{server={:?}}} {}
 myproxy_server_query_errors{{server={:?}}} {}
 myproxy_server_query_warnings{{server={:?}}} {}
+myproxy_server_no_good_index_queries{{server={:?}}} {}
+myproxy_server_no_index_queries{{server={:?}}} {}
+myproxy_server_slow_queries{{server={:?}}} {}
 myproxy_server_query_wait{{server={:?}}} {}
 )",
 				 server, node.n_connects,
@@ -117,6 +129,9 @@ myproxy_server_query_wait{{server={:?}}} {}
 				 server, node.n_queries,
 				 server, node.n_query_errors,
 				 server, node.n_query_warnings,
+				 server, node.n_no_good_index_queries,
+				 server, node.n_no_index_queries,
+				 server, node.n_slow_queries,
 				 server, ToFloatSeconds(node.query_wait));
 
 		if (node.state != nullptr)

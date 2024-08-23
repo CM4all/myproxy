@@ -470,6 +470,16 @@ Connection::Outgoing::OnQueryOk(const Mysql::OkPacket &packet,
 {
 	++stats.n_queries;
 	stats.n_query_warnings += packet.warnings;
+
+	if (packet.status_flags & Mysql::SERVER_QUERY_NO_GOOD_INDEX_USED)
+		++stats.n_no_good_index_queries;
+
+	if (packet.status_flags & Mysql::SERVER_QUERY_NO_INDEX_USED)
+		++stats.n_no_index_queries;
+
+	if (packet.status_flags & Mysql::SERVER_QUERY_WAS_SLOW)
+		++stats.n_slow_queries;
+
 	stats.query_wait += duration;
 
 	policy_duration(connection.user.c_str(), duration);

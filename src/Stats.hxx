@@ -23,6 +23,9 @@ struct NodeStats {
 	uint_least64_t n_queries = 0;
 	uint_least64_t n_query_errors = 0;
 	uint_least64_t n_query_warnings = 0;
+	uint_least64_t n_no_good_index_queries = 0;
+	uint_least64_t n_no_index_queries = 0;
+	uint_least64_t n_slow_queries = 0;
 
 	Event::Duration query_wait{};
 };

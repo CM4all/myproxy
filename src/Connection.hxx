@@ -82,20 +82,24 @@ class Connection final
 	/**
 	 * The connection to the server.
 	 */
-	struct Outgoing final : PeerHandler, MysqlHandler {
+	class Outgoing final : PeerHandler, MysqlHandler {
 		Connection &connection;
 
 		NodeStats &stats;
 
+	public:
 		Peer peer;
 
+	private:
 		std::unique_ptr<Mysql::AuthHandler> auth_handler;
 
+	public:
 		Outgoing(Connection &_connection,
 			 NodeStats &_stats,
 			 UniqueSocketDescriptor fd) noexcept;
 		~Outgoing() noexcept;
 
+	private:
 		Result OnHandshake(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
 

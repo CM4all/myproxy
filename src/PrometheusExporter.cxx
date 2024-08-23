@@ -4,6 +4,7 @@
 
 #include "Instance.hxx"
 #include "net/ToString.hxx"
+#include "time/Cast.hxx"
 #include "util/PrintException.hxx"
 
 #include <fmt/core.h>
@@ -60,6 +61,12 @@ Instance::OnPrometheusExporterRequest()
 # HELP myproxy_server_malformed_packets Number of malformed packets received from this server
 # TYPE myproxy_server_malformed_packets counter
 
+# HELP myproxy_server_queries Number of queries sent to this server
+# TYPE myproxy_server_queries counter
+
+# HELP myproxy_server_query_wait Total wait time for query results
+# TYPE myproxy_server_query_wait counter
+
 myproxy_connections_accepted {}
 myproxy_connections_rejected {}
 myproxy_client_bytes_received {}
@@ -91,12 +98,16 @@ myproxy_server_connect_errors{{server={:?}}} {}
 myproxy_server_bytes_received{{server={:?}}} {}
 myproxy_server_packets_received{{server={:?}}} {}
 myproxy_server_malformed_packets{{server={:?}}} {}
+myproxy_server_queries{{server={:?}}} {}
+myproxy_server_query_wait{{server={:?}}} {}
 )",
 				 server, node.n_connects,
 				 server, node.n_connect_errors,
 				 server, node.n_bytes_received,
 				 server, node.n_packets_received,
-				 server, node.n_malformed_packets);
+				 server, node.n_malformed_packets,
+				 server, node.n_queries,
+				 server, ToFloatSeconds(node.wait));
 
 		if (node.state != nullptr)
 			s += fmt::format("myproxy_server_state{{server={:?},state={:?}}} 1\n",

@@ -535,6 +535,10 @@ try {
 	case Mysql::Command::EOF_:
 		if (c.request_time != Event::TimePoint{}) {
 			const auto duration = c.GetEventLoop().SteadyNow() - c.request_time;
+
+			++c.outgoing_stats->n_queries;
+			c.outgoing_stats->wait += duration;
+
 			policy_duration(c.user.c_str(), duration);
 			c.request_time = Event::TimePoint{};
 		}

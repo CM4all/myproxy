@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "event/Chrono.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 
 #include <algorithm> // for std::lexicographical_compare()
@@ -18,6 +19,10 @@ struct NodeStats {
 	uint_least64_t n_packets_received = 0;
 	uint_least64_t n_bytes_received = 0;
 	uint_least64_t n_malformed_packets = 0;
+
+	uint_least64_t n_queries = 0;
+
+	Event::Duration wait{};
 };
 
 struct Stats {

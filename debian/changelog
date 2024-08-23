@@ -5,7 +5,7 @@ cm4all-myproxy (0.20) unstable; urgency=low
   * prometheus: export Lua error counter
   * prometheus: export per-server query statistics
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Fri, 23 Aug 2024 17:49:49 +0200
 
 cm4all-myproxy (0.19) unstable; urgency=low
 

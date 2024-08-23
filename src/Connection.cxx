@@ -559,6 +559,12 @@ try {
 		break;
 
 	case Mysql::Command::OK:
+		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0)
+			OnQueryOk(Mysql::ParseOk(payload, peer.capabilities),
+				  duration);
+
+		break;
+
 	case Mysql::Command::ERR:
 	case Mysql::Command::QUERY:
 	case Mysql::Command::INIT_DB:

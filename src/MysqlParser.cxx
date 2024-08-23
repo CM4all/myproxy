@@ -26,7 +26,7 @@ ParseHandshake(std::span<const std::byte> payload)
 		packet.capabilities |= static_cast<uint_least32_t>(d.ReadInt2()) << 16;
 
 		std::size_t auth_plugin_data_len = 0;
-		if (packet.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
+		if (packet.capabilities & CLIENT_PLUGIN_AUTH) {
 			auth_plugin_data_len = d.ReadInt1();
 		} else {
 			d.ReadInt1(); // 00
@@ -37,14 +37,14 @@ ParseHandshake(std::span<const std::byte> payload)
 		if (auth_plugin_data_len > 8)
 			packet.auth_plugin_data2 = d.ReadVariableLengthString(auth_plugin_data_len - 8);
 
-		if (packet.capabilities & Mysql::CLIENT_PLUGIN_AUTH)
+		if (packet.capabilities & CLIENT_PLUGIN_AUTH)
 			packet.auth_plugin_name = d.ReadNullTerminatedString();
 	} else if (packet.protocol_version == 9) {
 		packet.server_version = d.ReadNullTerminatedString();
 		packet.thread_id = d.ReadInt4();
 		packet.scramble = d.ReadNullTerminatedString();
 	} else
-		throw Mysql::MalformedPacket{};
+		throw MalformedPacket{};
 
 	return packet;
 }
@@ -56,7 +56,7 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 	HandshakeResponsePacket packet{};
 
 	packet.capabilities = d.ReadInt2();
-	if (packet.capabilities & Mysql::CLIENT_PROTOCOL_41) {
+	if (packet.capabilities & CLIENT_PROTOCOL_41) {
 		// HandshakeResponse41
 
 		packet.capabilities |= static_cast<uint_least32_t>(d.ReadInt2()) << 16;
@@ -65,18 +65,18 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 		d.ReadN(23); // filler
 		packet.user = d.ReadNullTerminatedString();
 
-		if (packet.capabilities & Mysql::CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
+		if (packet.capabilities & CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA) {
 			packet.auth_response = d.ReadLengthEncodedString();
 		} else {
 			const std::size_t auth_response_length = d.ReadInt1();
 			packet.auth_response = d.ReadVariableLengthString(auth_response_length);
 		}
 
-		if (packet.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
+		if (packet.capabilities & CLIENT_CONNECT_WITH_DB) {
 			packet.database = d.ReadNullTerminatedString();
 		}
 
-		if (packet.capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
+		if (packet.capabilities & CLIENT_PLUGIN_AUTH) {
 			packet.client_plugin_name = d.ReadNullTerminatedString();
 		}
 
@@ -85,7 +85,7 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 		   apparently it does, therefore we have the "empty"
 		   checks */
 
-		if (!d.empty() && (packet.capabilities & Mysql::CLIENT_CONNECT_ATTRS)) {
+		if (!d.empty() && (packet.capabilities & CLIENT_CONNECT_ATTRS)) {
 			const std::size_t length = d.ReadLengthEncodedInteger();
 			d.ReadN(length);
 		}
@@ -98,7 +98,7 @@ ParseHandshakeResponse(std::span<const std::byte> payload)
 		packet.max_packet_size = d.ReadInt3();
 		packet.user = d.ReadNullTerminatedString();
 
-		if (packet.capabilities & Mysql::CLIENT_CONNECT_WITH_DB) {
+		if (packet.capabilities & CLIENT_CONNECT_WITH_DB) {
 			packet.auth_response = d.ReadNullTerminatedString();
 			packet.database = d.ReadNullTerminatedString();
 		} else {
@@ -140,10 +140,10 @@ ParseOk(std::span<const std::byte> payload, uint_least32_t capabilities)
 	packet.affected_rows = d.ReadLengthEncodedInteger();
 	packet.last_insert_id = d.ReadLengthEncodedInteger();
 
-	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+	if (capabilities & CLIENT_PROTOCOL_41) {
 		packet.status_flags = d.ReadInt2();
 		packet.warnings = d.ReadInt2();
-	} else if (capabilities & Mysql::CLIENT_TRANSACTIONS) {
+	} else if (capabilities & CLIENT_TRANSACTIONS) {
 		packet.status_flags = d.ReadInt2();
 	}
 
@@ -176,7 +176,7 @@ ParseEof(std::span<const std::byte> payload, uint_least32_t capabilities)
 
 	d.ReadInt1(); // command
 
-	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+	if (capabilities & CLIENT_PROTOCOL_41) {
 		packet.warnings = d.ReadInt2();
 		packet.status_flags = d.ReadInt2();
 	}
@@ -198,7 +198,7 @@ ParseErr(std::span<const std::byte> payload, uint_least32_t capabilities)
 	d.ReadInt1(); // command
 	packet.error_code = static_cast<ErrorCode>(d.ReadInt2());
 
-	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+	if (capabilities & CLIENT_PROTOCOL_41) {
 		d.ReadVariableLengthString(1); // sql_state_marker
 		packet.sql_state = d.ReadVariableLengthString(5); // sql_state
 	}
@@ -235,7 +235,7 @@ ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
 	d.ReadInt1(); // command
 	packet.user = d.ReadNullTerminatedString();
 
-	if (capabilities & Mysql::CLIENT_SECURE_CONNECTION) {
+	if (capabilities & CLIENT_SECURE_CONNECTION) {
 		std::size_t auth_plugin_data_len = d.ReadInt1();
 		packet.auth_plugin_data = d.ReadVariableLengthString(auth_plugin_data_len);
 	} else {
@@ -244,11 +244,11 @@ ParseChangeUser(std::span<const std::byte> payload, uint_least32_t capabilities)
 
 	packet.database = d.ReadNullTerminatedString();
 
-	if (capabilities & Mysql::CLIENT_PROTOCOL_41) {
+	if (capabilities & CLIENT_PROTOCOL_41) {
 		packet.character_set = d.ReadInt2();
 	}
 
-	if (capabilities & Mysql::CLIENT_PLUGIN_AUTH) {
+	if (capabilities & CLIENT_PLUGIN_AUTH) {
 		packet.auth_plugin_name = d.ReadNullTerminatedString();
 	}
 

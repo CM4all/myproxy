@@ -6,6 +6,7 @@
 #include "MysqlSerializer.hxx"
 #include "MysqlMakePacket.hxx"
 #include "net/SocketError.hxx"
+#include "net/SocketProtocolError.hxx"
 #include "util/Compiler.h"
 
 #include <stdexcept>
@@ -26,7 +27,7 @@ try {
 		throw MakeSocketError("Send failed");
 
 	case WRITE_BLOCKING:
-		throw std::runtime_error{"Socket buffer full"};
+		throw SocketBufferFullError{};
 
 	case WRITE_DESTROYED:
 		return false;

@@ -283,6 +283,11 @@ MysqlCheck::OnTextResultsetEnd()
 {
 	assert(options.no_read_only);
 
+	if (!peer->Send(Mysql::MakeQuit(1)))
+		return;
+
+	peer->GetSocket().Shutdown();
+
 	if (!have_read_only)
 		throw std::runtime_error{"No row"};
 

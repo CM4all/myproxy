@@ -1,6 +1,6 @@
 cm4all-myproxy (0.21) unstable; urgency=low
 
-  * 
+  * check: send QUIT packet before disconnecting
 
  --   
 

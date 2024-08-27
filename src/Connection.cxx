@@ -325,6 +325,7 @@ try {
 
 	switch (cmd) {
 	case Mysql::Command::OK:
+	case Mysql::Command::QUIT:
 	case Mysql::Command::EOF_:
 	case Mysql::Command::ERR:
 	case Mysql::Command::RESET_CONNECTION:
@@ -592,6 +593,7 @@ try {
 
 		break;
 
+	case Mysql::Command::QUIT:
 	case Mysql::Command::QUERY:
 	case Mysql::Command::INIT_DB:
 	case Mysql::Command::CHANGE_USER:

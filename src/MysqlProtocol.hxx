@@ -18,6 +18,7 @@ namespace Mysql {
 
 enum class Command : uint_least8_t {
 	OK = 0x00,
+	QUIT = 0x01,
 	INIT_DB = 0x02,
 	QUERY = 0x03,
 	CHANGE_USER = 0x11,

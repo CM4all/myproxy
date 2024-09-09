@@ -22,7 +22,6 @@
 #include "lua/io/CgroupInfo.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
-#include "memory/fb_pool.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/LocalSocketAddress.hxx"
 #include "net/Parser.hxx"
@@ -202,7 +201,7 @@ try {
 	setvbuf(stdout, nullptr, _IOLBF, 0);
 	setvbuf(stderr, nullptr, _IOLBF, 0);
 
-	const ScopeFbPoolInit fb_pool_init;
+	const ScopeInitDefaultFifoBuffer init_default_fifo_buffer;
 
 	Instance instance;
 	SetupConfigState(instance.GetLuaState(), instance);

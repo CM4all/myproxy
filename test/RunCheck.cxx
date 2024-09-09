@@ -4,12 +4,12 @@
 
 #include "Check.hxx"
 #include "Options.hxx"
-#include "memory/fb_pool.hxx"
 #include "event/Loop.hxx"
 #include "net/AddressInfo.hxx"
 #include "net/Resolver.hxx"
 #include "util/Cancellable.hxx"
 #include "util/PrintException.hxx"
+#include "DefaultFifoBuffer.hxx"
 
 #include <fmt/format.h>
 
@@ -30,7 +30,7 @@ try {
 		.no_read_only = true,
 	};
 
-	const ScopeFbPoolInit fb_pool_init;
+	const ScopeInitDefaultFifoBuffer init_default_fifo_buffer;
 
 	EventLoop event_loop;
 

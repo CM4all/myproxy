@@ -127,7 +127,7 @@ Peer::OnBufferedWrite()
 }
 
 enum write_result
-Peer::OnBufferedBroken() noexcept
+Peer::OnBufferedBroken()
 {
 	return handler.OnPeerBroken()
 		? WRITE_ERRNO

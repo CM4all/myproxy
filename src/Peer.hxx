@@ -125,6 +125,6 @@ private:
 	BufferedResult OnBufferedData() override;
 	bool OnBufferedClosed() noexcept override;
 	bool OnBufferedWrite() override;
-	enum write_result OnBufferedBroken() noexcept override;
+	enum write_result OnBufferedBroken() override;
 	void OnBufferedError(std::exception_ptr e) noexcept override;
 };

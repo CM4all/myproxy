@@ -35,10 +35,10 @@ extern "C" {
 
 [[gnu::pure]]
 static std::string
-MakeClientName(SocketAddress address, const struct ucred &cred) noexcept
+MakeClientName(SocketAddress address, const SocketPeerAuth &peer_auth) noexcept
 {
-	if (cred.pid >= 0)
-		return fmt::format("pid={} uid={}", cred.pid, cred.uid);
+	if (peer_auth.HaveCred())
+		return fmt::format("pid={} uid={}", peer_auth.GetPid(), peer_auth.GetUid());
 
 	char buffer[256];
 	if (ToString(buffer, address))
@@ -54,8 +54,8 @@ LClient::LClient(lua_State *L, Lua::AutoCloseList &_auto_close,
 		 std::string_view _server_version)
 	:lua_state(L), auto_close(&_auto_close),
 	 server_version(_server_version),
-	 peer_cred(socket.GetPeerCredentials()),
-	 name_(MakeClientName(_address, peer_cred))
+	 peer_auth(socket),
+	 name_(MakeClientName(_address, peer_auth))
 {
 	auto_close->Add(L, Lua::RelativeStackIndex{-1});
 
@@ -172,28 +172,25 @@ LClient::Index(lua_State *L)
 
 		return 1;
 	} else if (StringIsEqual(name, "pid")) {
-		if (!HavePeerCred())
+		if (!peer_auth.HaveCred())
 			return 0;
 
-		Lua::Push(L, static_cast<lua_Integer>(peer_cred.pid));
+		Lua::Push(L, static_cast<lua_Integer>(peer_auth.GetPid()));
 		return 1;
 	} else if (StringIsEqual(name, "uid")) {
-		if (!HavePeerCred())
+		if (!peer_auth.HaveCred())
 			return 0;
 
-		Lua::Push(L, static_cast<lua_Integer>(peer_cred.uid));
+		Lua::Push(L, static_cast<lua_Integer>(peer_auth.GetUid()));
 		return 1;
 	} else if (StringIsEqual(name, "gid")) {
-		if (!HavePeerCred())
+		if (!peer_auth.HaveCred())
 			return 0;
 
-		Lua::Push(L, static_cast<lua_Integer>(peer_cred.gid));
+		Lua::Push(L, static_cast<lua_Integer>(peer_auth.GetGid()));
 		return 1;
 	} else if (StringIsEqual(name, "cgroup")) {
-		if (!HavePeerCred())
-			return 0;
-
-		const auto path = ReadProcessCgroup(peer_cred.pid);
+		const auto path = peer_auth.GetCgroupPath();
 		if (path.empty())
 			return 0;
 
@@ -240,7 +237,7 @@ LClient::NewIndex(lua_State *L)
 		}
 
 		if (Lua::GetFenvCache(L, 1, "address")) {
-			name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_cred);
+			name_ = MakeClientName(Lua::GetSocketAddress(L, -1), peer_auth);
 			lua_pop(L, 1);
 		}
 

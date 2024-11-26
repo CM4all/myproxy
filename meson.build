@@ -121,6 +121,7 @@ subdir('libcommon/src/io')
 subdir('libcommon/src/io/linux')
 subdir('libcommon/src/system')
 subdir('libcommon/src/net')
+subdir('libcommon/src/net/linux')
 subdir('libcommon/src/event')
 subdir('libcommon/src/event/net')
 subdir('libcommon/src/memory')
@@ -202,6 +203,7 @@ executable(
     util_dep,
     io_linux_dep,
     net_dep,
+    net_linux_dep,
     event_dep,
     lua_dep,
     lua_io_dep,

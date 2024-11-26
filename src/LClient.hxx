@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "net/linux/PeerAuth.hxx"
+
 #include <string>
 #include <string_view>
-
-#include <sys/socket.h> // for struct ucred
 
 struct lua_State;
 class SocketAddress;
@@ -21,7 +21,7 @@ class LClient {
 
 	std::string server_version;
 
-	const struct ucred peer_cred;
+	const SocketPeerAuth peer_auth;
 
 	std::string name_;
 
@@ -72,8 +72,4 @@ private:
 
 	int Index(lua_State *L);
 	int NewIndex(lua_State *L);
-
-	bool HavePeerCred() const noexcept {
-		return peer_cred.pid >= 0;
-	}
 };

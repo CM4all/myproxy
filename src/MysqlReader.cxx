@@ -137,7 +137,7 @@ MysqlReader::FlushForward(BufferedSocket &socket) noexcept
 
 	case MysqlHandler::RawResult::CLOSED:
 		assert(consumed == 0);
-		return FlushResult::BLOCKING;
+		return FlushResult::CLOSED;
 	}
 
 	return forward_remaining == 0 ? FlushResult::DRAINED : FlushResult::MORE;

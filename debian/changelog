@@ -4,7 +4,7 @@ cm4all-myproxy (0.22) unstable; urgency=low
   * use pidfd to avoid PID recycling races
   * fix assertion failure
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 26 Nov 2024 12:50:31 +0100
 
 cm4all-myproxy (0.21) unstable; urgency=low
 

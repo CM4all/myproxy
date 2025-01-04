@@ -13,7 +13,7 @@
 
 class SlicePool;
 
-static constexpr size_t FB_SIZE = 32768;
+static constexpr std::size_t FB_SIZE = 8192;
 
 /**
  * Global initialization.

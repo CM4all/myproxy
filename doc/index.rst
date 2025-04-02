@@ -209,7 +209,7 @@ There are some `libsodium <https://www.libsodium.org/>`__ bindings.
 
 `Helpers <https://doc.libsodium.org/helpers>`__::
 
-  bin = sodium.hex2bin("deadbeef") -- returns "\xde\xad\xbe\ef"
+  bin = sodium.hex2bin("deadbeef") -- returns "\xde\xad\xbe\xef"
   hex = sodium.bin2hex("A\0\xff") -- returns "4100ff"
 
 `Generating random data

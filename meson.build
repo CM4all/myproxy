@@ -1,10 +1,10 @@
 project('CM4all MyProxy', 'cpp', version: '0.23',
   meson_version: '>= 1.2',
   default_options: [
-    'cpp_std=c++2a',
+    'cpp_std=c++23',
     'warning_level=3',
 
-    'fmt:cpp_std=c++2a',
+    'fmt:cpp_std=c++23',
   ],
 )
 

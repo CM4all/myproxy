@@ -13,7 +13,7 @@ Building myproxy
 
 You need:
 
-- a C++20 compliant compiler (e.g. GCC or clang)
+- a C++23 compliant compiler (e.g. GCC or clang)
 - `Meson 1.2 <http://mesonbuild.com/>`__ and `Ninja <https://ninja-build.org/>`__
 - `libfmt <https://fmt.dev/>`__
 - `libmd <https://www.hadrons.org/software/libmd/>`__

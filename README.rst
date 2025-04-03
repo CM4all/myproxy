@@ -14,7 +14,7 @@ Building myproxy
 You need:
 
 - a C++20 compliant compiler (e.g. GCC or clang)
-- `Meson 1.0 <http://mesonbuild.com/>`__ and `Ninja <https://ninja-build.org/>`__
+- `Meson 1.2 <http://mesonbuild.com/>`__ and `Ninja <https://ninja-build.org/>`__
 - `libfmt <https://fmt.dev/>`__
 - `libmd <https://www.hadrons.org/software/libmd/>`__
 - `libsodium <https://www.libsodium.org/>`__

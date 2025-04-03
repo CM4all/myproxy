@@ -26,6 +26,7 @@
 #include "net/LocalSocketAddress.hxx"
 #include "net/Parser.hxx"
 #include "system/SetupProcess.hxx"
+#include "util/Compiler.h" // for gcc_unreachable
 #include "util/PrintException.hxx"
 #include "util/ScopeExit.hxx"
 #include "config.h"

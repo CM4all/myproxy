@@ -78,7 +78,7 @@ Instance::AddSystemdListener(std::shared_ptr<LuaHandler> handler)
 		throw std::runtime_error{"No systemd socket"};
 
 	for (unsigned i = 0; i < unsigned(n); ++i)
-		AddListener(UniqueSocketDescriptor(SD_LISTEN_FDS_START + i),
+		AddListener(UniqueSocketDescriptor(AdoptTag{}, SD_LISTEN_FDS_START + i),
 			    std::shared_ptr<LuaHandler>{handler});
 }
 

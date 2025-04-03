@@ -26,7 +26,6 @@
 #include "net/LocalSocketAddress.hxx"
 #include "net/Parser.hxx"
 #include "system/SetupProcess.hxx"
-#include "util/Compiler.h" // for gcc_unreachable
 #include "util/PrintException.hxx"
 #include "util/ScopeExit.hxx"
 #include "config.h"
@@ -49,6 +48,7 @@ extern "C" {
 #endif
 
 #include <stdexcept>
+#include <utility> // for std::unreachable()
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -77,7 +77,7 @@ try {
 	return std::make_shared<LuaHandler >(L, Lua::StackIndex{idx});
 } catch (const std::invalid_argument &e) {
 	luaL_argerror(L, idx, e.what());
-	gcc_unreachable();
+	std::unreachable();
 }
 
 static int

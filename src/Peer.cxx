@@ -7,9 +7,9 @@
 #include "MysqlMakePacket.hxx"
 #include "net/SocketError.hxx"
 #include "net/SocketProtocolError.hxx"
-#include "util/Compiler.h"
 
 #include <stdexcept>
+#include <utility> // for std::unreachable()
 
 bool
 Peer::Send(std::span<const std::byte> src) noexcept
@@ -94,8 +94,7 @@ Peer::OnBufferedData()
 		return BufferedResult::DESTROYED;
 	}
 
-	assert(false);
-	gcc_unreachable();
+	std::unreachable();
 }
 
 bool
@@ -122,8 +121,7 @@ Peer::OnBufferedWrite()
 		return false;
 	}
 
-	assert(false);
-	gcc_unreachable();
+	std::unreachable();
 }
 
 enum write_result

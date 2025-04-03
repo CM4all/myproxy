@@ -7,9 +7,9 @@
 #include "MysqlParser.hxx"
 #include "MysqlProtocol.hxx"
 #include "net/SocketProtocolError.hxx"
-#include "util/Compiler.h"
 
 #include <stdexcept>
+#include <utility> // for std::unreachable()
 
 namespace Mysql {
 
@@ -39,7 +39,7 @@ TextResultsetParser::OnResponse(std::span<const std::byte> payload)
 		return OnRow(payload);
 	}
 
-	gcc_unreachable();
+	std::unreachable();
 }
 
 inline TextResultsetParser::Result
@@ -69,7 +69,7 @@ TextResultsetParser::OnEof()
 		return OnFinalEof();
 	}
 
-	gcc_unreachable();
+	std::unreachable();
 }
 
 inline TextResultsetParser::Result

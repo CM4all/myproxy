@@ -6,7 +6,6 @@
 #include "MysqlHandler.hxx"
 #include "MysqlProtocol.hxx"
 #include "event/net/BufferedSocket.hxx"
-#include "util/Compiler.h"
 
 #include <cassert>
 

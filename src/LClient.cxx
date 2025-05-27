@@ -86,9 +86,9 @@ static void
 Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 {
 	if (StringIsEqual(name, "user"))
-		action.user = CheckString(L, value_idx, "Bad value type");
+		action.user = CheckStringView(L, value_idx, "Bad value type");
 	else if (StringIsEqual(name, "password"))
-		action.password = CheckString(L, value_idx, "Bad value type");
+		action.password = CheckStringView(L, value_idx, "Bad value type");
 	else if (StringIsEqual(name, "password_sha1")) {
 		const auto password_sha1 = CheckStringView(L, value_idx, "Bad value type");
 		if (password_sha1.length() != SHA1_DIGEST_LENGTH)
@@ -96,7 +96,7 @@ Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
 
 		action.password_sha1 = password_sha1;
 	} else if (StringIsEqual(name, "database"))
-		action.database = CheckString(L, value_idx, "Bad value type");
+		action.database = CheckStringView(L, value_idx, "Bad value type");
 	else
 		throw Lua::ArgError{"Unknown attribute"};
 }

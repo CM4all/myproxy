@@ -49,10 +49,10 @@ CheckStringView(lua_State *L, auto _idx, const char *extramsg)
 
 inline void
 ApplyOptionsTable(lua_State *L, int table_idx,
-		  std::invocable<const char *, RelativeStackIndex> auto f)
+		  std::invocable<std::string_view, RelativeStackIndex> auto f)
 try {
 	ForEach(L, table_idx, [L, &f](auto key_idx, auto value_idx){
-		const char *key = CheckString(L, key_idx, "Bad key type");
+		const std::string_view key = CheckStringView(L, key_idx, "Bad key type");
 		f(key, value_idx);
 	});
 } catch (ArgError e) {

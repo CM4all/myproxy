@@ -33,6 +33,8 @@ extern "C" {
 
 #include <fmt/core.h>
 
+using std::string_view_literals::operator""sv;
+
 [[gnu::pure]]
 static std::string
 MakeClientName(SocketAddress address, const SocketPeerAuth &peer_auth) noexcept
@@ -83,19 +85,19 @@ LClient::NewErrAction(lua_State *L)
 }
 
 static void
-Apply(lua_State *L, ConnectAction &action, const char *name, auto value_idx)
+Apply(lua_State *L, ConnectAction &action, std::string_view name, auto value_idx)
 {
-	if (StringIsEqual(name, "user"))
+	if (name == "user"sv)
 		action.user = CheckStringView(L, value_idx, "Bad value type");
-	else if (StringIsEqual(name, "password"))
+	else if (name == "password"sv)
 		action.password = CheckStringView(L, value_idx, "Bad value type");
-	else if (StringIsEqual(name, "password_sha1")) {
+	else if (name == "password_sha1"sv) {
 		const auto password_sha1 = CheckStringView(L, value_idx, "Bad value type");
 		if (password_sha1.length() != SHA1_DIGEST_LENGTH)
 			luaL_error(L, "Bad SHA1 length");
 
 		action.password_sha1 = password_sha1;
-	} else if (StringIsEqual(name, "database"))
+	} else if (name == "database"sv)
 		action.database = CheckStringView(L, value_idx, "Bad value type");
 	else
 		throw Lua::ArgError{"Unknown attribute"};
@@ -119,7 +121,7 @@ try {
 	} else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
 
-	Lua::ApplyOptionsTable(L, 3, [L, &action](const char *key, auto value_idx){
+	Lua::ApplyOptionsTable(L, 3, [L, &action](std::string_view key, auto value_idx){
 		Apply(L, action, key, value_idx);
 	});
 

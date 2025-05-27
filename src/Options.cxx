@@ -4,25 +4,26 @@
 
 #include "Options.hxx"
 #include "OptionsTable.hxx"
-#include "util/StringAPI.hxx"
+
+using std::string_view_literals::operator""sv;
 
 void
 ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 {
-	Lua::ApplyOptionsTable(L, table_idx, [this, L](const char *key, auto value_idx){
-		if (StringIsEqual(key, "monitoring"))
+	Lua::ApplyOptionsTable(L, table_idx, [this, L](std::string_view key, auto value_idx){
+		if (key == "monitoring"sv)
 			monitoring = Lua::CheckBool(L, value_idx,
 						    "Bad `monitoring` option");
-		else if (StringIsEqual(key, "user"))
+		else if (key == "user"sv)
 			check.user = Lua::CheckStringView(L, value_idx,
 							  "Bad 'user' value");
-		else if (StringIsEqual(key, "password"))
+		else if (key == "password"sv)
 			check.password = Lua::CheckStringView(L, value_idx,
 							      "Bad 'password' value");
-		else if (StringIsEqual(key, "no_read_only"))
+		else if (key == "no_read_only"sv)
 			check.no_read_only = Lua::CheckBool(L, value_idx,
 							    "Bad 'no_read_only' value");
-		else if (StringIsEqual(key, "disconnect_unavailable"))
+		else if (key == "disconnect_unavailable"sv)
 			disconnect_unavailable = Lua::CheckBool(L, value_idx,
 								"Bad `disconnect_unavailable` option");
 		else

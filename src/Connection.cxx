@@ -241,12 +241,19 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 
 	const auto packet = Mysql::ParseHandshakeResponse(payload);
 
+	/* with "mysql_clear_password", the auth_response must have a
+	   trailing null byte; strip it */
+	std::string_view _password = packet.auth_response;
+	if (!_password.ends_with('\0'))
+		throw Mysql::MalformedPacket{};
+	_password.remove_suffix(1);
+
 	incoming.capabilities &= packet.capabilities;
 
 	fmt::print("[{}] login user={:?} database={:?}\n", GetName(), packet.user, packet.database);
 
 	user = packet.user;
-	password = packet.auth_response;
+	password = _password;
 	database = packet.database;
 
 	incoming.handshake_response = true;

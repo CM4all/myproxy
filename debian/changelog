@@ -1,5 +1,6 @@
 cm4all-myproxy (0.23) unstable; urgency=low
 
+  * strip trailing null byte from password
   * switch to C++23
   * require Meson 1.2
 

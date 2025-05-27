@@ -246,7 +246,7 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	fmt::print("[{}] login user={:?} database={:?}\n", GetName(), packet.user, packet.database);
 
 	user = packet.user;
-	auth_response = packet.auth_response;
+	password = packet.auth_response;
 	database = packet.database;
 
 	incoming.handshake_response = true;
@@ -821,7 +821,7 @@ try {
 
 	lua_newtable(L);
 	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "user", user);
-	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", auth_response);
+	Lua::SetField(L, Lua::RelativeStackIndex{-1}, "password", password);
 
 	if (!database.empty())
 		Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);

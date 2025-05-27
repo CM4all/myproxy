@@ -64,7 +64,7 @@ class Connection final
 	 */
 	DeferEvent defer_delete;
 
-	std::string user, auth_response, database;
+	std::string user, password, database;
 
 	/**
 	 * The time stamp of the last request packet [us].

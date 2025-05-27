@@ -27,16 +27,6 @@ CheckBool(lua_State *L, auto _idx, const char *extramsg)
 	return lua_toboolean(L, idx);
 }
 
-inline const char *
-CheckString(lua_State *L, auto _idx, const char *extramsg)
-{
-	const int idx = GetStackIndex(_idx);
-	if (!lua_isstring(L, idx))
-		throw ArgError{extramsg};
-
-	return lua_tostring(L, idx);
-}
-
 inline std::string_view
 CheckStringView(lua_State *L, auto _idx, const char *extramsg)
 {

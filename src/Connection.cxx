@@ -244,9 +244,11 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	/* with "mysql_clear_password", the auth_response must have a
 	   trailing null byte; strip it */
 	std::string_view _password = packet.auth_response;
-	if (!_password.ends_with('\0'))
-		throw Mysql::MalformedPacket{};
-	_password.remove_suffix(1);
+	if (!_password.empty()) {
+		if (!_password.ends_with('\0'))
+			throw Mysql::MalformedPacket{};
+		_password.remove_suffix(1);
+	}
 
 	incoming.capabilities &= packet.capabilities;
 

@@ -46,6 +46,18 @@ class Cluster {
 	};
 
 	/**
+	 * The comparison function for Rendezvous hashing (used in
+	 * method Pick()).
+	 *
+	 * @param read_only prefer read-only nodes? (It is a template
+	 * parameter to reduce overhead for the common case)
+	 */
+	template<bool read_only>
+	struct CompareNodes {
+		constexpr bool operator()(const RendezvousNode &a, const RendezvousNode &b) noexcept;
+	};
+
+	/**
 	 * This is a copy of #node_list with precalculated hash for
 	 * Rendezvous Hashing.  It will be sorted in each Pick() call.
 	 */

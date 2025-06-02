@@ -55,8 +55,10 @@ void
 ConnectOptions::ApplyLuaTable(lua_State *L, int table_idx)
 {
 	Lua::ApplyOptionsTable(L, table_idx, [this, L](std::string_view key, auto value_idx){
-		(void)key;
-		(void)value_idx;
-		throw Lua::ArgError{"Unknown option"};
+		if (key == "read_only"sv)
+			read_only = Lua::CheckBool(L, value_idx,
+						   "Bad 'read_only' value");
+		else
+			throw Lua::ArgError{"Unknown option"};
 	});
 }

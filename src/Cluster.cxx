@@ -206,6 +206,27 @@ Cluster::~Cluster() noexcept
 	assert(ready_tasks.empty());
 }
 
+template<bool read_only>
+[[gnu::always_inline]]
+constexpr bool
+Cluster::CompareNodes<read_only>::operator()(const RendezvousNode &a, const RendezvousNode &b) noexcept
+{
+	/* prefer nodes that are alive */
+	if (a.node->state != b.node->state) {
+		if constexpr (read_only) {
+			/* in read-only mode, compare the other way:
+			   prefer READ_ONLY over ALIVE */
+			if (a.node->state >= NodeState::READ_ONLY &&
+			    b.node->state >= NodeState::READ_ONLY)
+				return a.node->state < b.node->state;
+		}
+
+		return a.node->state > b.node->state;
+	}
+
+	return a.hash < b.hash;
+}
+
 std::pair<SocketAddress, NodeStats &>
 Cluster::Pick(std::string_view account,
 	      [[maybe_unused]] const ConnectOptions &connect_options,
@@ -215,15 +236,12 @@ Cluster::Pick(std::string_view account,
 		i.hash = RendezvousHash(i.node->address, account);
 
 	/* sort the list for Rendezvous Hashing */
-	std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
-		  [](const auto &a, const auto &b) noexcept
-		  {
-			  /* prefer nodes that are alive */
-			  if (a.node->state != b.node->state)
-				  return a.node->state > b.node->state;
-
-			  return a.hash < b.hash;
-		  });
+	if (connect_options.read_only) [[unlikely]]
+		std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
+			  CompareNodes<true>{});
+	else
+		std::sort(rendezvous_nodes.begin(), rendezvous_nodes.end(),
+			  CompareNodes<false>{});
 
 	auto &node = *rendezvous_nodes.front().node;
 

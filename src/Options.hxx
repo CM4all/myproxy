@@ -35,5 +35,10 @@ struct ClusterOptions {
  * Options for the Lua method `client:connect()`.
  */
 struct ConnectOptions {
+	/**
+	 * Prefer servers with the #read_only attribute?
+	 */
+	bool read_only = false;
+
 	void ApplyLuaTable(lua_State *L, int table_idx);
 };

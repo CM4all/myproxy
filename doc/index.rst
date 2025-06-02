@@ -139,7 +139,11 @@ these actions:
     works because that authentication method does not require knowing
     the cleartext password, only its SHA1 digest.
 
-  - ``options``: an optional third parameter is a table of options.
+  - ``options``: an optional third parameter is a table of options:
+
+    - ``read_only``: if ``true``, then servers which are read-only
+      will be preferred (depends on cluster options ``monitoring`` and
+      ``user`` / ``password``).
 
 * ``client:err("Error message")`` fails the handshake with the
   specified message.

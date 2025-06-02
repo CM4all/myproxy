@@ -4,7 +4,7 @@ cm4all-myproxy (0.23) unstable; urgency=low
   * switch to C++23
   * require Meson 1.2
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 02 Jun 2025 08:18:45 +0200
 
 cm4all-myproxy (0.22) unstable; urgency=low
 

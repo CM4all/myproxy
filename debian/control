@@ -5,7 +5,7 @@ Maintainer: Max Kellermann <max.kellermann@ionos.com>
 Build-Depends: debhelper (>= 13.3~),
  meson (>= 1.2),
  python3-sphinx,
- g++ (>= 4:10),
+ g++ (>= 4:12),
  libfmt-dev (>= 9),
  libmd-dev,
  libpq-dev,

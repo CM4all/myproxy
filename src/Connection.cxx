@@ -857,7 +857,8 @@ try {
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();
 
-			const auto p = cluster.Pick(lua_client_ptr->GetAccount(), this);
+			const auto p = cluster.Pick(lua_client_ptr->GetAccount(), connect_action->options,
+						    this);
 			address = p.first;
 			outgoing_stats = &p.second;
 		} else {

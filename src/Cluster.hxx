@@ -17,6 +17,7 @@
 struct lua_State;
 struct Stats;
 struct NodeStats;
+struct ConnectOptions;
 class SocketAddress;
 class AllocatedSocketAddress;
 class EventLoop;
@@ -120,6 +121,7 @@ public:
 
 	[[nodiscard]] [[gnu::pure]]
 	std::pair<SocketAddress, NodeStats &> Pick(std::string_view account,
+						   const ConnectOptions &connect_options,
 						   ClusterNodeObserver *observer=nullptr) noexcept;
 
 private:

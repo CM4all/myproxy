@@ -123,8 +123,8 @@ Login Callback Actions
 The login callback (i.e. ``HandshakeResponse``) can return one of
 these actions:
 
-* ``client:connect(address, handshake_response)`` connects to the
-  specified address and proxies all queries to it.  Parameters:
+* ``client:connect(address, handshake_response, [options])`` connects
+  to the specified address and proxies all queries to it.  Parameters:
 
   - ``address``: a ``SocketAddress`` or a ``mysql_cluster`` object.
 
@@ -138,6 +138,8 @@ these actions:
     requires a server which supports ``mysql_native_password``, and
     works because that authentication method does not require knowing
     the cleartext password, only its SHA1 digest.
+
+  - ``options``: an optional third parameter is a table of options.
 
 * ``client:err("Error message")`` fails the handshake with the
   specified message.

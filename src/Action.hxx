@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Options.hxx"
 #include "lua/ValuePtr.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 
@@ -28,4 +29,6 @@ struct ConnectAction {
 	 * (binary, not hex).
 	 */
 	std::string password_sha1;
+
+	ConnectOptions options;
 };

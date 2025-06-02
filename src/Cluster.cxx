@@ -208,6 +208,7 @@ Cluster::~Cluster() noexcept
 
 std::pair<SocketAddress, NodeStats &>
 Cluster::Pick(std::string_view account,
+	      [[maybe_unused]] const ConnectOptions &connect_options,
 	      ClusterNodeObserver *observer) noexcept
 {
 	for (auto &i : rendezvous_nodes)

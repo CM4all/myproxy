@@ -30,3 +30,10 @@ struct ClusterOptions {
 
 	void ApplyLuaTable(lua_State *L, int table_idx);
 };
+
+/**
+ * Options for the Lua method `client:connect()`.
+ */
+struct ConnectOptions {
+	void ApplyLuaTable(lua_State *L, int table_idx);
+};

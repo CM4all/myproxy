@@ -50,3 +50,13 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 			throw Lua::ArgError{"'disconnect_unavailable' without 'monitoring'"};
 	}
 }
+
+void
+ConnectOptions::ApplyLuaTable(lua_State *L, int table_idx)
+{
+	Lua::ApplyOptionsTable(L, table_idx, [this, L](std::string_view key, auto value_idx){
+		(void)key;
+		(void)value_idx;
+		throw Lua::ArgError{"Unknown option"};
+	});
+}

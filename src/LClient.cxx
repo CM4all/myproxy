@@ -106,7 +106,8 @@ Apply(lua_State *L, ConnectAction &action, std::string_view name, auto value_idx
 inline int
 LClient::NewConnectAction(lua_State *L)
 try {
-	if (lua_gettop(L) != 3)
+	const int top = lua_gettop(L);
+	if (top < 3 || top > 4)
 		return luaL_error(L, "Invalid parameters");
 
 	ConnectAction action;
@@ -124,6 +125,9 @@ try {
 	Lua::ApplyOptionsTable(L, 3, [L, &action](std::string_view key, auto value_idx){
 		Apply(L, action, key, value_idx);
 	});
+
+	if (top >= 4)
+		action.options.ApplyLuaTable(L, 4);
 
 	NewLuaConnectAction(L, std::move(action));
 	return 1;

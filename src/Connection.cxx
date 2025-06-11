@@ -693,6 +693,12 @@ Connection::GetName() const noexcept
 	return lua_client_ptr->GetName();
 }
 
+bool
+Connection::IsAccount(std::string_view account) const noexcept
+{
+	return account == lua_client_ptr->GetAccount();
+}
+
 void
 Connection::OnOutgoingError(std::string_view msg) noexcept
 {

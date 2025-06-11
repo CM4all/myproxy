@@ -89,6 +89,9 @@ Example::
  control_listen('*', {multicast_group='224.0.0.42', interface='eth1'})
  control_listen('127.0.0.1:1234')
 
+The control command ``DISCONNECT_DATABASE`` disconnects all
+connections of the account specified in the payload.
+
 
 Prometheus Exporter
 ^^^^^^^^^^^^^^^^^^^

@@ -7,6 +7,9 @@
 #include "net/SocketAddress.hxx"
 #include "net/SocketConfig.hxx"
 #include "util/PrintException.hxx"
+#include "util/SpanCast.hxx"
+
+#include <fmt/core.h>
 
 void
 Instance::AddControlListener(const SocketConfig &config)
@@ -16,10 +19,24 @@ Instance::AddControlListener(const SocketConfig &config)
 					handler);
 }
 
+inline void
+Instance::DisconnectDatabase(std::string_view account) noexcept
+{
+	std::size_t n = 0;
+
+	for (auto &listener : listeners)
+		n += listener.CloseConnectionsIf([account](const auto &connection){
+			return connection.IsAccount(account);
+		});
+
+	if (n > 0)
+		fmt::print(stderr, "Closed {} connections for account {:?}\n", n, account);
+}
+
 void
 Instance::OnControlPacket([[maybe_unused]] BengControl::Server &control_server,
 			  BengControl::Command command,
-			  [[maybe_unused]] std::span<const std::byte> payload,
+			  std::span<const std::byte> payload,
 			  [[maybe_unused]] std::span<UniqueFileDescriptor> fds,
 			  [[maybe_unused]] SocketAddress address,
 			  [[maybe_unused]] int uid)
@@ -50,6 +67,11 @@ Instance::OnControlPacket([[maybe_unused]] BengControl::Server &control_server,
 	case Command::DISABLE_QUEUE:
 	case Command::RELOAD_STATE:
 	case Command::TERMINATE_CHILDREN:
+		break;
+
+	case Command::DISCONNECT_DATABASE:
+		if (!payload.empty())
+			DisconnectDatabase(ToStringView(payload));
 		break;
 	}
 }

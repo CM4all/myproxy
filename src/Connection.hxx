@@ -154,6 +154,9 @@ public:
 	[[gnu::pure]]
 	std::string_view GetName() const noexcept;
 
+	[[gnu::pure]]
+	bool IsAccount(std::string_view account) const noexcept;
+
 private:
 	bool IsStale() const noexcept {
 		return defer_delete.IsPending();

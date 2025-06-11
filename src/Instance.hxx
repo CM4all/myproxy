@@ -100,6 +100,8 @@ private:
 	void OnReload(int) noexcept;
 
 #ifdef ENABLE_CONTROL
+	void DisconnectDatabase(std::string_view account) noexcept;
+
 	/* virtual methods from class ControlHandler */
 	void OnControlPacket(BengControl::Server &control_server,
 			     BengControl::Command command,

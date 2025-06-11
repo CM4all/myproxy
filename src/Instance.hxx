@@ -20,12 +20,20 @@
 #include "event/systemd/Watchdog.hxx"
 #endif // HAVE_LIBSYSTEMD
 
+#ifdef ENABLE_CONTROL
+#include "event/net/control/Handler.hxx"
+#endif
+
 #include <forward_list>
 
+struct SocketConfig;
 class PrometheusExporterListener;
 
 class Instance final
 	: PrometheusExporterHandler
+#ifdef ENABLE_CONTROL
+	, BengControl::Handler
+#endif
 {
 	EventLoop event_loop;
 
@@ -42,6 +50,10 @@ class Instance final
 	Lua::ReloadRunner reload{lua_state.get()};
 
 	std::forward_list<MyProxyListener> listeners;
+
+#ifdef ENABLE_CONTROL
+	std::forward_list<BengControl::Server> control_listeners;
+#endif
 
 	std::forward_list<PrometheusExporterListener> prometheus_exporters;
 
@@ -69,6 +81,8 @@ public:
 	void AddListener(SocketAddress address,
 			 std::shared_ptr<LuaHandler> handler);
 
+	void AddControlListener(const SocketConfig &config);
+
 	void AddPrometheusListener(SocketAddress address);
 
 	/**
@@ -84,6 +98,17 @@ public:
 private:
 	void OnShutdown() noexcept;
 	void OnReload(int) noexcept;
+
+#ifdef ENABLE_CONTROL
+	/* virtual methods from class ControlHandler */
+	void OnControlPacket(BengControl::Server &control_server,
+			     BengControl::Command command,
+			     std::span<const std::byte> payload,
+			     std::span<UniqueFileDescriptor> fds,
+			     SocketAddress address, int uid) override;
+
+	void OnControlError(std::exception_ptr ep) noexcept override;
+#endif // ENABLE_CONTROL
 
 	/* virtual methods from class PrometheusExporterHandler */
 	std::string OnPrometheusExporterRequest() override;

@@ -1,6 +1,7 @@
 cm4all-myproxy (0.24) unstable; urgency=low
 
   * add connect option "read_only"
+  * control: allow controlling the server with UDP datagrams
 
  --   
 

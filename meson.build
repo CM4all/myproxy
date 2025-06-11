@@ -134,6 +134,15 @@ subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
 subdir('libcommon/src/lua/sodium')
 
+if get_option('control')
+  subdir('libcommon/src/event/net/control')
+  sources += [
+    'src/Control.cxx',
+  ]
+else
+  control_server_dep = dependency('', required: false)
+endif
+
 if libsystemd.found()
   # systemd support also enables the systemd-resolved client which
   # uses a protocol with JSON payloads
@@ -154,6 +163,7 @@ endif
 conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_OPENSSL', crypto_dep.found())
 conf.set('HAVE_PG', pg_dep.found())
+conf.set('ENABLE_CONTROL', get_option('control'))
 configure_file(output: 'config.h', configuration: conf)
 
 subdir('src/auth')
@@ -213,6 +223,7 @@ executable(
     pg_dep,
     sodium_dep,
     memory_dep,
+    control_server_dep,
   ],
   install: true,
   install_dir: 'sbin',

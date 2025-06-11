@@ -9,6 +9,10 @@
 #include "net/SocketConfig.hxx"
 #include "system/Error.hxx"
 
+#ifdef ENABLE_CONTROL
+#include "event/net/control/Server.hxx"
+#endif
+
 extern "C" {
 #include <lauxlib.h>
 }

@@ -25,10 +25,15 @@
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/LocalSocketAddress.hxx"
 #include "net/Parser.hxx"
+#include "net/SocketConfig.hxx"
 #include "system/SetupProcess.hxx"
 #include "util/PrintException.hxx"
 #include "util/ScopeExit.hxx"
 #include "config.h"
+
+#ifdef ENABLE_CONTROL
+#include "OptionsTable.hxx"
+#endif
 
 #ifdef HAVE_LIBSYSTEMD
 #include "AsyncResolver.hxx"
@@ -53,6 +58,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h> // for chdir()
+
+using std::string_view_literals::operator""sv;
 
 #ifdef HAVE_LIBSYSTEMD
 
@@ -106,6 +113,51 @@ try {
 	Lua::RaiseCurrent(L);
 }
 
+#ifdef ENABLE_CONTROL
+
+namespace Lua {
+
+static AllocatedSocketAddress
+CheckSocketAddress(lua_State *L, auto idx, int default_port, bool passive)
+{
+	return ParseSocketAddress(luaL_checkstring(L, GetStackIndex(idx)), default_port, passive);
+}
+
+} // namespace Lua
+
+static int
+l_control_listen(lua_State *L)
+try {
+	auto &instance = *(Instance *)lua_touserdata(L, lua_upvalueindex(1));
+
+	const auto top = lua_gettop(L);
+	if (top < 1 || top > 2)
+		return luaL_error(L, "Invalid parameter count");
+
+	SocketConfig config{
+		.bind_address = Lua::CheckSocketAddress(L, 1, BengControl::DEFAULT_PORT, true),
+	};
+
+	if (top >= 2)
+		Lua::ApplyOptionsTable(L, 2, [&config, L](std::string_view key, auto value_idx){
+			if (key == "interface"sv)
+				config.interface = Lua::CheckStringView(L, value_idx,
+									"Bad 'interface' value");
+			else if (key == "multicast_group"sv)
+				config.multicast_group = Lua::CheckSocketAddress(L, value_idx, 0, false);
+			else
+				throw Lua::ArgError{"Unknown option"};
+		});
+
+	instance.AddControlListener(config);
+
+	return 0;
+} catch (...) {
+	Lua::RaiseCurrent(L);
+}
+
+#endif // ENABLE_CONTROL
+
 static int
 l_prometheus_listen(lua_State *L)
 try {
@@ -148,6 +200,12 @@ SetupConfigState(lua_State *L, Instance &instance)
 		       Lua::MakeCClosure(l_mysql_listen,
 					 Lua::LightUserData(&instance)));
 
+#ifdef ENABLE_CONTROL
+	Lua::SetGlobal(L, "control_listen",
+		       Lua::MakeCClosure(l_control_listen,
+					 Lua::LightUserData(&instance)));
+#endif // ENABLE_CONTROL
+
 	Lua::SetGlobal(L, "prometheus_listen",
 		       Lua::MakeCClosure(l_prometheus_listen,
 					 Lua::LightUserData(&instance)));
@@ -179,6 +237,9 @@ static void
 SetupRuntimeState(lua_State *L)
 {
 	Lua::SetGlobal(L, "mysql_listen", nullptr);
+#ifdef ENABLE_CONTROL
+	Lua::SetGlobal(L, "control_listen", nullptr);
+#endif // ENABLE_CONTROL
 	Lua::SetGlobal(L, "prometheus_listen", nullptr);
 
 	Lua::InitXattrTable(L);

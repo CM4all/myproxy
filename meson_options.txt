@@ -1,3 +1,4 @@
+option('control', type: 'boolean', value: true, description: 'Support the beng-proxy control protocol')
 option('systemd', type: 'feature', description: 'systemd support (using libsystemd)')
 option('openssl', type: 'feature', description: 'Use OpenSSL (libcrypto)')
 option('pg', type: 'feature', description: 'PostgreSQL client for Lua')

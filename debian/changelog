@@ -2,7 +2,7 @@ cm4all-myproxy (0.25) unstable; urgency=low
 
   * no "disconnect_unavailable" for read-only connections
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Thu, 12 Jun 2025 17:12:37 +0200
 
 cm4all-myproxy (0.24) unstable; urgency=low
 

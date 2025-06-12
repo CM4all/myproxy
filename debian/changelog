@@ -1,6 +1,6 @@
 cm4all-myproxy (0.25) unstable; urgency=low
 
-  * 
+  * no "disconnect_unavailable" for read-only connections
 
  --   
 

@@ -863,8 +863,17 @@ try {
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();
 
+			ClusterNodeObserver *observer = this;
+			if (connect_action->options.read_only)
+				/* no observer for "read_only"
+				   connections; that doesn't work well
+				   because OnClusterNodeUnavailable()
+				   will get invoked whenever a
+				   writable node appears */
+				observer = nullptr;
+
 			const auto p = cluster.Pick(lua_client_ptr->GetAccount(), connect_action->options,
-						    this);
+						    observer);
 			address = p.first;
 			outgoing_stats = &p.second;
 		} else {

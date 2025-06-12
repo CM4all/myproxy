@@ -229,7 +229,7 @@ Cluster::CompareNodes<read_only>::operator()(const RendezvousNode &a, const Rend
 
 std::pair<SocketAddress, NodeStats &>
 Cluster::Pick(std::string_view account,
-	      [[maybe_unused]] const ConnectOptions &connect_options,
+	      const ConnectOptions &connect_options,
 	      ClusterNodeObserver *observer) noexcept
 {
 	for (auto &i : rendezvous_nodes)

@@ -5,6 +5,8 @@
 #include "AsyncResolver.hxx"
 #include "event/systemd/ResolvedClient.hxx"
 #include "net/AllocatedSocketAddress.hxx"
+#include "net/Parser.hxx"
+#include "net/Resolver.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
 #include "lua/PushCClosure.hxx"
@@ -12,6 +14,8 @@
 #include "lua/Util.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "util/Cancellable.hxx"
+
+#include <netdb.h>
 
 class LuaResolveHostnameRequest final : Systemd::ResolveHostnameHandler {
 	lua_State *const L;
@@ -59,13 +63,30 @@ l_mysql_async_resolve(lua_State *L)
 
 	const char *s = luaL_checkstring(L, 1);
 
-	if (*s == '/' || *s == '@') {
-		AllocatedSocketAddress address;
-		address.SetLocal(s);
-		Lua::NewSocketAddress(L, std::move(address));
-		return 1;
+	/* try to parse local or numeric addresses first */
+	try {
+		try {
+			Lua::NewSocketAddress(L, ParseSocketAddress(s, 3306, false));
+			return 1;
+		} catch (const std::system_error &e) {
+			/* EAI_NONAME is thrown when the parser
+			   refuses to do a DNS lookup due to
+			   AI_NUMERICHOST */
+
+			if (e.code().category() != resolver_error_category ||
+			    e.code().value() != EAI_NONAME)
+				/* other error: rethrow, to be caught
+				   by the other exception handler */
+				throw;
+		}
+	} catch (...) {
+		/* return [nil, error_message] for assert() */
+		Lua::Push(L, nullptr);
+		Lua::Push(L, std::current_exception());
+		return 2;
 	}
 
+	/* if the bare parser fails, fall back to systemd-resolved */
 	auto *request = LuaResolveHostnameRequestClass::New(L, L);
 	request->Start(event_loop, s);
 	return lua_yield(L, 1);

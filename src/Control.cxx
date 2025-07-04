@@ -34,8 +34,7 @@ Instance::DisconnectDatabase(std::string_view account) noexcept
 }
 
 void
-Instance::OnControlPacket([[maybe_unused]] BengControl::Server &control_server,
-			  BengControl::Command command,
+Instance::OnControlPacket(BengControl::Command command,
 			  std::span<const std::byte> payload,
 			  [[maybe_unused]] std::span<UniqueFileDescriptor> fds,
 			  [[maybe_unused]] SocketAddress address,

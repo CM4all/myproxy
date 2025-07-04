@@ -28,6 +28,7 @@
 
 struct SocketConfig;
 class PrometheusExporterListener;
+namespace BengControl { class Server; }
 
 class Instance final
 	: PrometheusExporterHandler
@@ -103,8 +104,7 @@ private:
 	void DisconnectDatabase(std::string_view account) noexcept;
 
 	/* virtual methods from class ControlHandler */
-	void OnControlPacket(BengControl::Server &control_server,
-			     BengControl::Command command,
+	void OnControlPacket(BengControl::Command command,
 			     std::span<const std::byte> payload,
 			     std::span<UniqueFileDescriptor> fds,
 			     SocketAddress address, int uid) override;

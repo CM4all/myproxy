@@ -11,7 +11,6 @@
 #include "lua/PushCClosure.hxx"
 #include "lua/net/Resolver.hxx"
 #include "lua/net/SocketAddress.hxx"
-#include "net/AddressInfo.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "config.h"
 
@@ -19,6 +18,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <netdb.h>
 #include <string.h>
 
 static int
@@ -63,7 +63,11 @@ RegisterLuaResolver(lua_State *L, EventLoop &event_loop, Stats &stats)
 {
 	Cluster::Register(L);
 
-	static constexpr auto hints = MakeAddrInfo(0, AF_UNSPEC, SOCK_STREAM);
+	static constexpr struct addrinfo hints{
+		.ai_family = AF_UNSPEC,
+		.ai_socktype = SOCK_STREAM,
+	};
+
 	Lua::PushResolveFunction(L, hints, 3306);
 	lua_setglobal(L, "mysql_resolve");
 

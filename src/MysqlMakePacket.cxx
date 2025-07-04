@@ -171,4 +171,13 @@ MakeQuery(uint_least8_t sequence_id, std::string_view query)
 	return s;
 }
 
+PacketSerializer
+MakeInitDb(uint_least8_t sequence_id, std::string_view database)
+{
+	Mysql::PacketSerializer s{sequence_id};
+	s.WriteCommand(Command::INIT_DB);
+	s.WriteVariableLengthString(database);
+	return s;
+}
+
 } // namespace Mysql

@@ -32,3 +32,7 @@ struct ConnectAction {
 
 	ConnectOptions options;
 };
+
+struct InitDbAction {
+	std::string database;
+};

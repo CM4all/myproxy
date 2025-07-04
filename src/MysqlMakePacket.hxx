@@ -49,4 +49,7 @@ MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
 PacketSerializer
 MakeQuery(uint_least8_t sequence_id, std::string_view query);
 
+PacketSerializer
+MakeInitDb(uint_least8_t sequence_id, std::string_view database);
+
 } // namespace Mysql

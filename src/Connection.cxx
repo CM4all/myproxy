@@ -282,7 +282,10 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 			: Result::CLOSED;
 	}
 
-	// TODO invoke Lua callback for the decision
+	if (handler->HasOnInitDb()) {
+		StartCoroutine(InvokeLuaInitDb(sequence_id, packet.database));
+		return Result::IGNORE;
+	}
 
 	return Result::FORWARD;
 }
@@ -895,6 +898,57 @@ try {
 
 	if (incoming.SendErr(sequence_id + 1,
 			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			     "Lua error"sv))
+		SafeDelete();
+}
+
+inline Co::InvokeTask
+Connection::InvokeLuaInitDb(uint_least8_t sequence_id, std::string_view db_name) noexcept
+try {
+	const auto main_L = GetLuaState();
+	const Lua::ScopeCheckStack check_main_stack{main_L};
+
+	Lua::Thread thread{main_L};
+
+	/* create a new thread for the coroutine */
+	const auto L = thread.Create(main_L);
+	/* pop the new thread from the main stack */
+	lua_pop(main_L, 1);
+
+	handler->PushOnInitDb(L);
+
+	lua_client.Push(L);
+
+	Lua::Push(L, db_name);
+
+	co_await Lua::CoAwaitable{thread, L, 2};
+
+	if (auto *err = CheckLuaErrAction(L, -1)) {
+		++stats.n_rejected_connections;
+
+		incoming.SendErr(sequence_id + 1,
+				 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+				 err->msg);
+		SafeDelete();
+	} else if (auto *init_db = CheckLuaInitDbAction(L, -1)) {
+		/* the Lua function returned a database name to forward */
+		auto s = Mysql::MakeInitDb(sequence_id, init_db->database);
+		if (!outgoing->peer.Send(s.Finish())) {
+			SafeDelete();
+			co_return;
+		}
+
+		database = init_db->database;
+		co_return;
+	} else
+		throw std::invalid_argument{"Bad return value"};
+
+} catch (...) {
+	++stats.n_lua_errors;
+	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
+
+	if (incoming.SendErr(sequence_id + 1,
+			     Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
 			     "Lua error"sv))
 		SafeDelete();
 }

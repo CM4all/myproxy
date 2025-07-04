@@ -54,6 +54,15 @@ The second parameter is a table containing callback functions:
 
 - ``on_command_phase(client)`` is invoked after successful login.
 
+- ``on_init_db(client, database_name)`` decides what to do with an
+  ``INIT_DB`` packet.  The function can then:
+
+  - ``return client:init_db(database_name)`` to forward the
+    ``INIT_DB`` packet to the server (possibly with a different
+    database name).
+  - ``return client:err("Error message")`` to reject the ``INIT_DB``
+    request.
+
 It is important that callback functions finish quickly.  They must
 never block, because this would block the whole daemon process.  This
 means they must not do any network I/O, launch child processes, and

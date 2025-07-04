@@ -63,6 +63,7 @@ public:
 
 	int NewErrAction(lua_State *L);
 	int NewConnectAction(lua_State *L);
+	int NewInitDbAction(lua_State *L);
 
 private:
 	int Close(lua_State *) {

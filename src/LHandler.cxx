@@ -12,7 +12,8 @@
 LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 	:on_connect(L),
 	 on_handshake_response(L),
-	 on_command_phase(L)
+	 on_command_phase(L),
+	 on_init_db(L)
 {
 	const Lua::ScopeCheckStack check_stack{L};
 
@@ -42,6 +43,12 @@ LuaHandler::LuaHandler(lua_State *L, Lua::StackIndex idx)
 				throw std::invalid_argument{"Value is not a function"};
 
 			on_command_phase.Set(L, value_idx);
+		} else if (StringIsEqual(key, "on_init_db")) {
+			if (!lua_isfunction(L, Lua::GetStackIndex(value_idx)))
+				throw std::invalid_argument{"Value is not a function"};
+
+			on_init_db.Set(L, value_idx);
+			has_on_init_db = true;
 		} else
 			throw std::invalid_argument{"Unrecognized key"};
 	});

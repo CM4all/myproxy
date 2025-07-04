@@ -135,9 +135,22 @@ try {
 	Lua::RaiseCurrent(L);
 }
 
+inline int
+LClient::NewInitDbAction(lua_State *L)
+{
+	if (lua_gettop(L) != 2)
+		return luaL_error(L, "Invalid parameters");
+
+	NewLuaInitDbAction(L, {
+		.database = luaL_checkstring(L, 2),
+	});
+	return 1;
+}
+
 static constexpr struct luaL_Reg client_methods [] = {
 	{"err", LuaClient::WrapMethod<&LClient::NewErrAction>()},
 	{"connect", LuaClient::WrapMethod<&LClient::NewConnectAction>()},
+	{"init_db", LuaClient::WrapMethod<&LClient::NewInitDbAction>()},
 	{nullptr, nullptr}
 };
 

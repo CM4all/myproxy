@@ -10,6 +10,9 @@ class LuaHandler {
 	Lua::Value on_connect;
 	Lua::Value on_handshake_response;
 	Lua::Value on_command_phase;
+	Lua::Value on_init_db;
+
+	bool has_on_init_db = false;
 
 public:
 	LuaHandler(lua_State *L, Lua::StackIndex idx);
@@ -28,5 +31,13 @@ public:
 
 	void PushOnCommandPhase(lua_State *L) {
 		on_command_phase.Push(L);
+	}
+
+	void PushOnInitDb(lua_State *L) {
+		on_init_db.Push(L);
+	}
+
+	bool HasOnInitDb() const noexcept {
+		return has_on_init_db;
 	}
 };

@@ -9,6 +9,9 @@ User=cm4all-myproxy
 ExecStart=/usr/sbin/cm4all-myproxy
 ExecReload=/bin/kill -HUP $MAINPID
 
+Restart=on-failure
+RestartPreventExitStatus=USAGE CONFIG
+
 WatchdogSec=2m
 
 # This allows the kernel to merge CPU wakeups, the default of 50ns is

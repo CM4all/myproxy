@@ -57,6 +57,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <sysexits.h> // for EX_*
 #include <unistd.h> // for chdir()
 
 using std::string_view_literals::operator""sv;
@@ -254,7 +255,13 @@ int
 main(int argc, char **argv) noexcept
 try {
 	Config config;
-	parse_cmdline(config, argc, argv);
+
+	try {
+		parse_cmdline(config, argc, argv);
+	} catch (...) {
+		PrintException(std::current_exception());
+		return EX_USAGE;
+	}
 
 	SetupProcess();
 
@@ -268,9 +275,14 @@ try {
 	Instance instance;
 	SetupConfigState(instance.GetLuaState(), instance);
 
-	LoadConfigFile(instance.GetLuaState(), config.config_path);
+	try {
+		LoadConfigFile(instance.GetLuaState(), config.config_path);
 
-	instance.Check();
+		instance.Check();
+	} catch (...) {
+		PrintException(std::current_exception());
+		return EX_CONFIG;
+	}
 
 	SetupRuntimeState(instance.GetLuaState());
 

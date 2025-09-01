@@ -21,7 +21,7 @@ class LClient {
 
 	std::string server_version;
 
-	const SocketPeerAuth peer_auth;
+	SocketPeerAuth peer_auth;
 
 	std::string name_;
 
@@ -68,6 +68,7 @@ public:
 private:
 	int Close(lua_State *) {
 		auto_close = nullptr;
+		std::move(peer_auth).Close();
 		return 0;
 	}
 

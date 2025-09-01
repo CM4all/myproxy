@@ -1,7 +1,7 @@
 cm4all-myproxy (0.26) unstable; urgency=low
 
   * allow intercepting INIT_DB packets
-  * close cgroup file descriptors on disconnect
+  * close pidfds and cgroup file descriptors on disconnect
   * systemd: do not restart on configuration errors
   * systemd: raise LimitNOFILE to 1048576
   * debian: start daemon during initial installation, stop on uninstall

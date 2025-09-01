@@ -7,7 +7,7 @@ cm4all-myproxy (0.26) unstable; urgency=low
   * systemd: raise LimitNOFILE to 1048576
   * debian: start daemon during initial installation, stop on uninstall
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 01 Sep 2025 21:02:49 +0200
 
 cm4all-myproxy (0.25) unstable; urgency=low
 

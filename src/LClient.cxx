@@ -156,7 +156,7 @@ static constexpr struct luaL_Reg client_methods [] = {
 
 inline int
 LClient::Index(lua_State *L)
-{
+try {
 	if (lua_gettop(L) != 2)
 		return luaL_error(L, "Invalid parameters");
 
@@ -224,11 +224,13 @@ LClient::Index(lua_State *L)
 		return 1;
 	} else
 		return luaL_error(L, "Unknown attribute");
+} catch (...) {
+	Lua::RaiseCurrent(L);
 }
 
 inline int
 LClient::NewIndex(lua_State *L)
-{
+try {
 	if (lua_gettop(L) != 3)
 		return luaL_error(L, "Invalid parameters");
 
@@ -265,6 +267,8 @@ LClient::NewIndex(lua_State *L)
 		return 0;
 	} else
 		return luaL_error(L, "Unknown attribute");
+} catch (...) {
+	Lua::RaiseCurrent(L);
 }
 
 void

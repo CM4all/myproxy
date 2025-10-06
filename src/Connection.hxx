@@ -168,16 +168,7 @@ private:
 	 * because the coroutine stack must not be deleted while it
 	 * runs.
 	 */
-	void SafeDelete() noexcept {
-		defer_start_handler.Cancel();
-		incoming.Close();
-
-		if (connect.IsPending())
-			connect.Cancel();
-
-		defer_delete.Schedule();
-		outgoing.reset();
-	}
+	void SafeDelete() noexcept;
 
 	/**
 	 * The outgoing connection has failed.  Send an error to the

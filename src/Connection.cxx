@@ -62,6 +62,19 @@ static constexpr uint_least32_t handshake_capabilities =
 inline
 Connection::Outgoing::~Outgoing() noexcept = default;
 
+void
+Connection::SafeDelete() noexcept
+{
+	defer_start_handler.Cancel();
+	incoming.Close();
+
+	if (connect.IsPending())
+		connect.Cancel();
+
+	defer_delete.Schedule();
+	outgoing.reset();
+}
+
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {

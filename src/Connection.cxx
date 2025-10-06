@@ -730,7 +730,7 @@ Connection::OnCoroutineComplete(std::exception_ptr error) noexcept
 {
 	if (error) {
 		fmt::print(stderr, "[{}] {}\n", GetName(), error);
-		SafeDelete();
+		delete this;
 	}
 }
 

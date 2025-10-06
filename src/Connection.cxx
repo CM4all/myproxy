@@ -65,6 +65,7 @@ Connection::Outgoing::~Outgoing() noexcept = default;
 void
 Connection::SafeDelete() noexcept
 {
+	UnregisterClusterNodeObserver();
 	defer_start_handler.Cancel();
 	incoming.Close();
 

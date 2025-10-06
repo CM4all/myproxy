@@ -22,4 +22,10 @@ public:
 	 * never be called again.
 	 */
 	virtual void OnClusterNodeUnavailable() noexcept = 0;
+
+protected:
+	void UnregisterClusterNodeObserver() noexcept {
+		if (is_linked())
+			unlink();
+	}
 };

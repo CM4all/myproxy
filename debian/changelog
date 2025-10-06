@@ -1,6 +1,6 @@
 cm4all-myproxy (0.27) unstable; urgency=low
 
-  * 
+  * fix assertion failure with "disconnect_unavailable" option
 
  --   
 

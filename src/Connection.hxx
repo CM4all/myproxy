@@ -162,6 +162,12 @@ private:
 		return defer_delete.IsPending();
 	}
 
+	/**
+	 * Disconnect but defer actually deleting this object.  This
+	 * is sometimes necessary when called from within a coroutine
+	 * because the coroutine stack must not be deleted while it
+	 * runs.
+	 */
 	void SafeDelete() noexcept {
 		defer_start_handler.Cancel();
 		incoming.Close();

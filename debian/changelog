@@ -5,7 +5,7 @@ cm4all-myproxy (0.27) unstable; urgency=low
   * pg: fix assertion failure
   * pg: fix stalled connection
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Tue, 07 Oct 2025 15:10:36 +0200
 
 cm4all-myproxy (0.26) unstable; urgency=low
 

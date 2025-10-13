@@ -68,6 +68,8 @@ Instance::OnControlPacket(BengControl::Command command,
 	case Command::TERMINATE_CHILDREN:
 	case Command::DISABLE_URING:
 	case Command::RESET_LIMITER:
+	case Command::REJECT_CLIENT:
+	case Command::TARPIT_CLIENT:
 		break;
 
 	case Command::DISCONNECT_DATABASE:

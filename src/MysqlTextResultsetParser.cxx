@@ -13,8 +13,13 @@
 
 namespace Mysql {
 
-#if defined(__GNUC__) && !defined(__clang__)
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#else
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=noreturn"
+#endif
 #endif
 
 void
@@ -22,6 +27,10 @@ TextResultsetHandler::OnTextResultsetErr(const ErrPacket &err)
 {
 	throw err;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 inline TextResultsetParser::Result
 TextResultsetParser::OnResponse(std::span<const std::byte> payload)

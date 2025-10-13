@@ -5,6 +5,7 @@
 #include "LResolver.hxx"
 #include "Cluster.hxx"
 #include "Options.hxx"
+#include "lua/LightUserData.hxx"
 #include "lua/Util.hxx"
 #include "lua/Error.hxx"
 #include "lua/ForEach.hxx"

@@ -9,6 +9,7 @@
 #include "net/Resolver.hxx"
 #include "lua/Class.hxx"
 #include "lua/Error.hxx"
+#include "lua/LightUserData.hxx"
 #include "lua/PushCClosure.hxx"
 #include "lua/Resume.hxx"
 #include "lua/Util.hxx"

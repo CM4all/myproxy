@@ -158,7 +158,8 @@ libcommon_require_pg = get_option('pg')
 subdir('libcommon/src/pg')
 if pg_dep.found()
   subdir('libcommon/src/lua/pg')
-  pg_dep = lua_pg_dep
+else
+  lua_pg_dep = pg_dep
 endif
 
 conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
@@ -221,7 +222,7 @@ executable(
     lua_net_dep,
     lua_event_dep,
     lua_sodium_dep,
-    pg_dep,
+    lua_pg_dep,
     sodium_dep,
     memory_dep,
     control_server_dep,

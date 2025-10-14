@@ -8,6 +8,7 @@
 #include "net/Parser.hxx"
 #include "net/Resolver.hxx"
 #include "lua/Class.hxx"
+#include "lua/CoOperation.hxx"
 #include "lua/Error.hxx"
 #include "lua/LightUserData.hxx"
 #include "lua/PushCClosure.hxx"
@@ -90,7 +91,7 @@ l_mysql_async_resolve(lua_State *L)
 	/* if the bare parser fails, fall back to systemd-resolved */
 	auto *request = LuaResolveHostnameRequestClass::New(L, L);
 	request->Start(event_loop, s);
-	return lua_yield(L, 1);
+	return Lua::YieldOperation(L);
 }
 
 void

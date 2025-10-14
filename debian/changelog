@@ -1,6 +1,7 @@
 cm4all-myproxy (0.28) unstable; urgency=low
 
   * lua: support coroutine.yield(), coroutine.resume()
+  * lua: check number of Lua return values (fixes assertion failure)
 
  --   
 

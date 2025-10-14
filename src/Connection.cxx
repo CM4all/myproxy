@@ -776,7 +776,7 @@ try {
 
 		co_await Lua::CoAwaitable{thread, L, 1};
 
-		if (lua_isnil(L, -1)) {
+		if (lua_gettop(L) == 0 || lua_isnil(L, -1)) {
 			// OK
 			// TODO implement more actions
 		} else if (auto *err = CheckLuaErrAction(L, -1)) {
@@ -823,7 +823,7 @@ Connection::InvokeLuaCommandPhase()
 
 		co_await Lua::CoAwaitable{thread, L, 1};
 
-		if (lua_isnil(L, -1)) {
+		if (lua_gettop(L) == 0 || lua_isnil(L, -1)) {
 			// OK
 			// TODO implement more actions
 		} else
@@ -859,6 +859,9 @@ try {
 		Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 
 	co_await Lua::CoAwaitable{thread, L, 2};
+
+	if (lua_gettop(L) == 0)
+		throw std::invalid_argument{"Bad return value"};
 
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;

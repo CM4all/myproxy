@@ -181,6 +181,7 @@ static void
 SetupConfigState(lua_State *L, Instance &instance)
 {
 	luaL_openlibs(L);
+	Lua::InitResume(L);
 
 	Lua::InitSodium(L);
 

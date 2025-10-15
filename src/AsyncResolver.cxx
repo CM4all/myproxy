@@ -39,11 +39,14 @@ public:
 
 	/* virtual methods from ResolveHostnameHandler */
 	void OnResolveHostname(std::span<const SocketAddress> address) noexcept override {
+		Lua::ConsumeOperation(L);
 		Lua::NewSocketAddress(L, address.front());
 		Lua::Resume(L, 1);
 	}
 
 	void OnResolveHostnameError(std::exception_ptr error) noexcept override {
+		Lua::ConsumeOperation(L);
+
 		/* return [nil, error_message] for assert() */
 		Lua::Push(L, nullptr);
 		Lua::Push(L, error);

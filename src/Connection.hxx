@@ -201,7 +201,7 @@ private:
 
 	void OnDeferredStartHandler() noexcept;
 
-	void OnCoroutineComplete(std::exception_ptr error) noexcept;
+	void OnCoroutineComplete(std::exception_ptr &&error) noexcept;
 	void StartCoroutine(Co::InvokeTask &&_coroutine) noexcept;
 
 	/**

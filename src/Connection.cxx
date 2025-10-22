@@ -740,10 +740,10 @@ Connection::StartCoroutine(Co::InvokeTask &&_coroutine) noexcept
 }
 
 inline void
-Connection::OnCoroutineComplete(std::exception_ptr error) noexcept
+Connection::OnCoroutineComplete(std::exception_ptr &&error) noexcept
 {
 	if (error) {
-		fmt::print(stderr, "[{}] {}\n", GetName(), error);
+		fmt::print(stderr, "[{}] {}\n", GetName(), std::move(error));
 		delete this;
 	}
 }

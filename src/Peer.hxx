@@ -104,9 +104,7 @@ public:
 		socket.DeferWrite();
 	}
 
-	ssize_t WriteSome(std::span<const std::byte> src) noexcept {
-		return socket.Write(src);
-	}
+	ssize_t SendSome(std::span<const std::byte> src) noexcept;
 
 	bool Send(std::span<const std::byte> src) noexcept;
 	bool Send(Mysql::PacketSerializer &&s) noexcept;

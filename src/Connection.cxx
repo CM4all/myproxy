@@ -394,7 +394,7 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 
 	got_raw_from_incoming = true;
 
-	const auto result = outgoing->peer.WriteSome(src);
+	const auto result = outgoing->peer.SendSome(src);
 	if (result > 0) [[likely]] {
 		if (static_cast<std::size_t>(result) < src.size())
 			outgoing->peer.ScheduleWrite();
@@ -403,14 +403,10 @@ Connection::OnMysqlRaw(std::span<const std::byte> src) noexcept
 		return {RawResult::OK, static_cast<std::size_t>(result)};
 	}
 
-	switch (result) {
-	case WRITE_BLOCKING:
+	if (result == 0)
 		return {RawResult::OK, 0U};
 
-	default:
-		// TODO
-		return {RawResult::CLOSED, 0U};
-	}
+	return {RawResult::CLOSED, 0U};
 }
 
 inline Event::Duration
@@ -650,7 +646,7 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 {
 	connection.got_raw_from_outgoing = true;
 
-	const auto result = connection.incoming.WriteSome(src);
+	const auto result = connection.incoming.SendSome(src);
 	if (result > 0) [[likely]] {
 		if (static_cast<std::size_t>(result) < src.size())
 			connection.incoming.ScheduleWrite();
@@ -659,14 +655,10 @@ Connection::Outgoing::OnMysqlRaw(std::span<const std::byte> src) noexcept
 		return {RawResult::OK, static_cast<std::size_t>(result)};
 	}
 
-	switch (result) {
-	case WRITE_BLOCKING:
+	if (result == 0)
 		return {RawResult::OK, 0U};
 
-	default:
-		// TODO
-		return {RawResult::CLOSED, 0U};
-	}
+	return {RawResult::CLOSED, 0U};
 }
 
 Connection::Outgoing::Outgoing(Connection &_connection,

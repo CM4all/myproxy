@@ -11,6 +11,30 @@
 #include <stdexcept>
 #include <utility> // for std::unreachable()
 
+ssize_t
+Peer::SendSome(std::span<const std::byte> src) noexcept
+try {
+	const auto result = socket.Write(src);
+	if (result > 0) [[likely]]
+		return static_cast<std::size_t>(result);
+
+	switch (result) {
+	case WRITE_ERRNO:
+		throw MakeSocketError("Send failed");
+
+	case WRITE_BLOCKING:
+		return 0;
+
+	case WRITE_DESTROYED:
+		return WRITE_DESTROYED;
+	}
+
+	throw std::runtime_error{"Send error"};
+} catch (...) {
+	handler.OnPeerError(std::current_exception());
+	return WRITE_DESTROYED;
+}
+
 bool
 Peer::Send(std::span<const std::byte> src) noexcept
 try {

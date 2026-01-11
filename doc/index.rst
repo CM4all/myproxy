@@ -250,6 +250,38 @@ automatically choose a node using consistent hashing with the
 ``client.account`` attribute.
 
 
+socket
+^^^^^^
+
+A simple low-level networking library.  Example::
+
+  tcp = socket:connect('localhost:1234')
+  udp = socket:connect('localhost:4321', {type='dgram'})
+  multicast = socket:connect('[ff02::dead:beef]:2345', {type='dgram'})
+  unix = socket:connect('/run/test.socket')
+  abstract = socket:connect('@test', {type='seqpacket'})
+  abstract:send('hello world')
+
+The ``socket`` library has the following methods:
+
+- ``connect(ADDRESS, [OPTIONS])``: Create a new socket connected to
+  the specified address.  ``OPTIONS`` may be a table with the
+  following keys:
+
+  - ``type``: the socket type, one of ``stream`` (the default),
+    ``dgram``, ``seqpacket``.
+
+  Returns a new socket object on success or ``[nil,error]`` on error.
+
+Socket objects have the following methods:
+
+- ``close()``: Close the socket.
+
+- ``send(DATA, [START], [END])``: Send data (i.e. a string) to the
+  peer.  ``START`` and ``END`` are start and end position within the
+  string with the same semantics as in ``string.sub()``.  Returns the
+  number of bytes sent on success or ``[nil,error]`` on error.
+
 
 control_client
 ^^^^^^^^^^^^^^

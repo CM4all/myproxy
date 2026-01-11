@@ -15,6 +15,7 @@
 #include "lua/RunFile.hxx"
 #include "lua/Util.hxx"
 #include "lua/StringView.hxx"
+#include "lua/net/Socket.hxx"
 #include "lua/net/SocketAddress.hxx"
 #include "lua/sodium/Init.hxx"
 #include "lua/event/Init.hxx"
@@ -193,6 +194,7 @@ SetupConfigState(lua_State *L, Instance &instance)
 #endif
 
 	Lua::InitSocketAddress(L);
+	Lua::InitSocket(L);
 #ifdef ENABLE_CONTROL
 	Lua::InitControlClient(L);
 #endif

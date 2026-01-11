@@ -70,6 +70,7 @@ Instance::OnControlPacket(BengControl::Command command,
 	case Command::RESET_LIMITER:
 	case Command::REJECT_CLIENT:
 	case Command::TARPIT_CLIENT:
+	case Command::CANCEL_JOB:
 		break;
 
 	case Command::DISCONNECT_DATABASE:

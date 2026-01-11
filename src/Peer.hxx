@@ -64,7 +64,7 @@ public:
 	bool handshake = false, handshake_response = false, command_phase = false;
 
 	Peer(EventLoop &event_loop,
-	     UniqueSocketDescriptor fd,
+	     UniqueSocketDescriptor &&fd,
 	     PeerHandler &_handler,
 	     MysqlHandler &_mysql_handler) noexcept
 		:socket(event_loop),

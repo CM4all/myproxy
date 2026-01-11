@@ -33,6 +33,7 @@
 
 #ifdef ENABLE_CONTROL
 #include "OptionsTable.hxx"
+#include "lua/net/ControlClient.hxx"
 #endif
 
 #ifdef HAVE_LIBSYSTEMD
@@ -192,6 +193,9 @@ SetupConfigState(lua_State *L, Instance &instance)
 #endif
 
 	Lua::InitSocketAddress(L);
+#ifdef ENABLE_CONTROL
+	Lua::InitControlClient(L);
+#endif
 	RegisterLuaResolver(L, instance.GetEventLoop(), instance.GetStats());
 
 #ifdef HAVE_LIBSYSTEMD

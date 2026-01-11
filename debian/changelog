@@ -1,6 +1,8 @@
 cm4all-myproxy (0.29) unstable; urgency=low
 
   * fix crash after send error
+  * lua: new libraries:
+    - "control_client
 
  --   
 

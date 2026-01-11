@@ -15,6 +15,10 @@
 #include "net/AllocatedSocketAddress.hxx"
 #include "config.h"
 
+#ifdef ENABLE_CONTROL
+#include "net/control/Protocol.hxx"
+#endif
+
 extern "C" {
 #include <lauxlib.h>
 }
@@ -68,6 +72,11 @@ RegisterLuaResolver(lua_State *L, EventLoop &event_loop, Stats &stats)
 		.ai_family = AF_UNSPEC,
 		.ai_socktype = SOCK_STREAM,
 	};
+
+#ifdef ENABLE_CONTROL
+	Lua::PushResolveFunction(L, hints, BengControl::DEFAULT_PORT);
+	lua_setglobal(L, "control_resolve");
+#endif
 
 	Lua::PushResolveFunction(L, hints, 3306);
 	lua_setglobal(L, "mysql_resolve");

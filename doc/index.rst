@@ -250,6 +250,55 @@ automatically choose a node using consistent hashing with the
 ``client.account`` attribute.
 
 
+
+control_client
+^^^^^^^^^^^^^^
+
+A client for the `beng-proxy control protocol
+<https://beng-proxy.readthedocs.io/en/latest/control.html>`__.
+
+During startup, create a ``control_client`` object::
+
+  -- IPv4 (default port)
+  c = control_client:new('224.0.0.42')
+
+  -- IPv6 on default port
+  c = control_client:new('ff02::dead:beef')
+
+  -- IPv6 on non-default port (requires square brackets)
+  c = control_client:new('[ff02::dead:beef]:1234')
+
+  -- local socket
+  c = control_client:new('/run/cm4all/workshop/control')
+
+  -- abstract socket
+  c = control_client:new('@bp-control')
+
+The ``new()`` constructor returns ``nil,error`` on error (and thus the
+call can be wrapped in ``assert()`` to raise a Lua error instead).
+
+The method ``build()`` creates an object which can be used to build a
+control datagram with one or more commands.  After that datagram has
+been assembled, it can be sent with the ``send()`` method.  Example::
+
+  c:send(c:build():fade_children('foo'):flush_http_cache('bar'))
+
+The ``send()`` method returns ``nil,error`` on error.
+
+The builder implements the following methods:
+
+- ``cancel_job(PARTITION_NAME, JOB_ID)``
+- ``discard_session(ID)``
+- ``disconnect_database(ACCOUNT)``
+- ``fade_children(TAG)``
+- ``flush_filter_cache(TAG)``
+- ``flush_http_cache(TAG)``
+- ``reject_client(ADDRESS)``
+- ``reset_limiter(ACCOUNT)``
+- ``tarpit_client(ADDRESS)``
+- ``terminate_children(TAG)``
+
+
 libsodium
 ^^^^^^^^^
 

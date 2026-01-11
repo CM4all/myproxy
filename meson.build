@@ -128,14 +128,8 @@ subdir('libcommon/src/event/net')
 subdir('libcommon/src/memory')
 subdir('src/memory')
 
-subdir('libcommon/src/co')
-subdir('libcommon/src/lua')
-subdir('libcommon/src/lua/io')
-subdir('libcommon/src/lua/net')
-subdir('libcommon/src/lua/event')
-subdir('libcommon/src/lua/sodium')
-
 if get_option('control')
+  subdir('libcommon/src/net/control')
   subdir('libcommon/src/event/net/control')
   sources += [
     'src/Control.cxx',
@@ -143,6 +137,13 @@ if get_option('control')
 else
   control_server_dep = dependency('', required: false)
 endif
+
+subdir('libcommon/src/co')
+subdir('libcommon/src/lua')
+subdir('libcommon/src/lua/io')
+subdir('libcommon/src/lua/net')
+subdir('libcommon/src/lua/event')
+subdir('libcommon/src/lua/sodium')
 
 if libsystemd.found()
   # systemd support also enables the systemd-resolved client which

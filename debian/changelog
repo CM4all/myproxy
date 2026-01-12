@@ -5,7 +5,7 @@ cm4all-myproxy (0.29) unstable; urgency=low
     - "control_client
     - "socket"
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 12 Jan 2026 09:34:10 +0100
 
 cm4all-myproxy (0.28) unstable; urgency=low
 

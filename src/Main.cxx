@@ -23,6 +23,7 @@
 #include "lua/io/CgroupInfo.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SystemError.hxx"
+#include "memory/SlicePool.hxx"
 #include "net/AllocatedSocketAddress.hxx"
 #include "net/LocalSocketAddress.hxx"
 #include "net/Parser.hxx"
@@ -80,6 +81,15 @@ IsSystemdMagic(lua_State *L, int idx)
 }
 
 #endif // HAVE_LIBSYSTEMD
+
+static bool
+GetGlobalBool(lua_State *L, const char *name)
+{
+	lua_getglobal(L, name);
+	AtScopeExit(L) { lua_pop(L, 1); };
+
+	return lua_toboolean(L, -1);
+}
 
 static auto
 ParameterToLuaHandler(lua_State *L, int idx)
@@ -290,6 +300,9 @@ try {
 		PrintException(std::current_exception());
 		return EX_CONFIG;
 	}
+
+	if (GetGlobalBool(instance.GetLuaState(), "populate_io_buffers"))
+		fb_pool_get().Populate();
 
 	SetupRuntimeState(instance.GetLuaState());
 

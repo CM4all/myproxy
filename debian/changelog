@@ -1,5 +1,6 @@
 cm4all-myproxy (0.30) unstable; urgency=low
 
+  * add option "populate_io_buffers"
   * fix build with glibc 2.43
 
  --   

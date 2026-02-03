@@ -69,6 +69,14 @@ means they must not do any network I/O, launch child processes, and
 should avoid anything but querying the parameters.
 
 
+Global Variables
+^^^^^^^^^^^^^^^^
+
+- ``populate_io_buffers``: ``true`` populates all I/O buffers on
+  startup.  This reduces waits for Linux kernel VM
+  compaction/migration.
+
+
 Control Listener
 ----------------
 

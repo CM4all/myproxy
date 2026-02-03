@@ -106,6 +106,7 @@ inc = include_directories(
   'libcommon/src',
 )
 
+libcommon_enable_EventLoopStats = true
 libcommon_enable_json = false
 libcommon_require_libcrypto = get_option('openssl')
 libcommon_enable_libssl = false

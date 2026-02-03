@@ -3,16 +3,23 @@
 // author: Max Kellermann <max.kellermann@ionos.com>
 
 #include "Instance.hxx"
+#include "event/PrometheusStats.hxx"
 #include "net/ToString.hxx"
 #include "time/Cast.hxx"
 #include "util/PrintException.hxx"
 
 #include <fmt/core.h>
 
+using std::string_view_literals::operator""sv;
+
 std::string
 Instance::OnPrometheusExporterRequest()
 {
+	constexpr auto process = "myproxy"sv;
+
 	auto s = fmt::format(R"(
+{}
+
 # HELP myproxy_connections_accepted Number of accepted MySQL connections (including those that were rejected later)
 # TYPE myproxy_connections_accepted counter
 
@@ -96,6 +103,7 @@ myproxy_client_auth_err {}
 myproxy_client_queries {}
 myproxy_lua_errors {}
 )",
+			   ToPrometheusString(event_loop.GetStats(), process),
 			   stats.n_accepted_connections,
 			   stats.n_rejected_connections,
 			   stats.n_client_bytes_received,

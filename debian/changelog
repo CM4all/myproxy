@@ -1,6 +1,6 @@
 cm4all-myproxy (0.30) unstable; urgency=low
 
-  * 
+  * fix build with glibc 2.43
 
  --   
 

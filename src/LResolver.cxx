@@ -73,11 +73,6 @@ RegisterLuaResolver(lua_State *L, EventLoop &event_loop, Stats &stats)
 		.ai_socktype = SOCK_STREAM,
 	};
 
-#ifdef ENABLE_CONTROL
-	Lua::PushResolveFunction(L, hints, BengControl::DEFAULT_PORT);
-	lua_setglobal(L, "control_resolve");
-#endif
-
 	Lua::PushResolveFunction(L, hints, 3306);
 	lua_setglobal(L, "mysql_resolve");
 
@@ -85,6 +80,16 @@ RegisterLuaResolver(lua_State *L, EventLoop &event_loop, Stats &stats)
 		       Lua::MakeCClosure(l_mysql_cluster,
 					 Lua::LightUserData{&event_loop},
 					 Lua::LightUserData{&stats}));
+
+#ifdef ENABLE_CONTROL
+	static constexpr struct addrinfo control_hints{
+		.ai_family = AF_UNSPEC,
+		.ai_socktype = SOCK_DGRAM,
+	};
+
+	Lua::PushResolveFunction(L, control_hints, BengControl::DEFAULT_PORT);
+	lua_setglobal(L, "control_resolve");
+#endif
 }
 
 void

@@ -71,6 +71,7 @@ Instance::OnControlPacket(BengControl::Command command,
 	case Command::REJECT_CLIENT:
 	case Command::TARPIT_CLIENT:
 	case Command::CANCEL_JOB:
+	case Command::EXPIRE_TCACHE_TAG:
 		break;
 
 	case Command::DISCONNECT_DATABASE:

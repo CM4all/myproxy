@@ -797,7 +797,7 @@ try {
 
 inline Co::InvokeTask
 Connection::InvokeLuaCommandPhase()
-{
+try {
 	const auto main_L = GetLuaState();
 	const Lua::ScopeCheckStack check_main_stack{main_L};
 
@@ -824,6 +824,9 @@ Connection::InvokeLuaCommandPhase()
 
 	/* now process postponed packets */
 	incoming.DeferRead();
+} catch (...) {
+	++stats.n_lua_errors;
+	throw;
 }
 
 inline Co::InvokeTask

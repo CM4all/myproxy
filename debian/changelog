@@ -1,5 +1,6 @@
 cm4all-myproxy (0.31) unstable; urgency=low
 
+  * fix two double free bugs after sending error reply
   * keep at least one mmap with "populate_io_buffers" enabled
   * fix build failure after OpenSSL 4.0 API change
 

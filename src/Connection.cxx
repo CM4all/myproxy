@@ -861,10 +861,10 @@ try {
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;
 
-		incoming.SendErr(sequence_id + 1,
-				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-				 err->msg);
-		SafeDelete();
+		if (incoming.SendErr(sequence_id + 1,
+				     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+				     err->msg))
+			SafeDelete();
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
 
@@ -938,10 +938,10 @@ try {
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;
 
-		incoming.SendErr(sequence_id + 1,
-				 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
-				 err->msg);
-		SafeDelete();
+		if (incoming.SendErr(sequence_id + 1,
+				     Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+				     err->msg))
+			SafeDelete();
 	} else if (auto *init_db = CheckLuaInitDbAction(L, -1)) {
 		/* the Lua function returned a database name to forward */
 		auto s = Mysql::MakeInitDb(sequence_id, init_db->database);

@@ -1,6 +1,6 @@
 cm4all-myproxy (0.31) unstable; urgency=low
 
-  * 
+  * keep at least one mmap with "populate_io_buffers" enabled
 
  --   
 

@@ -13,6 +13,8 @@
 
 #include <fmt/format.h>
 
+#include <cassert>
+
 int
 main(int argc, char **argv) noexcept
 try {
@@ -52,7 +54,24 @@ try {
 	if (!handler.finished)
 		event_loop.Run();
 
-	return EXIT_SUCCESS;
+	assert(handler.finished);
+
+	switch (handler.result) {
+	case CheckServerResult::OK:
+		return EXIT_SUCCESS;
+
+	case CheckServerResult::READ_ONLY:
+		fmt::print(stderr, "read_only\n");
+		return EXIT_FAILURE;
+
+	case CheckServerResult::AUTH_FAILED:
+		fmt::print(stderr, "auth_failed\n");
+		return EXIT_FAILURE;
+
+	case CheckServerResult::ERROR:
+		fmt::print(stderr, "error\n");
+		return EXIT_FAILURE;
+	}
 } catch (...) {
 	PrintException(std::current_exception());
 	return EXIT_FAILURE;

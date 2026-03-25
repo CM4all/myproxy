@@ -318,6 +318,9 @@ try {
 		}
 	}
 
+	if (payload.empty())
+		throw Mysql::MalformedPacket{};
+
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	if (!peer->command_phase) {

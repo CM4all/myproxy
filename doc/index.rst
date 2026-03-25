@@ -23,7 +23,7 @@ contains at least one :samp:`mysql_listen()` call, for example::
  end
 
  function handler.on_handshake_response(client, handshake_response)
-    return m:connect('192.168.1.99', handshake_response)
+    return client:connect('192.168.1.99', handshake_response)
  end
 
  mysql_listen('/run/cm4all/myproxy/myproxy.sock', handler)

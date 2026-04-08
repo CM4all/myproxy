@@ -5,8 +5,7 @@
 #include "CachingSha2Password.hxx"
 #include "SHA256.hxx"
 #include "lib/openssl/Error.hxx"
-#include "lib/openssl/MemBio.hxx"
-#include "lib/openssl/UniqueBIO.hxx"
+#include "lib/openssl/PemKey.hxx"
 #include "lib/openssl/UniqueEVP.hxx"
 #include "net/SocketProtocolError.hxx"
 #include "util/SpanCast.hxx"
@@ -74,17 +73,6 @@ CachingSha2Password::GenerateResponse(std::string_view password,
 	return buffer;
 }
 
-static UniqueEVP_PKEY
-ParsePublicKey(std::span<const std::byte> pem)
-{
-	const auto bio = BIO_new_mem_buf(pem);
-	EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bio.get(), nullptr, nullptr, nullptr);
-	if (pkey == nullptr)
-		throw SslError{"PEM_read_bio_PUBKEY() failed"};
-
-	return UniqueEVP_PKEY{pkey};
-}
-
 static AllocatedArray<std::byte>
 Encrypt(EVP_PKEY &key, std::span<const std::byte> src)
 {
@@ -137,7 +125,7 @@ MakeEncryptedPassword(std::string_view password,
 		      std::span<const std::byte, 20> auth_plugin_data,
 		      std::span<const std::byte> public_key_pem)
 {
-	const auto public_key = ParsePublicKey(public_key_pem);
+	const auto public_key = DecodePemPublicKey(ToStringView(public_key_pem));
 	const auto xor_password = XorPassword(password, auth_plugin_data);
 
 	return Encrypt(*public_key, xor_password);

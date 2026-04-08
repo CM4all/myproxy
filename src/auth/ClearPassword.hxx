@@ -6,9 +6,13 @@
 
 #include "Handler.hxx"
 
+#include <string>
+
 namespace Mysql {
 
 class ClearPassword final : public AuthHandler {
+	std::string buffer;
+
 public:
 	constexpr ClearPassword() noexcept
 		:AuthHandler("mysql_clear_password") {}

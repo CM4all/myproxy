@@ -18,7 +18,13 @@ ClearPassword::GenerateResponse(std::string_view password,
 	if (password.empty() && !password_sha1.empty())
 		throw std::invalid_argument{"Need clear-text password"};
 
-	return AsBytes(password);
+	/* the password must be null-terminated, but since we have
+	   only a std::string_view, we have to copy it to a
+	   std::string which implicitly appends a null terminator, and
+	   then include this null terminator in the return value */
+	buffer = password;
+	const std::string_view terminated_password{buffer.data(), buffer.length() + 1};
+	return AsBytes(terminated_password);
 }
 
 } // namespace Mysql

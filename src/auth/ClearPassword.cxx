@@ -3,7 +3,7 @@
 // author: Max Kellermann <max.kellermann@ionos.com>
 
 #include "ClearPassword.hxx"
-#include "MysqlSerializer.hxx"
+#include "util/SpanCast.hxx"
 
 #include <stdexcept>
 

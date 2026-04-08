@@ -451,6 +451,8 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 		   connection.GetName(), packet.server_version);
 
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, false);
+	if (!auth_handler)
+		throw SocketProtocolError{"Unsupported auth_plugin"};
 
 	const auto &action = *connection.connect_action;
 	const auto response =

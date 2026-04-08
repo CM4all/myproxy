@@ -1,5 +1,6 @@
 cm4all-myproxy (0.32) unstable; urgency=low
 
+  * fix crash after unsupported auth plugin was selected by server
   * check: reject empty reply packets
 
  --   

@@ -192,6 +192,8 @@ MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> pa
 	peer->capabilities = handshake.capabilities & client_flag;
 
 	auth_handler = Mysql::MakeAuthHandler(handshake.auth_plugin_name, false);
+	if (!auth_handler)
+		throw SocketProtocolError{"Unsupported auth_plugin"};
 
 	const auto auth_response =
 		auth_handler->GenerateResponse(options.password, {},

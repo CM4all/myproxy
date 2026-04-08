@@ -171,6 +171,13 @@ private:
 	void SafeDelete() noexcept;
 
 	/**
+	 * Send an ERR packet to the incoming socket and delete this
+	 * object.
+	 */
+	void AbortErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
+		      std::string_view sql_state, std::string_view msg) noexcept;
+
+	/**
 	 * The outgoing connection has failed.  Send an error to the
 	 * incoming client and close the connection.  After returning,
 	 * the #Connection object has been destroyed.

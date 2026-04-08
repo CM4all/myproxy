@@ -76,6 +76,19 @@ Connection::SafeDelete() noexcept
 	outgoing.reset();
 }
 
+void
+Connection::AbortErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
+		     std::string_view sql_state, std::string_view msg) noexcept
+{
+	if (incoming.SendErr(sequence_id, error_code, sql_state, msg))
+		/* sending has succeeded and this connection object is
+		   still alive; close it now */
+		SafeDelete();
+
+	/* if SendErr() fails, then this object has already been
+	   deleted and we omit the SafeDelete() call */
+}
+
 PeerHandler::WriteResult
 Connection::Outgoing::OnPeerWrite()
 {
@@ -236,10 +249,9 @@ Connection::OnSocketConnectError(std::exception_ptr e) noexcept
 
 	fmt::print(stderr, "[{}] {}\n", GetName(), e);
 
-	if (incoming.SendErr(incoming_handshake_response_sequence_id + 1,
-			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-			     "Connection error"sv))
-		SafeDelete();
+	AbortErr(incoming_handshake_response_sequence_id + 1,
+		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+		 "Connection error"sv);
 }
 
 inline MysqlHandler::Result
@@ -711,14 +723,13 @@ Connection::IsAccount(std::string_view account) const noexcept
 void
 Connection::OnOutgoingError(std::string_view msg) noexcept
 {
-	if (incoming.SendErr(incoming.command_phase
-			     ? 0
-			     : incoming_handshake_response_sequence_id + 1,
-			     incoming.command_phase
-			     ? Mysql::ErrorCode::UNKNOWN_COM_ERROR
-			     : Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-			     msg))
-		SafeDelete();
+	AbortErr(incoming.command_phase
+		 ? 0
+		 : incoming_handshake_response_sequence_id + 1,
+		 incoming.command_phase
+		 ? Mysql::ErrorCode::UNKNOWN_COM_ERROR
+		 : Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+		 msg);
 }
 
 inline void
@@ -774,10 +785,9 @@ try {
 		} else if (auto *err = CheckLuaErrAction(L, -1)) {
 			++stats.n_rejected_connections;
 
-			if (incoming.SendErr(0,
-					     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-					     err->msg))
-				SafeDelete();
+			AbortErr(0,
+				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+				 err->msg);
 			co_return;
 		} else
 			throw std::invalid_argument{"Bad return value"};
@@ -789,10 +799,9 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	if (incoming.SendErr(0,
-			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-			     "Lua error"sv))
-		SafeDelete();
+	AbortErr(0,
+		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+		 "Lua error"sv);
 }
 
 inline Co::InvokeTask
@@ -861,10 +870,9 @@ try {
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;
 
-		if (incoming.SendErr(sequence_id + 1,
-				     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-				     err->msg))
-			SafeDelete();
+		AbortErr(sequence_id + 1,
+			 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			 err->msg);
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
 
@@ -908,10 +916,9 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	if (incoming.SendErr(sequence_id + 1,
-			     Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-			     "Lua error"sv))
-		SafeDelete();
+	AbortErr(sequence_id + 1,
+		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+		 "Lua error"sv);
 }
 
 inline Co::InvokeTask
@@ -938,10 +945,9 @@ try {
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;
 
-		if (incoming.SendErr(sequence_id + 1,
-				     Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
-				     err->msg))
-			SafeDelete();
+		AbortErr(sequence_id + 1,
+			 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+			 err->msg);
 	} else if (auto *init_db = CheckLuaInitDbAction(L, -1)) {
 		/* the Lua function returned a database name to forward */
 		auto s = Mysql::MakeInitDb(sequence_id, init_db->database);
@@ -959,8 +965,7 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	if (incoming.SendErr(sequence_id + 1,
-			     Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
-			     "Lua error"sv))
-		SafeDelete();
+	AbortErr(sequence_id + 1,
+		 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+		 "Lua error"sv);
 }

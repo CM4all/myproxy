@@ -5,6 +5,7 @@
 #include "AsyncResolver.hxx"
 #include "event/systemd/ResolvedClient.hxx"
 #include "net/AllocatedSocketAddress.hxx"
+#include "net/InetAddress.hxx"
 #include "net/Parser.hxx"
 #include "net/Resolver.hxx"
 #include "lua/Class.hxx"
@@ -38,7 +39,7 @@ public:
 	}
 
 	/* virtual methods from ResolveHostnameHandler */
-	void OnResolveHostname(std::span<const SocketAddress> address) noexcept override {
+	void OnResolveHostname(std::span<const InetAddress> address) noexcept override {
 		Lua::ConsumeOperation(L);
 		Lua::NewSocketAddress(L, address.front());
 		Lua::Resume(L, 1);

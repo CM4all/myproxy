@@ -5,6 +5,7 @@
 #include "CachingSha2Password.hxx"
 #include "SHA256.hxx"
 #include "lib/openssl/Error.hxx"
+#include "lib/openssl/MemBio.hxx"
 #include "lib/openssl/UniqueBIO.hxx"
 #include "lib/openssl/UniqueEVP.hxx"
 #include "net/SocketProtocolError.hxx"
@@ -76,7 +77,7 @@ CachingSha2Password::GenerateResponse(std::string_view password,
 static UniqueEVP_PKEY
 ParsePublicKey(std::span<const std::byte> pem)
 {
-	UniqueBIO bio{BIO_new_mem_buf(pem.data(), pem.size())};
+	const auto bio = BIO_new_mem_buf(pem);
 	EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bio.get(), nullptr, nullptr, nullptr);
 	if (pkey == nullptr)
 		throw SslError{"PEM_read_bio_PUBKEY() failed"};

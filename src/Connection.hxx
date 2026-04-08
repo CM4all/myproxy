@@ -38,6 +38,17 @@ class Connection final
 	  PeerHandler, MysqlHandler,
 	  ConnectSocketHandler
 {
+	/**
+	 * This is a sequence id that will be used for unsolicited ERR
+	 * responses to the client (#incoming).  It is used when an
+	 * error has occurred that is not a result of a client request
+	 * and we cannot use a real sequence id.  This is strictly a
+	 * protocol violation, but may be better than silently closing
+	 * the connection with no information about the nature of the
+	 * error.
+	 */
+	static constexpr uint_least8_t bogus_sequence_id = 0;
+
 	Stats &stats;
 	NodeStats *outgoing_stats;
 

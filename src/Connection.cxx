@@ -724,7 +724,7 @@ void
 Connection::OnOutgoingError(std::string_view msg) noexcept
 {
 	AbortErr(incoming.command_phase
-		 ? 0
+		 ? bogus_sequence_id
 		 : incoming_handshake_response_sequence_id + 1,
 		 incoming.command_phase
 		 ? Mysql::ErrorCode::UNKNOWN_COM_ERROR
@@ -785,7 +785,7 @@ try {
 		} else if (auto *err = CheckLuaErrAction(L, -1)) {
 			++stats.n_rejected_connections;
 
-			AbortErr(0,
+			AbortErr(bogus_sequence_id,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 				 err->msg);
 			co_return;
@@ -799,7 +799,7 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	AbortErr(0,
+	AbortErr(bogus_sequence_id,
 		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 		 "Lua error"sv);
 }

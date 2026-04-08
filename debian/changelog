@@ -3,7 +3,7 @@ cm4all-myproxy (0.32) unstable; urgency=low
   * fix crash after unsupported auth plugin was selected by server
   * check: reject empty reply packets
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 08 Apr 2026 20:02:12 +0200
 
 cm4all-myproxy (0.31) unstable; urgency=low
 

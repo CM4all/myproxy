@@ -1,6 +1,6 @@
 cm4all-myproxy (0.33) unstable; urgency=low
 
-  * 
+  * lua/pg: delay PostgreSQL reconnect after repeated errors
 
  --   
 

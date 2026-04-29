@@ -351,6 +351,14 @@ try {
 	if (!incoming.handshake_response)
 		return OnHandshakeResponse(number, payload);
 
+	if (IsDelayed())
+		/* do not process further packets from the client
+		   while we're waiting for the completion of a
+		   (suspended) coroutine (e.g. a Lua script), as this
+		   may cause another coroutine to be started,
+		   canceling the old one */
+		return Result::BLOCKING;
+
 	if (!outgoing || !outgoing->peer.command_phase)
 		return Result::BLOCKING;
 
@@ -797,6 +805,10 @@ try {
 
 	/* write the handshake */
 	incoming.DeferWrite();
+
+	/* re-enable reading just in case (postponed) packets have
+	   arrived while this coroutine was suspended */
+	incoming.DeferRead();
 } catch (...) {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
@@ -914,6 +926,10 @@ try {
 				std::chrono::seconds{30});
 	} else
 		throw std::invalid_argument{"Bad return value"};
+
+	/* re-enable reading just in case (postponed) packets have
+	   arrived while this coroutine was suspended */
+	incoming.DeferRead();
 } catch (...) {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
@@ -963,6 +979,9 @@ try {
 	} else
 		throw std::invalid_argument{"Bad return value"};
 
+	/* re-enable reading just in case (postponed) packets have
+	   arrived while this coroutine was suspended */
+	incoming.DeferRead();
 } catch (...) {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());

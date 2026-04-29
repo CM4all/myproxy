@@ -4,6 +4,7 @@ cm4all-myproxy (0.33) unstable; urgency=low
   * lua/pg: delay PostgreSQL reconnect after repeated errors
   * lua/socket: rethrow C++ exception from resolver as Lua error
   * auth/mysql_clear_password: add missing null terminator
+  * block packets during lua callbacks
 
  --   
 

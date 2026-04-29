@@ -303,6 +303,8 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 	if (packet.database == database) {
 		/* no-op */
 
+		FinishServerResponse();
+
 		return incoming.SendOk(sequence_id + 1)
 			? Result::IGNORE
 			: Result::CLOSED;
@@ -333,6 +335,7 @@ Connection::OnChangeUser(uint_least8_t sequence_id,
 		if (!outgoing->peer.Send(s.Finish()))
 			return Result::CLOSED;
 
+		FinishServerResponse();
 		return Result::IGNORE;
 	}
 
@@ -366,6 +369,8 @@ try {
 
 	if (payload.empty())
 		throw Mysql::MalformedPacket{};
+
+	ExpectServerResponse(number);
 
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
@@ -616,6 +621,8 @@ try {
 		}
 	}
 
+	c.FinishServerResponse();
+
 	switch (cmd) {
 	case Mysql::Command::EOF_:
 		if (const auto duration = c.MaybeFinishQuery(); duration.count() >= 0)
@@ -644,6 +651,7 @@ try {
 	case Mysql::Command::RESET_CONNECTION:
 		break;
 	}
+
 
 	return Result::FORWARD;
 } catch (Mysql::MalformedPacket) {
@@ -734,12 +742,30 @@ void
 Connection::OnOutgoingError(std::string_view msg) noexcept
 {
 	AbortErr(incoming.command_phase
-		 ? bogus_sequence_id
+		 ? pending_response_sequence_id
 		 : incoming_handshake_response_sequence_id + 1,
 		 incoming.command_phase
 		 ? Mysql::ErrorCode::UNKNOWN_COM_ERROR
 		 : Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 		 msg);
+}
+
+inline void
+Connection::ExpectServerResponse(uint_least8_t request_sequence_id) noexcept
+{
+	if (pending_response_sequence_id > 0 && request_sequence_id == 0)
+		/* a new command starts at sequence_id 0; if another
+		   command is already waiting for a response, keep the
+		   older one */
+		return;
+
+	pending_response_sequence_id = request_sequence_id + 1;
+}
+
+inline void
+Connection::FinishServerResponse() noexcept
+{
+	pending_response_sequence_id = 0;
 }
 
 inline void

@@ -44,17 +44,6 @@ class Connection final
 	 */
 	static constexpr uint_least8_t initial_server_sequence_id = 0;
 
-	/**
-	 * This is a sequence id that will be used for unsolicited ERR
-	 * responses to the client (#incoming).  It is used when an
-	 * error has occurred that is not a result of a client request
-	 * and we cannot use a real sequence id.  This is strictly a
-	 * protocol violation, but may be better than silently closing
-	 * the connection with no information about the nature of the
-	 * error.
-	 */
-	static constexpr uint_least8_t bogus_sequence_id = 0;
-
 	Stats &stats;
 	NodeStats *outgoing_stats;
 
@@ -149,6 +138,13 @@ class Connection final
 	 */
 	uint_least8_t incoming_handshake_response_sequence_id;
 
+	/**
+	 * If a client command is waiting for its first server
+	 * response packet, this is the sequence_id that response must
+	 * use.  Zero means there is no pending response.
+	 */
+	uint_least8_t pending_response_sequence_id = 0;
+
 	bool got_raw_from_incoming, got_raw_from_outgoing;
 
 public:
@@ -200,6 +196,9 @@ private:
 	 * the #Connection object has been destroyed.
 	 */
 	void OnOutgoingError(std::string_view msg) noexcept;
+
+	void ExpectServerResponse(uint_least8_t request_sequence_id) noexcept;
+	void FinishServerResponse() noexcept;
 
 	bool IsDelayed() const noexcept {
 		return coroutine;

@@ -93,6 +93,8 @@ TextResultsetParser::OnMysqlPacket([[maybe_unused]] unsigned number,
 				   std::span<const std::byte> payload,
 				   [[maybe_unused]] bool complete)
 {
+	assert(!payload.empty());
+
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	switch (cmd) {

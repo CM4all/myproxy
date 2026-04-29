@@ -90,6 +90,8 @@ public:
 
 	/**
 	 * Throws on error.
+	 *
+	 * @param payload a non-empty payload
 	 */
 	Result OnMysqlPacket(unsigned number,
 			     std::span<const std::byte> payload,

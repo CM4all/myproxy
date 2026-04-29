@@ -7,7 +7,7 @@ cm4all-myproxy (0.33) unstable; urgency=low
   * auth/mysql_clear_password: add missing null terminator
   * block packets during lua callbacks
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Wed, 29 Apr 2026 17:33:47 +0200
 
 cm4all-myproxy (0.32) unstable; urgency=low
 

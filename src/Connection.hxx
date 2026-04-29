@@ -39,6 +39,12 @@ class Connection final
 	  ConnectSocketHandler
 {
 	/**
+	 * A sequence_id used to reject a new connection before the
+	 * handshake.
+	 */
+	static constexpr uint_least8_t initial_server_sequence_id = 0;
+
+	/**
 	 * This is a sequence id that will be used for unsolicited ERR
 	 * responses to the client (#incoming).  It is used when an
 	 * error has occurred that is not a result of a client request

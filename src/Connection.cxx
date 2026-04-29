@@ -795,7 +795,7 @@ try {
 		} else if (auto *err = CheckLuaErrAction(L, -1)) {
 			++stats.n_rejected_connections;
 
-			AbortErr(bogus_sequence_id,
+			AbortErr(initial_server_sequence_id,
 				 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 				 err->msg);
 			co_return;
@@ -813,7 +813,7 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	AbortErr(bogus_sequence_id,
+	AbortErr(initial_server_sequence_id,
 		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 		 "Lua error"sv);
 }

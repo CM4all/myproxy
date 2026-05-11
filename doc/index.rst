@@ -367,6 +367,28 @@ There are some `libsodium <https://www.libsodium.org/>`__ bindings.
   pk = sodium.crypto_scalarmult_base(sk)
 
 
+json
+^^^^
+
+If built with `nlohmann json <https://json.nlohmann.me/>`__, the
+following functions are available in the ``json`` namespace::
+
+- the function ``json.dump()`` converts the parameter to a JSON
+  string::
+
+    print(json.dump{x=42, y="z"})
+    {"x":42,"y":"z"}
+
+- the function ``json.parse()`` parses a JSON string and returns it as
+  a Lua value::
+
+    print(inspect(json.parse('{"x":42,"y":"z"}')))
+    {
+      x = 42,
+      y = "z"
+    }
+
+
 PostgreSQL Client
 ^^^^^^^^^^^^^^^^^
 

@@ -3,6 +3,7 @@
 
 MESON_OPTIONS = \
 	-Ddocumentation=enabled \
+	-Djson=enabled \
 	-Dsystemd=enabled \
 	-Dopenssl=enabled \
 	-Dpg=enabled \

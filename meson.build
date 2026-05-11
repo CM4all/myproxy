@@ -107,7 +107,7 @@ inc = include_directories(
 )
 
 libcommon_enable_EventLoopStats = true
-libcommon_enable_json = false
+libcommon_enable_json = get_option('json')
 libcommon_require_libcrypto = get_option('openssl')
 libcommon_enable_libssl = false
 openssl_min_version = '3'
@@ -117,6 +117,7 @@ sources = []
 
 subdir('libcommon/src/util')
 subdir('libcommon/src/lib/fmt')
+subdir('libcommon/src/lib/nlohmann_json')
 subdir('libcommon/src/lib/openssl')
 subdir('libcommon/src/lib/sodium')
 subdir('libcommon/src/io')
@@ -146,12 +147,17 @@ subdir('libcommon/src/lua/net')
 subdir('libcommon/src/lua/event')
 subdir('libcommon/src/lua/sodium')
 
+if nlohmann_json_dep.found()
+  subdir('libcommon/src/lua/json')
+else
+  lua_json_dep = nlohmann_json_dep
+endif
+
 if libsystemd.found()
   # systemd support also enables the systemd-resolved client which
   # uses a protocol with JSON payloads
   sources += 'src/AsyncResolver.cxx'
 
-  subdir('libcommon/src/lib/nlohmann_json')
   subdir('libcommon/src/event/systemd')
   libsystemd = event_systemd_dep
 endif
@@ -164,6 +170,7 @@ else
   lua_pg_dep = pg_dep
 endif
 
+conf.set('HAVE_JSON', nlohmann_json_dep.found())
 conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_OPENSSL', crypto_dep.found())
 conf.set('HAVE_PG', pg_dep.found())
@@ -223,6 +230,7 @@ executable(
     lua_io_dep,
     lua_net_dep,
     lua_event_dep,
+    lua_json_dep,
     lua_sodium_dep,
     lua_pg_dep,
     sodium_dep,

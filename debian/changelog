@@ -1,6 +1,7 @@
 cm4all-myproxy (0.34) unstable; urgency=low
 
   * fix assertion failure after connect error
+  * lua: add JSON library
 
  --   
 

@@ -38,6 +38,10 @@
 #include "lua/net/ControlClient.hxx"
 #endif
 
+#ifdef HAVE_JSON
+#include "lua/json/Init.hxx"
+#endif
+
 #ifdef HAVE_LIBSYSTEMD
 #include "AsyncResolver.hxx"
 #endif
@@ -196,6 +200,10 @@ SetupConfigState(lua_State *L, Instance &instance)
 	Lua::InitResume(L);
 
 	Lua::InitSodium(L);
+
+#ifdef HAVE_JSON
+	Lua::InitJson(L);
+#endif
 
 	Lua::InitEvent(L, instance.GetEventLoop());
 

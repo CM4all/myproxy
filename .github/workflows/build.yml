@@ -47,6 +47,7 @@ jobs:
         run: |
           meson setup \
             -Ddocumentation=disabled \
+            -Djson=enabled \
             -Dopenssl=enabled \
             -Dsystemd=enabled \
             -Dpg=enabled \

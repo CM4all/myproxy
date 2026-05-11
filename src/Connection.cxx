@@ -913,6 +913,7 @@ try {
 		AbortErr(sequence_id + 1,
 			 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
 			 err->msg);
+		co_return;
 	} else if (auto *c = CheckLuaConnectAction(L, -1)) {
 		connect_action = std::move(*c);
 
@@ -948,8 +949,9 @@ try {
 		/* connect to the outgoing server and perform the
 		   handshake to it */
 		fmt::print("[{}] connecting to {}\n", GetName(), address);
-		connect.Connect(address,
-				std::chrono::seconds{30});
+		if (!connect.Connect(address,
+				     std::chrono::seconds{30}))
+			co_return;
 	} else
 		throw std::invalid_argument{"Bad return value"};
 

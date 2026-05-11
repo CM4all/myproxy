@@ -3,7 +3,7 @@ cm4all-myproxy (0.34) unstable; urgency=low
   * fix assertion failure after connect error
   * lua: add JSON and JWT library
 
- --   
+ -- Max Kellermann <mk@cm4all.com>  Mon, 11 May 2026 13:28:41 +0200
 
 cm4all-myproxy (0.33) unstable; urgency=low
 

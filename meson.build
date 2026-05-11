@@ -153,6 +153,14 @@ else
   lua_json_dep = nlohmann_json_dep
 endif
 
+if nlohmann_json_dep.found() and sodium_dep.found()
+  crypto_dep = dependency('', required: false)
+  subdir('libcommon/src/jwt')
+  subdir('libcommon/src/lua/jwt')
+else
+  lua_jwt_dep = dependency('', required: false)
+endif
+
 if libsystemd.found()
   # systemd support also enables the systemd-resolved client which
   # uses a protocol with JSON payloads
@@ -171,6 +179,7 @@ else
 endif
 
 conf.set('HAVE_JSON', nlohmann_json_dep.found())
+conf.set('HAVE_JWT', lua_jwt_dep.found())
 conf.set('HAVE_LIBSYSTEMD', libsystemd.found())
 conf.set('HAVE_OPENSSL', crypto_dep.found())
 conf.set('HAVE_PG', pg_dep.found())
@@ -231,6 +240,7 @@ executable(
     lua_net_dep,
     lua_event_dep,
     lua_json_dep,
+    lua_jwt_dep,
     lua_sodium_dep,
     lua_pg_dep,
     sodium_dep,

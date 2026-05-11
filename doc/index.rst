@@ -389,6 +389,20 @@ following functions are available in the ``json`` namespace::
     }
 
 
+JWT
+^^^
+
+The function `jwt.sign()` generates a JSON Web Token::
+
+  pk, sk = sodium.crypto_sign_keypair()
+  header = {kid='foo'}
+  payload = {iss="joe",exp=1300819380}
+  token = jwt.sign(sk, header, payload)
+
+The JWT library requires building with ``nlohmann_json`` and
+``libsodium``.
+
+
 PostgreSQL Client
 ^^^^^^^^^^^^^^^^^
 

@@ -1,5 +1,7 @@
 [Unit]
 Description=CM4all MySQL proxy
+Documentation=https://myproxy.readthedocs.io/
+
 Wants=network-online.target
 After=network-online.target
 

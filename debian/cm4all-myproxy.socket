@@ -1,4 +1,6 @@
 [Socket]
+Documentation=https://myproxy.readthedocs.io/
+
 ListenStream=/run/cm4all/myproxy/socket
 PassCredentials=true
 

@@ -31,7 +31,7 @@ extern "C" {
 
 #include <sha1.h> // for SHA1_DIGEST_LENGTH
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 using std::string_view_literals::operator""sv;
 

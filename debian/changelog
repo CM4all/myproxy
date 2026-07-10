@@ -8,7 +8,7 @@ cm4all-myproxy (0.35) unstable; urgency=low
   * debian: add lintian override "no-manual-page"
   * debian/control: set "Priority: optional"
 
- --   
+ -- Max Kellermann <max.kellermann@ionos.com>  Fri, 10 Jul 2026 13:16:59 +0200
 
 cm4all-myproxy (0.34) unstable; urgency=low
 

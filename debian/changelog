@@ -1,6 +1,6 @@
 cm4all-myproxy (0.35) unstable; urgency=low
 
-  * 
+  * debian: build-depend on pkgconf instead of pkg-config
 
  --   
 

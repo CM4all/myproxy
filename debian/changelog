@@ -4,6 +4,7 @@ cm4all-myproxy (0.35) unstable; urgency=low
   * support libfmt 12.2.0
   * debian: build-depend on pkgconf instead of pkg-config
   * debian: add copyright file
+  * debian: add source/format file
 
  --   
 

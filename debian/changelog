@@ -3,6 +3,7 @@ cm4all-myproxy (0.35) unstable; urgency=low
   * apply "populate_io_buffers" only to the first memory area
   * support libfmt 12.2.0
   * debian: build-depend on pkgconf instead of pkg-config
+  * debian: add copyright file
 
  --   
 

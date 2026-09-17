@@ -1,6 +1,6 @@
 cm4all-myproxy (0.36) unstable; urgency=low
 
-  * 
+  * fix use-after-free bug on INIT_DB
 
  --   
 

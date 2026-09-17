@@ -207,7 +207,7 @@ private:
 	Co::InvokeTask InvokeLuaConnect();
 	Co::InvokeTask InvokeLuaHandshakeResponse(uint_least8_t sequence_id) noexcept;
 	Co::InvokeTask InvokeLuaCommandPhase();
-	Co::InvokeTask InvokeLuaInitDb(uint_least8_t sequence_id, std::string_view db_name) noexcept;
+	Co::InvokeTask InvokeLuaInitDb(uint_least8_t sequence_id, std::string db_name) noexcept;
 
 	Result OnHandshakeResponse(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);

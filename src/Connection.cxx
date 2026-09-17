@@ -311,7 +311,11 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 	}
 
 	if (handler->HasOnInitDb()) {
-		StartCoroutine(InvokeLuaInitDb(sequence_id, packet.database));
+		/* must copy packet.database to a new allocation
+		   because the coroutine will run after this method
+		   returns after the "payload" memory area will be
+		   freed */
+		StartCoroutine(InvokeLuaInitDb(sequence_id, std::string{packet.database}));
 		return Result::IGNORE;
 	}
 
@@ -968,7 +972,7 @@ try {
 }
 
 inline Co::InvokeTask
-Connection::InvokeLuaInitDb(uint_least8_t sequence_id, std::string_view db_name) noexcept
+Connection::InvokeLuaInitDb(uint_least8_t sequence_id, const std::string db_name) noexcept
 try {
 	const auto main_L = GetLuaState();
 	const Lua::ScopeCheckStack check_main_stack{main_L};

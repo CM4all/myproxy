@@ -16,7 +16,7 @@ cm4all-myproxy (0.36) unstable; urgency=low
   * prometheus: close connections after 30 seconds
   * meson.build: fix bug that caused "caching_sha2_password" to be unavailable
 
- --   
+ -- Max Kellermann <max.kellermann@ionos.com>  Mon, 05 Oct 2026 16:49:10 +0200
 
 cm4all-myproxy (0.35) unstable; urgency=low
 

@@ -17,6 +17,7 @@
 #include "lib/fmt/ExceptionFormatter.hxx"
 #include "lib/fmt/RuntimeError.hxx"
 #include "lib/fmt/SocketAddressFormatter.hxx"
+#include "event/CoarseTimerEvent.hxx"
 #include "event/net/ConnectSocket.hxx"
 #include "net/SocketAddress.hxx"
 #include "net/SocketProtocolError.hxx"
@@ -45,6 +46,11 @@ class MysqlCheck final
 	SocketAddress address;
 
 	const CheckOptions &options;
+
+	/**
+	 * Limits the total duration of this check.
+	 */
+	CoarseTimerEvent timeout;
 
 	ConnectSocket connect;
 
@@ -79,11 +85,13 @@ public:
 		   CheckServerHandler &_handler) noexcept
 		:handler(_handler),
 		 options(_options),
+		 timeout(event_loop, BIND_THIS_METHOD(OnTimeout)),
 		 connect(event_loop, *this) {}
 
 	void Start(SocketAddress _address, CancellablePointer &cancel_ptr) noexcept {
 		address = _address;
 		cancel_ptr = *this;
+		timeout.Schedule(std::chrono::seconds{20});
 		connect.Connect(address, std::chrono::seconds{10});
 	}
 
@@ -128,6 +136,10 @@ private:
 	Result OnAuthSwitchRequest(uint_least8_t sequence_id,
 				   std::span<const std::byte> payload);
 	Result OnCommandPhase();
+
+	void OnTimeout() noexcept {
+		DestroyError("timeout");
+	}
 
 	/* virtual methods from Cancellable */
 	void Cancel() noexcept override {

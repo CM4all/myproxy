@@ -1027,7 +1027,6 @@ try {
 			co_return;
 
 		database = init_db->database;
-		co_return;
 	} else
 		throw std::invalid_argument{"Bad return value"};
 

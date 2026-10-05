@@ -477,7 +477,8 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 		   connection.GetName(), packet.server_version);
 
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
-					      {.strict = false});
+					      {.allow_clear_password = connection.allow_clear_password,
+					       .strict = false});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 
@@ -510,7 +511,8 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 	const auto packet = Mysql::ParseAuthSwitchRequest(payload);
 
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
-					      {.strict = true});
+					      {.allow_clear_password = connection.allow_clear_password,
+					       .strict = true});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 
@@ -938,6 +940,7 @@ try {
 			AtScopeExit(L) { lua_pop(L, 1); };
 
 			auto &cluster = Cluster::Cast(L, -1);
+			allow_clear_password = cluster.GetOptions().check.allow_clear_password;
 
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();

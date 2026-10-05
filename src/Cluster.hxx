@@ -117,6 +117,10 @@ public:
 	[[gnu::pure]]
 	static Cluster &Cast(lua_State *L, int idx) noexcept;
 
+	const auto &GetOptions() const noexcept {
+		return options;
+	}
+
 	bool IsReady() const noexcept {
 		return !options.monitoring || found_alive || n_unknown == 0;
 	}

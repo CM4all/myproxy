@@ -12,6 +12,11 @@ struct CheckOptions {
 	std::string user, password;
 
 	/**
+	 * Allow authenticating with "mysql_clear_password"?
+	 */
+	bool allow_clear_password = false;
+
+	/**
 	 * Prefer servers without the #read_only attribute?
 	 */
 	bool no_read_only = false;

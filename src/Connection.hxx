@@ -147,6 +147,8 @@ class Connection final
 
 	bool got_raw_from_incoming, got_raw_from_outgoing;
 
+	bool allow_clear_password = false;
+
 public:
 	Connection(EventLoop &event_loop, Stats &_stats,
 		   std::shared_ptr<LuaHandler> _handler,

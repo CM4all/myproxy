@@ -20,6 +20,9 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 		else if (key == "password"sv)
 			check.password = Lua::CheckStringView(L, value_idx,
 							      "Bad 'password' value");
+		else if (key == "allow_clear_password"sv)
+			check.allow_clear_password = Lua::CheckBool(L, value_idx,
+								    "Bad 'allow_clear_password' value");
 		else if (key == "no_read_only"sv)
 			check.no_read_only = Lua::CheckBool(L, value_idx,
 							    "Bad 'no_read_only' value");

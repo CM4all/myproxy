@@ -476,7 +476,8 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 	fmt::print("[{}] handshake server_version={:?}\n",
 		   connection.GetName(), packet.server_version);
 
-	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, false);
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
+					      {.strict = false});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 
@@ -508,7 +509,8 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 
 	const auto packet = Mysql::ParseAuthSwitchRequest(payload);
 
-	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, true);
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
+					      {.strict = true});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 

@@ -191,7 +191,8 @@ MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> pa
 
 	peer->capabilities = handshake.capabilities & client_flag;
 
-	auth_handler = Mysql::MakeAuthHandler(handshake.auth_plugin_name, false);
+	auth_handler = Mysql::MakeAuthHandler(handshake.auth_plugin_name,
+					      {.strict = false});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 
@@ -221,7 +222,8 @@ MysqlCheck::OnAuthSwitchRequest(uint_least8_t sequence_id,
 
 	const auto packet = ParseAuthSwitchRequest(payload);
 
-	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name, true);
+	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
+					      {.strict = true});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
 

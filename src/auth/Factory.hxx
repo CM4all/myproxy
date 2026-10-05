@@ -11,7 +11,11 @@ namespace Mysql {
 
 class AuthHandler;
 
+struct AuthFactoryOptions {
+	bool strict = true;
+};
+
 std::unique_ptr<AuthHandler>
-MakeAuthHandler(std::string_view plugin_name, bool strict) noexcept;
+MakeAuthHandler(std::string_view plugin_name, AuthFactoryOptions options) noexcept;
 
 } // namespace Mysql

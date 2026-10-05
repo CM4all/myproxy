@@ -17,7 +17,7 @@ using std::string_view_literals::operator""sv;
 namespace Mysql {
 
 std::unique_ptr<AuthHandler>
-MakeAuthHandler(std::string_view plugin_name, bool strict) noexcept
+MakeAuthHandler(std::string_view plugin_name, AuthFactoryOptions options) noexcept
 {
 	if (plugin_name == "mysql_clear_password"sv)
 		return std::make_unique<ClearPassword>();
@@ -27,7 +27,7 @@ MakeAuthHandler(std::string_view plugin_name, bool strict) noexcept
 	else if (plugin_name == "caching_sha2_password"sv)
 		return std::make_unique<CachingSha2Password>();
 #endif // HAVE_OPENSSL
-	else if (!strict || plugin_name == "mysql_native_password"sv)
+	else if (!options.strict || plugin_name == "mysql_native_password"sv)
 		return std::make_unique<NativePassword>();
 	else
 		return {};

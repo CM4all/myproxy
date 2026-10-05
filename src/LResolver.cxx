@@ -51,8 +51,10 @@ try {
 
 	ClusterOptions options;
 
-	if (lua_gettop(L) >= 2)
+	if (lua_gettop(L) >= 2) {
+		luaL_argcheck(L, lua_istable(L, 2), 1, "Table expected");
 		options.ApplyLuaTable(L, 2);
+	}
 
 	luaL_argcheck(L, !nodes.empty(), 1, "Cluster is empty");
 

@@ -159,7 +159,8 @@ try {
 		.bind_address = Lua::CheckSocketAddress(L, 1, BengControl::DEFAULT_PORT, true),
 	};
 
-	if (top >= 2)
+	if (top >= 2) {
+		luaL_argcheck(L, lua_istable(L, 2), 1, "Table expected");
 		Lua::ApplyOptionsTable(L, 2, [&config, L](std::string_view key, auto value_idx){
 			if (key == "interface"sv)
 				config.interface = Lua::CheckStringView(L, value_idx,
@@ -169,6 +170,7 @@ try {
 			else
 				throw Lua::ArgError{"Unknown option"};
 		});
+	}
 
 	instance.AddControlListener(config);
 

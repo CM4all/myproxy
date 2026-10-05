@@ -30,6 +30,8 @@ public:
 		:L(_L) {}
 
 	void Start(EventLoop &event_loop, std::string_view hostname) noexcept {
+		assert(!cancel_ptr);
+
 		ResolveHostname(event_loop, hostname, 3306, AF_UNSPEC,
 				*this, cancel_ptr);
 	}
@@ -40,12 +42,17 @@ public:
 
 	/* virtual methods from ResolveHostnameHandler */
 	void OnResolveHostname(std::span<const InetAddress> address) noexcept override {
+		assert(!address.empty());
+		assert(cancel_ptr);
+
 		Lua::ConsumeOperation(L);
 		Lua::NewSocketAddress(L, address.front());
 		Lua::Resume(L, 1);
 	}
 
 	void OnResolveHostnameError(std::exception_ptr error) noexcept override {
+		assert(error);
+
 		Lua::ConsumeOperation(L);
 
 		/* return [nil, error_message] for assert() */

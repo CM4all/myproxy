@@ -49,9 +49,7 @@ public:
 		Lua::ConsumeOperation(L);
 
 		/* return [nil, error_message] for assert() */
-		Lua::Push(L, nullptr);
-		Lua::Push(L, std::move(error));
-		Lua::Resume(L, 2);
+		Lua::Resume(L, Lua::ReturnException(L, std::move(error)));
 	}
 };
 

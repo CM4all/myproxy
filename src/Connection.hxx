@@ -100,6 +100,12 @@ class Connection final
 	private:
 		std::unique_ptr<Mysql::AuthHandler> auth_handler;
 
+		/**
+		 * The number of packets received from the server
+		 * during authentication.
+		 */
+		unsigned n_auth_packets = 0;
+
 	public:
 		Outgoing(Connection &_connection,
 			 NodeStats &_stats,

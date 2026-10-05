@@ -52,6 +52,12 @@ class MysqlCheck final
 
 	std::unique_ptr<Mysql::AuthHandler> auth_handler;
 
+	/**
+	 * The number of packets received from the server during
+	 * authentication.
+	 */
+	unsigned n_auth_packets = 0;
+
 	std::optional<Mysql::TextResultsetParser> text_resultset_parser;
 
 	/**
@@ -330,6 +336,9 @@ try {
 	const auto cmd = static_cast<Mysql::Command>(payload.front());
 
 	if (!peer->command_phase) {
+		if (++n_auth_packets > Mysql::MAX_AUTH_PACKETS)
+			throw SocketProtocolError{"Too many authentication packets"};
+
 		switch (cmd) {
 		case Mysql::Command::OK:
 			peer->command_phase = true;

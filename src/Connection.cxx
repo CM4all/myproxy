@@ -588,6 +588,9 @@ try {
 	if (!peer.command_phase) {
 		assert(!c.incoming.command_phase);
 
+		if (++n_auth_packets > Mysql::MAX_AUTH_PACKETS)
+			throw SocketProtocolError{"Too many authentication packets"};
+
 		if (auth_handler) {
 			if (const auto new_payload = auth_handler->HandlePacket(payload);
 			    new_payload.data() != nullptr) {

@@ -5,6 +5,7 @@ cm4all-myproxy (0.36) unstable; urgency=low
   * fix crash on early systemd-resolved error
   * fix two use-after-free bugs on INIT_DB
   * refuse COM_CHANGE_USER to a different user/database
+  * auth: limit the number of authentication cycles
   * auth/mysql_clear_password: disable by default
   * auth/caching_sha2_password: limit the RSA key size and exponent
   * prometheus: close connections after 30 seconds

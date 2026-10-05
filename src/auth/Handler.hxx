@@ -12,6 +12,15 @@ namespace Mysql {
 
 class PacketSerializer;
 
+/**
+ * The maximum number of packets the server may send after the
+ * handshake until authentication completes.  This limits the
+ * (CPU) cost a malicious server can cause; a legitimate exchange
+ * needs at most AuthSwitchRequest, fast auth result, public key
+ * and OK/ERR.
+ */
+static constexpr unsigned MAX_AUTH_PACKETS = 8;
+
 class AuthHandler {
 	std::string_view name;
 

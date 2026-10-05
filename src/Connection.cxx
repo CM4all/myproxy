@@ -99,6 +99,11 @@ Connection::Outgoing::OnPeerWrite()
 		break;
 
 	case MysqlReader::FlushResult::BLOCKING:
+		/* this means the server socket is full; it cannot be
+		   caused by a suspended coroutine because no
+		   coroutine is started while forwarded data is
+		   pending */
+		assert(!connection.IsDelayed());
 		return WriteResult::MORE;
 
 	case MysqlReader::FlushResult::MORE:

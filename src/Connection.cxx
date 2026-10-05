@@ -1019,6 +1019,7 @@ try {
 		AbortErr(sequence_id + 1,
 			 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
 			 err->msg);
+		co_return;
 	} else if (auto *init_db = CheckLuaInitDbAction(L, -1)) {
 		/* the Lua function returned a database name to forward */
 		auto s = Mysql::MakeInitDb(sequence_id, init_db->database);

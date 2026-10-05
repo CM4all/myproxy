@@ -75,6 +75,27 @@ MysqlReader::Process(BufferedSocket &socket) noexcept
 			break;
 
 		case MysqlHandler::Result::BLOCKING:
+			if (HasPendingForward()) {
+				/* the handler may have refused to
+				   handle this packet until previously
+				   forwarded data has been flushed;
+				   flush it and try again */
+				switch (Flush(socket)) {
+				case FlushResult::DRAINED:
+					/* try again */
+					continue;
+
+				case FlushResult::BLOCKING:
+					return ProcessResult::BLOCKING;
+
+				case FlushResult::MORE:
+					return ProcessResult::MORE;
+
+				case FlushResult::CLOSED:
+					return ProcessResult::CLOSED;
+				}
+			}
+
 			return ProcessResult::BLOCKING;
 
 		case MysqlHandler::Result::IGNORE:

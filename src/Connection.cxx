@@ -301,6 +301,12 @@ Connection::OnInitDb(uint_least8_t sequence_id,
 	assert(outgoing);
 	assert(outgoing->peer.command_phase);
 
+	if (incoming.HasPendingForward())
+		/* we may send an INIT_DB packet to the server, which
+		   must not be inserted in the middle of a forwarded
+		   packet; let MysqlReader flush it first */
+		return Result::BLOCKING;
+
 	const auto packet = Mysql::ParseInitDb(payload);
 
 	if (packet.database == database) {
@@ -332,6 +338,13 @@ Connection::OnChangeUser(uint_least8_t sequence_id,
 	assert(incoming.command_phase);
 	assert(outgoing);
 	assert(outgoing->peer.command_phase);
+
+	if (incoming.HasPendingForward())
+		/* we may send a RESET_CONNECTION packet to the
+		   server, which must not be inserted in the middle of
+		   a forwarded packet; let MysqlReader flush it
+		   first */
+		return Result::BLOCKING;
 
 	const auto packet = Mysql::ParseChangeUser(payload, incoming.capabilities);
 

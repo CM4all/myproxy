@@ -28,6 +28,14 @@ public:
 	explicit constexpr MysqlReader(MysqlHandler &_handler) noexcept
 		:handler(_handler) {}
 
+	/**
+	 * Is there data from a previous FORWARD packet which has not
+	 * yet been passed to OnMysqlRaw()?
+	 */
+	bool HasPendingForward() const noexcept {
+		return forward_remaining > 0;
+	}
+
 	enum class ProcessResult {
 		/**
 		 * The Process() method has finished successfully.

@@ -84,6 +84,10 @@ public:
 		return socket.GetSocket();
 	}
 
+	bool HasPendingForward() const noexcept {
+		return reader.HasPendingForward();
+	}
+
 	BufferedReadResult Read() noexcept {
 		return socket.Read();
 	}

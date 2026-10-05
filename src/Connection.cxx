@@ -284,6 +284,9 @@ Connection::OnHandshakeResponse(uint_least8_t sequence_id,
 	password = _password;
 	database = packet.database;
 
+	if (packet.capabilities & Mysql::CLIENT_PROTOCOL_41)
+		character_set = packet.character_set;
+
 	incoming.handshake_response = true;
 
 	StartCoroutine(InvokeLuaHandshakeResponse(sequence_id));
@@ -491,6 +494,7 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 
 	auto s = Mysql::MakeHandshakeResponse41(sequence_id + 1,
 						connection.incoming.capabilities,
+						connection.character_set,
 						action.user,
 						ToStringView(response),
 						action.database,

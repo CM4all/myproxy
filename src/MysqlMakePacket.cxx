@@ -50,6 +50,7 @@ MakeHandshakeV10(std::string_view server_version,
 
 PacketSerializer
 MakeHandshakeResponse41(uint_least8_t sequence_id, uint_least32_t client_flag,
+			uint_least8_t character_set,
 			std::string_view user, std::string_view auth_response,
 			std::string_view database,
 			std::string_view client_plugin_name)
@@ -73,7 +74,7 @@ MakeHandshakeResponse41(uint_least8_t sequence_id, uint_least32_t client_flag,
 	Mysql::PacketSerializer s{sequence_id};
 	s.WriteInt4(client_flag);
 	s.WriteInt4(0x1000000); // max_packet_size
-	s.WriteInt1(0x21); // character_set
+	s.WriteInt1(character_set);
 	s.WriteZero(23); // filler
 	s.WriteNullTerminatedString(user);
 	s.WriteLengthEncodedString(auth_response);

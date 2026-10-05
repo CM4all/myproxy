@@ -155,6 +155,13 @@ class Connection final
 
 	bool allow_clear_password = false;
 
+	/**
+	 * The character set requested by the client in its
+	 * HandshakeResponse; it is passed to the server.  Defaults to
+	 * the one announced in our handshake (utf8_general_ci).
+	 */
+	uint_least8_t character_set = 0x21;
+
 public:
 	Connection(EventLoop &event_loop, Stats &_stats,
 		   std::shared_ptr<LuaHandler> _handler,

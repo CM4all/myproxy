@@ -22,6 +22,7 @@ MakeHandshakeV10(std::string_view server_version,
 
 PacketSerializer
 MakeHandshakeResponse41(uint_least8_t sequence_id, uint_least32_t client_flag,
+			uint_least8_t character_set,
 			std::string_view user, std::string_view auth_response,
 			std::string_view database,
 			std::string_view client_plugin_name);

@@ -210,6 +210,7 @@ MysqlCheck::OnHandshake(uint_least8_t sequence_id, std::span<const std::byte> pa
 
 	auto s = Mysql::MakeHandshakeResponse41(sequence_id + 1,
 						peer->capabilities,
+						0x21, // utf8_general_ci
 						options.user,
 						ToStringView(auth_response),
 						{},

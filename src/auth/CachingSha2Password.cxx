@@ -5,11 +5,13 @@
 #include "CachingSha2Password.hxx"
 #include "SHA256.hxx"
 #include "lib/openssl/Error.hxx"
+#include "lib/openssl/EvpParam.hxx"
 #include "lib/openssl/PemKey.hxx"
 #include "lib/openssl/UniqueEVP.hxx"
 #include "net/SocketProtocolError.hxx"
 #include "util/SpanCast.hxx"
 
+#include <openssl/core_names.h>
 #include <openssl/pem.h>
 
 #include <algorithm> // for std::fill()
@@ -74,6 +76,23 @@ CachingSha2Password::GenerateResponse(std::string_view password,
 	return buffer;
 }
 
+/**
+ * @return false if the server public key is not acceptable
+ */
+[[nodiscard]] [[gnu::pure]]
+static bool
+CheckServerPublicKey(const EVP_PKEY &key) noexcept
+try {
+	/* the key was chosen by the server; limit the cost of the
+	   encryption */
+	return EVP_PKEY_is_a(&key, "RSA") &&
+		EVP_PKEY_get_bits(&key) <= 4096 &&
+		BN_num_bits(GetBNParam<false>(key, OSSL_PKEY_PARAM_RSA_E).get()) <= 64;
+} catch (...) {
+	// GetBNParam() may throw on OpenSSL error
+	return false;
+}
+
 static AllocatedArray<std::byte>
 Encrypt(EVP_PKEY &key, std::span<const std::byte> src)
 {
@@ -128,6 +147,10 @@ MakeEncryptedPassword(std::string_view password,
 		      std::span<const std::byte> public_key_pem)
 {
 	const auto public_key = DecodePemPublicKey(ToStringView(public_key_pem));
+
+	if (!CheckServerPublicKey(*public_key))
+		throw std::invalid_argument{"Unsupported server public key"};
+
 	const auto xor_password = XorPassword(password, auth_plugin_data);
 
 	return Encrypt(*public_key, xor_password);

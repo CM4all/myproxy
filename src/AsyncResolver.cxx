@@ -86,10 +86,7 @@ l_mysql_async_resolve(lua_State *L)
 				throw;
 		}
 	} catch (...) {
-		/* return [nil, error_message] for assert() */
-		Lua::Push(L, nullptr);
-		Lua::Push(L, std::current_exception());
-		return 2;
+		return Lua::ReturnCurrentException(L);
 	}
 
 	/* if the bare parser fails, fall back to systemd-resolved */

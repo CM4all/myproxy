@@ -12,6 +12,7 @@
 
 #include <openssl/pem.h>
 
+#include <algorithm> // for std::fill()
 #include <stdexcept>
 
 namespace Mysql {

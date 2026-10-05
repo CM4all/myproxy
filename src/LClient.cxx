@@ -122,13 +122,13 @@ try {
 	} else
 		action.address = Lua::ToSocketAddress(L, 2, 3306);
 
-	luaL_argcheck(L, lua_istable(L, 3), 1, "Table expected");
+	luaL_checktype(L, 3, LUA_TTABLE);
 	Lua::ApplyOptionsTable(L, 3, [L, &action](std::string_view key, auto value_idx){
 		Apply(L, action, key, value_idx);
 	});
 
 	if (top >= 4) {
-		luaL_argcheck(L, lua_istable(L, 4), 1, "Table expected");
+		luaL_checktype(L, 4, LUA_TTABLE);
 		action.options.ApplyLuaTable(L, 4);
 	}
 

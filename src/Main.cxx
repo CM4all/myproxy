@@ -160,7 +160,7 @@ try {
 	};
 
 	if (top >= 2) {
-		luaL_argcheck(L, lua_istable(L, 2), 1, "Table expected");
+		luaL_checktype(L, 2, LUA_TTABLE);
 		Lua::ApplyOptionsTable(L, 2, [&config, L](std::string_view key, auto value_idx){
 			if (key == "interface"sv)
 				config.interface = Lua::CheckStringView(L, value_idx,

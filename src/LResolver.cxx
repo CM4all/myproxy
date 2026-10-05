@@ -38,7 +38,7 @@ try {
 	if (lua_gettop(L) > 2)
 		return luaL_error(L, "Too many parameters");
 
-	luaL_argcheck(L, lua_istable(L, 1), 1, "Table expected");
+	luaL_checktype(L, 1, LUA_TTABLE);
 
 	std::forward_list<AllocatedSocketAddress> nodes;
 
@@ -52,7 +52,7 @@ try {
 	ClusterOptions options;
 
 	if (lua_gettop(L) >= 2) {
-		luaL_argcheck(L, lua_istable(L, 2), 1, "Table expected");
+		luaL_checktype(L, 2, LUA_TTABLE);
 		options.ApplyLuaTable(L, 2);
 	}
 

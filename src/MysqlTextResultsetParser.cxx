@@ -36,10 +36,17 @@ inline TextResultsetParser::Result
 TextResultsetParser::OnResponse(std::span<const std::byte> payload)
 {
 	switch (state) {
-	case State::COLUMN_COUNT:
-		values.ResizeDiscard(Mysql::ParseQueryMetadata(payload).column_count);
-		state = State::COLUMN_DEFINITON;
-		return Result::MORE;
+	case State::COLUMN_COUNT: {
+		if (const auto metadata = Mysql::ParseQueryMetadata(payload);
+		    metadata.column_count > 4096)
+			/* sanity check to avoid unbounded allocations */
+			throw SocketProtocolError{"Too many columns"};
+		else {
+			values.ResizeDiscard(metadata.column_count);
+			state = State::COLUMN_DEFINITON;
+			return Result::MORE;
+		}
+	}
 
 	case State::COLUMN_DEFINITON:
 		return Result::MORE;

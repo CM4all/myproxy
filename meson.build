@@ -154,7 +154,6 @@ else
 endif
 
 if nlohmann_json_dep.found() and sodium_dep.found()
-  crypto_dep = dependency('', required: false)
   subdir('libcommon/src/jwt')
   subdir('libcommon/src/lua/jwt')
 else

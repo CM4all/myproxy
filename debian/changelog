@@ -4,6 +4,7 @@ cm4all-myproxy (0.36) unstable; urgency=low
   * truncate error messages from Lua code
   * fix crash on early systemd-resolved error
   * fix two use-after-free bugs on INIT_DB
+  * refuse COM_CHANGE_USER to a different user/database
   * prometheus: close connections after 30 seconds
 
  --   

@@ -343,7 +343,16 @@ Connection::OnChangeUser(uint_least8_t sequence_id,
 		return Result::IGNORE;
 	}
 
-	return Result::FORWARD;
+	/* switching to a different user/database is refused because
+	   forwarding it would bypass the Lua handler */
+
+	FinishServerResponse();
+
+	return incoming.SendErr(sequence_id + 1,
+				Mysql::ErrorCode::ACCESS_DENIED_ERROR, "28000"sv,
+				"Changing the user or database is not allowed"sv)
+		? Result::IGNORE
+		: Result::CLOSED;
 }
 
 MysqlHandler::Result

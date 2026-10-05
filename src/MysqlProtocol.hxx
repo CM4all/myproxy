@@ -30,6 +30,7 @@ enum class Command : uint_least8_t {
 enum class ErrorCode : uint_least16_t {
 	HANDSHAKE_ERROR = 1043,
 	DBACCESS_DENIED_ERROR = 1044,
+	ACCESS_DENIED_ERROR = 1045,
 	UNKNOWN_COM_ERROR = 1047,
 };
 

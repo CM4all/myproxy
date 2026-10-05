@@ -25,15 +25,26 @@ class LuaResolveHostnameRequest final : Systemd::ResolveHostnameHandler {
 
 	CancellablePointer cancel_ptr;
 
+	/**
+	 * Set by OnResolveHostnameError() if the request has failed
+	 * synchronously inside Start().
+	 */
+	std::exception_ptr start_error;
+
 public:
 	explicit LuaResolveHostnameRequest(lua_State *_L) noexcept
 		:L(_L) {}
 
-	void Start(EventLoop &event_loop, std::string_view hostname) noexcept {
+	/**
+	 * @return the error if the call has failed early
+	 */
+	std::exception_ptr Start(EventLoop &event_loop, std::string_view hostname) noexcept {
 		assert(!cancel_ptr);
+		assert(!start_error);
 
 		ResolveHostname(event_loop, hostname, 3306, AF_UNSPEC,
 				*this, cancel_ptr);
+		return std::move(start_error);
 	}
 
 	void Cancel() noexcept {
@@ -44,6 +55,7 @@ public:
 	void OnResolveHostname(std::span<const InetAddress> address) noexcept override {
 		assert(!address.empty());
 		assert(cancel_ptr);
+		assert(!start_error);
 
 		Lua::ConsumeOperation(L);
 		Lua::NewSocketAddress(L, address.front());
@@ -52,6 +64,14 @@ public:
 
 	void OnResolveHostnameError(std::exception_ptr error) noexcept override {
 		assert(error);
+		assert(!start_error);
+
+		if (!cancel_ptr) {
+			/* called synchronously from within Start(),
+			   before the Lua thread has yielded */
+			start_error = std::move(error);
+			return;
+		}
 
 		Lua::ConsumeOperation(L);
 
@@ -96,7 +116,11 @@ l_mysql_async_resolve(lua_State *L)
 
 	/* if the bare parser fails, fall back to systemd-resolved */
 	auto *request = LuaResolveHostnameRequestClass::New(L, L);
-	request->Start(event_loop, s);
+	if (auto error = request->Start(event_loop, s)) {
+		/* return [nil, error_message] for assert() */
+		return Lua::ReturnException(L, std::move(error));
+	}
+
 	return Lua::YieldOperation(L);
 }
 

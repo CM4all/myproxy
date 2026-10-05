@@ -12,6 +12,13 @@ namespace Mysql {
 class AuthHandler;
 
 struct AuthFactoryOptions {
+	/**
+	 * Is the auth method "mysql_clear_password" allowed?  This
+	 * means that we tell the backend server the clear-text
+	 * password.
+	 */
+	bool allow_clear_password = true;
+
 	bool strict = true;
 };
 

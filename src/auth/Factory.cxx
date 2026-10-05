@@ -19,7 +19,7 @@ namespace Mysql {
 std::unique_ptr<AuthHandler>
 MakeAuthHandler(std::string_view plugin_name, AuthFactoryOptions options) noexcept
 {
-	if (plugin_name == "mysql_clear_password"sv)
+	if (options.allow_clear_password && plugin_name == "mysql_clear_password"sv)
 		return std::make_unique<ClearPassword>();
 	else if (plugin_name == "client_ed25519"sv)
 		return std::make_unique<ClientEd25519>();

@@ -50,7 +50,7 @@ public:
 
 		/* return [nil, error_message] for assert() */
 		Lua::Push(L, nullptr);
-		Lua::Push(L, error);
+		Lua::Push(L, std::move(error));
 		Lua::Resume(L, 2);
 	}
 };

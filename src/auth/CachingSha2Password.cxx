@@ -90,7 +90,8 @@ Encrypt(EVP_PKEY &key, std::span<const std::byte> src)
 	if (!EVP_PKEY_encrypt_init(ctx.get()))
 		throw SslError{"EVP_PKEY_encrypt_init() failed"};
 
-	EVP_PKEY_CTX_set_rsa_padding(ctx.get(), RSA_PKCS1_OAEP_PADDING);
+	if (EVP_PKEY_CTX_set_rsa_padding(ctx.get(), RSA_PKCS1_OAEP_PADDING) <= 0)
+		throw SslError{"EVP_PKEY_CTX_set_rsa_padding() failed"};
 
 	std::size_t result_size = result.size();
 	if (EVP_PKEY_encrypt(ctx.get(),

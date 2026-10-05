@@ -838,6 +838,10 @@ try {
 		lua_client.Push(L);
 
 		co_await Lua::CoAwaitable{thread, L, 1};
+		if (IsStale())
+			/* this connection was closed while the coroutine
+			   was suspended */
+			co_return;
 
 		if (lua_gettop(L) == 0 || lua_isnil(L, -1)) {
 			// OK
@@ -887,6 +891,10 @@ try {
 		lua_client.Push(L);
 
 		co_await Lua::CoAwaitable{thread, L, 1};
+		if (IsStale())
+			/* this connection was closed while the coroutine
+			   was suspended */
+			co_return;
 
 		if (lua_gettop(L) == 0 || lua_isnil(L, -1)) {
 			// OK
@@ -927,6 +935,10 @@ try {
 		Lua::SetField(L, Lua::RelativeStackIndex{-1}, "database", database);
 
 	co_await Lua::CoAwaitable{thread, L, 2};
+	if (IsStale())
+		/* this connection was closed while the coroutine
+		   was suspended */
+		co_return;
 
 	if (lua_gettop(L) == 0)
 		throw std::invalid_argument{"Bad return value"};
@@ -951,6 +963,10 @@ try {
 
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();
+			if (IsStale())
+				/* this connection was closed while the coroutine
+				   was suspended */
+				co_return;
 
 			ClusterNodeObserver *observer = this;
 			if (connect_action->options.read_only)
@@ -1012,6 +1028,10 @@ try {
 	Lua::Push(L, db_name);
 
 	co_await Lua::CoAwaitable{thread, L, 2};
+	if (IsStale())
+		/* this connection was closed while the coroutine
+		   was suspended */
+		co_return;
 
 	if (auto *err = CheckLuaErrAction(L, -1)) {
 		++stats.n_rejected_connections;

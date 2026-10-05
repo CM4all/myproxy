@@ -33,6 +33,14 @@ enum class ErrorCode : uint_least16_t {
 	UNKNOWN_COM_ERROR = 1047,
 };
 
+/**
+ * The maximum length of an error message in an "ERR" packet.
+ *
+ * This is the "MYSQL_ERRMSG_SIZE" macro in libmylsqlclient /
+ * libmariadb.
+ */
+static constexpr std::size_t ERRMSG_SIZE = 512;
+
 static constexpr uint_least32_t CLIENT_MYSQL = 1;
 static constexpr uint_least32_t CLIENT_FOUND_ROWS = 2;
 static constexpr uint_least32_t CLIENT_LONG_FLAG = 4;

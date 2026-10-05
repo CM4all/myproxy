@@ -157,7 +157,9 @@ MakeErr(uint_least8_t sequence_id, uint_least32_t capabilities,
 		s.WriteVariableLengthString(sql_state);
 	}
 
-	s.WriteVariableLengthString(msg);
+	/* truncate to MySQL's MYSQL_ERRMSG_SIZE so the message always
+	   fits into the PacketSerializer buffer */
+	s.WriteVariableLengthString(msg.substr(0, ERRMSG_SIZE));
 
 	return s;
 }

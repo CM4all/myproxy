@@ -80,6 +80,8 @@ void
 Connection::AbortErr(uint_least8_t sequence_id, Mysql::ErrorCode error_code,
 		     std::string_view sql_state, std::string_view msg) noexcept
 {
+	assert(!IsStale());
+
 	if (incoming.SendErr(sequence_id, error_code, sql_state, msg))
 		/* sending has succeeded and this connection object is
 		   still alive; close it now */
@@ -885,9 +887,13 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	AbortErr(initial_server_sequence_id,
-		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-		 "Lua error"sv);
+	if (!IsStale())
+		/* (if the connection was closed while the Lua
+		   handler was suspended, the sockets are already
+		   gone) */
+		AbortErr(initial_server_sequence_id,
+			 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			 "Lua error"sv);
 }
 
 inline Co::InvokeTask
@@ -1021,9 +1027,13 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	AbortErr(sequence_id + 1,
-		 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
-		 "Lua error"sv);
+	if (!IsStale())
+		/* (if the connection was closed while the Lua
+		   handler was suspended, the sockets are already
+		   gone) */
+		AbortErr(sequence_id + 1,
+			 Mysql::ErrorCode::HANDSHAKE_ERROR, "08S01"sv,
+			 "Lua error"sv);
 }
 
 inline Co::InvokeTask
@@ -1075,7 +1085,11 @@ try {
 	++stats.n_lua_errors;
 	fmt::print(stderr, "[{}] {}\n", GetName(), std::current_exception());
 
-	AbortErr(sequence_id + 1,
-		 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
-		 "Lua error"sv);
+	if (!IsStale())
+		/* (if the connection was closed while the Lua
+		   handler was suspended, the sockets are already
+		   gone) */
+		AbortErr(sequence_id + 1,
+			 Mysql::ErrorCode::DBACCESS_DENIED_ERROR, "42000"sv,
+			 "Lua error"sv);
 }

@@ -9,11 +9,13 @@
 
 #pragma once
 
+#include "util/ByteSizes.hxx"
+
 #include <cstddef>
 
 class SlicePool;
 
-static constexpr std::size_t FB_SIZE = 8192;
+static constexpr std::size_t FB_SIZE = 8_KiB;
 
 /**
  * Global initialization.

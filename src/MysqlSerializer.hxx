@@ -5,6 +5,7 @@
 #pragma once
 
 #include "MysqlProtocol.hxx"
+#include "util/ByteSizes.hxx"
 #include "util/SpanCast.hxx"
 
 #include <algorithm> // for std::copy()
@@ -17,7 +18,7 @@ namespace Mysql {
 struct PacketTooLarge {};
 
 class PacketSerializer {
-	std::array<std::byte, 1024> buffer;
+	std::array<std::byte, 1_KiB> buffer;
 
 	std::size_t position = 0;
 

@@ -25,7 +25,8 @@ MakeAuthHandler(std::string_view plugin_name, AuthFactoryOptions options) noexce
 		return std::make_unique<ClientEd25519>();
 #ifdef HAVE_OPENSSL
 	else if (plugin_name == "caching_sha2_password"sv)
-		return std::make_unique<CachingSha2Password>(options.get_server_public_key);
+		return std::make_unique<CachingSha2Password>(options.server_public_key,
+							     options.get_server_public_key);
 #endif // HAVE_OPENSSL
 	else if (!options.strict || plugin_name == "mysql_native_password"sv)
 		return std::make_unique<NativePassword>();

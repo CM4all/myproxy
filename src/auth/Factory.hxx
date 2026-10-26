@@ -27,6 +27,15 @@ struct AuthFactoryOptions {
 	 */
 	bool get_server_public_key = false;
 
+	/**
+	 * The trusted RSA public key (PEM) of the server for
+	 * "caching_sha2_password" full authentication; if not empty,
+	 * it is used instead of requesting the key from the server.
+	 * The referenced memory must remain valid as long as the
+	 * #AuthHandler is used.
+	 */
+	std::string_view server_public_key;
+
 	bool strict = true;
 };
 

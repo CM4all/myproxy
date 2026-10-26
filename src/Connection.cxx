@@ -502,6 +502,7 @@ Connection::Outgoing::OnHandshake(uint_least8_t sequence_id,
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
 					      {.allow_clear_password = connection.allow_clear_password,
 					       .get_server_public_key = connection.get_server_public_key,
+					       .server_public_key = connection.server_public_key,
 					       .strict = false});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
@@ -538,6 +539,7 @@ Connection::Outgoing::OnAuthSwitchRequest(uint_least8_t sequence_id,
 	auth_handler = Mysql::MakeAuthHandler(packet.auth_plugin_name,
 					      {.allow_clear_password = connection.allow_clear_password,
 					       .get_server_public_key = connection.get_server_public_key,
+					       .server_public_key = connection.server_public_key,
 					       .strict = true});
 	if (!auth_handler)
 		throw SocketProtocolError{"Unsupported auth_plugin"};
@@ -987,6 +989,7 @@ try {
 			auto &cluster = Cluster::Cast(L, -1);
 			allow_clear_password = cluster.GetOptions().check.allow_clear_password;
 			get_server_public_key = cluster.GetOptions().check.get_server_public_key;
+			server_public_key = cluster.GetOptions().check.server_public_key;
 
 			/* wait until all nodes have been probed */
 			co_await cluster.CoWaitReady();

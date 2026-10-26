@@ -141,6 +141,15 @@ XorPassword(std::string_view password,
 	return result;
 }
 
+void
+CheckCachingSha2PublicKey(std::string_view pem)
+{
+	const auto public_key = DecodePemPublicKey(pem);
+
+	if (!CheckServerPublicKey(*public_key))
+		throw std::invalid_argument{"Unsupported server public key"};
+}
+
 static AllocatedArray<std::byte>
 MakeEncryptedPassword(std::string_view password,
 		      std::span<const std::byte, 20> auth_plugin_data,
@@ -187,9 +196,20 @@ CachingSha2Password::HandlePacket(std::span<const std::byte> payload)
 		static constexpr std::byte dummy{};
 		return {&dummy, 0};
 	} else if (result == std::byte{4}) {
-		/* fast auth failed - request the server public key;
-		   once we receive it, we can encrypt the clear-text
-		   password with it */
+		/* fast auth failed */
+
+		if (!server_public_key.empty()) {
+			/* we know the (trusted) server public key:
+			   encrypt the clear-text password with it
+			   right away */
+			encrypted_password = MakeEncryptedPassword(last_password,
+								   last_auth_plugin_data,
+								   AsBytes(server_public_key));
+			return encrypted_password;
+		}
+
+		/* request the server public key; once we receive it,
+		   we can encrypt the clear-text password with it */
 		// TODO cache the server public key
 
 		if (!get_server_public_key)

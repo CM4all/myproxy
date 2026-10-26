@@ -9,6 +9,7 @@
 
 #include <array>
 #include <string>
+#include <string_view>
 
 namespace Mysql {
 
@@ -22,6 +23,12 @@ class CachingSha2Password final : public AuthHandler {
 	AllocatedArray<std::byte> encrypted_password;
 
 	/**
+	 * The trusted public key (PEM) of the server; if not empty,
+	 * it is used instead of requesting the key from the server.
+	 */
+	const std::string_view server_public_key;
+
+	/**
 	 * Are we allowed to request the server's (unauthenticated)
 	 * public key for full authentication?
 	 */
@@ -30,8 +37,10 @@ class CachingSha2Password final : public AuthHandler {
 	bool public_key_requested = false;
 
 public:
-	explicit CachingSha2Password(bool _get_server_public_key) noexcept
+	CachingSha2Password(std::string_view _server_public_key,
+			    bool _get_server_public_key) noexcept
 		:AuthHandler("caching_sha2_password"),
+		 server_public_key(_server_public_key),
 		 get_server_public_key(_get_server_public_key) {}
 
 	~CachingSha2Password() noexcept override;
@@ -43,5 +52,14 @@ public:
 						    std::span<const std::byte> data2) override;
 	std::span<const std::byte> HandlePacket(std::span<const std::byte> payload) override;
 };
+
+/**
+ * Check whether the given PEM string is a public key which can be
+ * used for "caching_sha2_password" full authentication.
+ *
+ * Throws on error.
+ */
+void
+CheckCachingSha2PublicKey(std::string_view pem);
 
 } // namespace Mysql

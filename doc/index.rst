@@ -252,6 +252,16 @@ An optional second parameter is a table of options:
   the user) is enabled: myproxy requests the server's RSA public key
   and sends the password encrypted with it.  Disabled by default.
 
+- ``server_public_key``: the RSA public key of the server(s) as a PEM
+  string for ``caching_sha2_password`` full authentication; if set,
+  myproxy encrypts the password with this key instead of requesting
+  the key from the server (``get_server_public_key`` is not needed
+  then).  The key can be obtained from the server's ``public_key.pem``
+  file or with ``SHOW STATUS LIKE
+  'Caching_sha2_password_rsa_public_key'``.  Example::
+
+    server_public_key = io.open('/etc/cm4all/myproxy/server.pem'):read('*a'),
+
 - ``no_read_only``: if ``true``, then servers which are not read-only
   will be preferred; set this option if you want myproxy to select the
   active master instance automatically (depends on ``monitoring`` and

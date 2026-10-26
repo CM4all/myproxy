@@ -12,6 +12,12 @@ struct CheckOptions {
 	std::string user, password;
 
 	/**
+	 * The trusted RSA public key (PEM) of the server(s) for
+	 * "caching_sha2_password" full authentication.
+	 */
+	std::string server_public_key;
+
+	/**
 	 * Allow authenticating with "mysql_clear_password"?
 	 */
 	bool allow_clear_password = false;

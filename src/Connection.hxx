@@ -158,6 +158,12 @@ class Connection final
 	bool get_server_public_key = false;
 
 	/**
+	 * Points to CheckOptions::server_public_key of the cluster,
+	 * which is kept alive by #connect_action.
+	 */
+	std::string_view server_public_key;
+
+	/**
 	 * The character set requested by the client in its
 	 * HandshakeResponse; it is passed to the server.  Defaults to
 	 * the one announced in our handshake (utf8_general_ci).

@@ -4,6 +4,11 @@
 
 #include "Options.hxx"
 #include "OptionsTable.hxx"
+#include "config.h"
+
+#ifdef HAVE_OPENSSL
+#include "auth/CachingSha2Password.hxx"
+#endif
 
 using std::string_view_literals::operator""sv;
 
@@ -26,7 +31,15 @@ ClusterOptions::ApplyLuaTable(lua_State *L, int table_idx)
 		else if (key == "get_server_public_key"sv)
 			check.get_server_public_key = Lua::CheckBool(L, value_idx,
 								     "Bad 'get_server_public_key' value");
-		else if (key == "no_read_only"sv)
+		else if (key == "server_public_key"sv) {
+#ifdef HAVE_OPENSSL
+			check.server_public_key = Lua::CheckStringView(L, value_idx,
+								       "Bad 'server_public_key' value");
+			Mysql::CheckCachingSha2PublicKey(check.server_public_key);
+#else
+			throw Lua::ArgError{"'server_public_key' requires OpenSSL"};
+#endif
+		} else if (key == "no_read_only"sv)
 			check.no_read_only = Lua::CheckBool(L, value_idx,
 							    "Bad 'no_read_only' value");
 		else if (key == "disconnect_unavailable"sv)

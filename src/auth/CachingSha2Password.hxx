@@ -21,11 +21,18 @@ class CachingSha2Password final : public AuthHandler {
 
 	AllocatedArray<std::byte> encrypted_password;
 
+	/**
+	 * Are we allowed to request the server's (unauthenticated)
+	 * public key for full authentication?
+	 */
+	const bool get_server_public_key;
+
 	bool public_key_requested = false;
 
 public:
-	CachingSha2Password() noexcept
-		:AuthHandler("caching_sha2_password") {}
+	explicit CachingSha2Password(bool _get_server_public_key) noexcept
+		:AuthHandler("caching_sha2_password"),
+		 get_server_public_key(_get_server_public_key) {}
 
 	~CachingSha2Password() noexcept override;
 

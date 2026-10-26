@@ -19,6 +19,14 @@ struct AuthFactoryOptions {
 	 */
 	bool allow_clear_password = true;
 
+	/**
+	 * Is "caching_sha2_password" allowed to request the server's
+	 * RSA public key for full authentication?  This key is not
+	 * authenticated, which means that an attacker answering for
+	 * the server can obtain the clear-text password.
+	 */
+	bool get_server_public_key = false;
+
 	bool strict = true;
 };
 

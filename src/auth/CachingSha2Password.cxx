@@ -192,6 +192,9 @@ CachingSha2Password::HandlePacket(std::span<const std::byte> payload)
 		   password with it */
 		// TODO cache the server public key
 
+		if (!get_server_public_key)
+			throw std::runtime_error{"Server requires caching_sha2_password full authentication, but 'get_server_public_key' is disabled"};
+
 		public_key_requested = true;
 		static constexpr std::array request_public_key{std::byte{0x02}};
 		return request_public_key;

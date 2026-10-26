@@ -247,6 +247,11 @@ An optional second parameter is a table of options:
 - ``allow_clear_password``: if ``true``, the ``mysql_clear_password``
   authentication plugin is enabled (disabled by default).
 
+- ``get_server_public_key``: if ``true``, ``caching_sha2_password``
+  full authentication (needed if the server has no cached entry for
+  the user) is enabled: myproxy requests the server's RSA public key
+  and sends the password encrypted with it.  Disabled by default.
+
 - ``no_read_only``: if ``true``, then servers which are not read-only
   will be preferred; set this option if you want myproxy to select the
   active master instance automatically (depends on ``monitoring`` and

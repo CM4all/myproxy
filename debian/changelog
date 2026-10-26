@@ -1,6 +1,8 @@
 cm4all-myproxy (0.37) unstable; urgency=low
 
   * lua: fix crash when client disconnects while Lua is suspended
+  * new cluster option "get_server_public_key", required for
+    caching_sha2_password full authentication
 
  --   
 

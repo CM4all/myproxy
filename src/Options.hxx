@@ -17,6 +17,12 @@ struct CheckOptions {
 	bool allow_clear_password = false;
 
 	/**
+	 * Allow requesting the server's (unauthenticated) RSA public
+	 * key for "caching_sha2_password" full authentication?
+	 */
+	bool get_server_public_key = false;
+
+	/**
 	 * Prefer servers without the #read_only attribute?
 	 */
 	bool no_read_only = false;

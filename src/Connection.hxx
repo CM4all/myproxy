@@ -155,6 +155,8 @@ class Connection final
 
 	bool allow_clear_password = false;
 
+	bool get_server_public_key = false;
+
 	/**
 	 * The character set requested by the client in its
 	 * HandshakeResponse; it is passed to the server.  Defaults to

@@ -2,7 +2,8 @@ Source: cm4all-myproxy
 Section: database
 Priority: optional
 Maintainer: Max Kellermann <max.kellermann@ionos.com>
-Build-Depends: debhelper (>= 13.3~),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-installsysusers,
  meson (>= 1.2),
  python3-sphinx,
  g++ (>= 4:12),
